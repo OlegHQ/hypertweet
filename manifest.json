@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "Copy Tweets",
+  "version": "1.0",
+  "description": "Copies tweets and their replies to the clipboard when clicked.",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "clipboardWrite"
+  ],
+  "host_permissions": [
+    "https://x.com/*"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "action": {
+    "default_title": "Copy Tweets"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://x.com/*"],
+      "js": ["content.js"]
+    }
+  ],
+  "icons": {
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
