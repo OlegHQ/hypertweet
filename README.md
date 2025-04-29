@@ -1,6 +1,6 @@
 # Copy Tweets
 
-![Copy Tweets Logo](copy-tweets-logo.png)
+<img src="copy-tweets-logo.png" width="50" height="50" />
 
 **Copy Tweets** is a lightweight browser extension that lets you quickly copy tweets and full threads—including replies—to your clipboard with a single click.
 
