@@ -1,18 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "Copy Tweets",
+  "name": "hypertweet",
   "version": "1.0",
-  "description": "Copies tweets and their replies to the clipboard when clicked.",
-  "permissions": [
-    "activeTab",
-    "scripting",
-    "clipboardWrite"
-  ],
-  "host_permissions": [
-    "https://x.com/*"
-  ],
+  "description": "AI assist for replies. Reply like a pro.",
+  "permissions": ["activeTab", "scripting", "clipboardWrite"],
+  "host_permissions": ["https://x.com/*"],
   "background": {
-    "scripts": ["background.js"]
+    "scripts": ["out/background.js"]
   },
   "action": {
     "default_title": "Copy Tweets"
@@ -20,12 +14,12 @@
   "content_scripts": [
     {
       "matches": ["https://x.com/*"],
-      "js": ["content.js"]
+      "js": ["out/content.js"]
     }
   ],
   "icons": {
-    "16": "icon-16.png",
-    "48": "icon-48.png",
-    "128": "icon-128.png"
+    "16": "img/icon-16.png",
+    "48": "img/icon-48.png",
+    "128": "img/icon-128.png"
   }
 }
