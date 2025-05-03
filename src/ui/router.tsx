@@ -13,5 +13,5 @@ export default function Router() {
     return <ProfileSelector />;
   }
 
-  return <div>A: {selectedProfile.name}</div>;
+  return <pre>A: {JSON.stringify(selectedProfile, null, 2)}</pre>;
 }

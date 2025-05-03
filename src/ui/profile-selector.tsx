@@ -1,9 +1,13 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
+import CreateProfileForm from "./create-profile-form";
+import type { Profile } from "../data";
 
 export default function ProfileSelector() {
   const { profiles, setProfiles, setSelectedProfile } = useGlobalState();
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<Profile | undefined>(undefined);
 
   useEffect(() => {
     async function loadProfiles() {
@@ -18,10 +22,17 @@ export default function ProfileSelector() {
     loadProfiles();
   }, [setProfiles]);
 
-  const handleCreateProfile = () => {
-    // TODO: Implement profile creation
-    console.log("Create profile clicked");
-  };
+  if (showCreateForm || editingProfile) {
+    return (
+      <CreateProfileForm
+        profile={editingProfile}
+        onCancel={() => {
+          setShowCreateForm(false);
+          setEditingProfile(undefined);
+        }}
+      />
+    );
+  }
 
   if (!profiles) {
     return (
@@ -39,7 +50,7 @@ export default function ProfileSelector() {
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-lg font-semibold">Select a Profile</h2>
         <button
-          onClick={handleCreateProfile}
+          onClick={() => setShowCreateForm(true)}
           className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
         >
           Create Profile
@@ -48,16 +59,26 @@ export default function ProfileSelector() {
 
       <div className="space-y-2">
         {profiles.map((profile) => (
-          <button
+          <div
             key={profile.id}
-            onClick={() => setSelectedProfile(profile)}
-            className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            className="group relative"
           >
-            <div className="font-medium">
-              {profile.name} {profile.lastName}
-            </div>
-            <div className="text-sm text-gray-600">{profile.linkedInUrl}</div>
-          </button>
+            <button
+              onClick={() => setSelectedProfile(profile)}
+              className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
+            >
+              <div className="font-medium">
+                {profile.name}
+              </div>
+              <div className="text-sm text-gray-600">{profile.linkedInUrl}</div>
+            </button>
+            <button
+              onClick={() => setEditingProfile(profile)}
+              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-gray-700"
+            >
+              Edit
+            </button>
+          </div>
         ))}
       </div>
 
