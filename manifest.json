@@ -21,7 +21,7 @@
     },
     "default_title": "Copy Tweets",
     "default_panel": "out/sidebar.html",
-    "open_at_install": false
+    "open_at_install": true
   },
   "content_scripts": [
     {

@@ -17,8 +17,8 @@ export async function createDataLayer(): Promise<DataLayer> {
   };
 }
 
-export function setupBackgroundApp() {
-  const dataLayer = createDataLayer();
+export async function setupBackgroundApp() {
+  const dataLayer = await createDataLayer();
   let cnt = 0;
   return {
     dataLayer,
@@ -28,6 +28,6 @@ export function setupBackgroundApp() {
   };
 }
 
-export type App = ReturnType<typeof setupBackgroundApp>;
+export type App = Awaited<ReturnType<typeof setupBackgroundApp>>;
 export * from "./models/profile";
 export * from "./models/settings";

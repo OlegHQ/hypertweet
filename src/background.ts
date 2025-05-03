@@ -11,12 +11,15 @@ browserApi.action.onClicked.addListener((tab) => {
   }
 });
 
-const app = setupBackgroundApp();
-const invoker = makePathInvoker(app);
+const invoker: { current: any } = { current: null };
+
+const app = setupBackgroundApp().then((app) => {
+  invoker.current = makePathInvoker(app);
+});
 
 browserApi.runtime.onMessage.addListener(async (message: any) => {
   const { name, path, args } = message;
   if (name === "proxy") {
-    return await invoker(path, args);
+    return await invoker.current(path, args);
   }
 });

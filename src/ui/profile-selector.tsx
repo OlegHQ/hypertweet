@@ -1,0 +1,71 @@
+import React, { useEffect } from "react";
+import { app } from "./app";
+import { useGlobalState } from "./state";
+
+export default function ProfileSelector() {
+  const { profiles, setProfiles, setSelectedProfile } = useGlobalState();
+
+  useEffect(() => {
+    async function loadProfiles() {
+      try {
+        const profiles = await app.dataLayer.profile.getAll();
+        console.log("profiles", profiles);
+        setProfiles(profiles);
+      } catch (error) {
+        console.error("Failed to load profiles:", error);
+      }
+    }
+    loadProfiles();
+  }, [setProfiles]);
+
+  const handleCreateProfile = () => {
+    // TODO: Implement profile creation
+    console.log("Create profile clicked");
+  };
+
+  if (!profiles) {
+    return (
+      <div className="p-4">
+        <div className="flex flex-col items-center justify-center h-64 space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+          <p className="text-gray-600">Loading profiles...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4">
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-lg font-semibold">Select a Profile</h2>
+        <button
+          onClick={handleCreateProfile}
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+        >
+          Create Profile
+        </button>
+      </div>
+
+      <div className="space-y-2">
+        {profiles.map((profile) => (
+          <button
+            key={profile.id}
+            onClick={() => setSelectedProfile(profile)}
+            className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
+          >
+            <div className="font-medium">
+              {profile.name} {profile.lastName}
+            </div>
+            <div className="text-sm text-gray-600">{profile.linkedInUrl}</div>
+          </button>
+        ))}
+      </div>
+
+      {profiles.length === 0 && (
+        <div className="text-center py-8 text-gray-600">
+          No profiles found. Click "Create Profile" to get started.
+        </div>
+      )}
+    </div>
+  );
+}
