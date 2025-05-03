@@ -2,11 +2,13 @@ import { create } from "zustand";
 import type { Profile } from "../data";
 
 interface GlobalState {
-  profiles: Profile[] | null;
+  profiles: Profile[];
   selectedProfile: Profile | null;
   loadedKeys: Set<string>;
+  lastUsedProfileId: string | null;
   setProfiles: (profiles: Profile[]) => void;
   setSelectedProfile: (profile: Profile | null) => void;
+  setLastUsedProfileId: (id: string | null) => void;
   addLoadedKey: (key: string) => void;
   removeLoadedKey: (key: string) => void;
   isKeyLoaded: (key: string) => boolean;
@@ -19,14 +21,21 @@ type GetState = () => GlobalState;
 
 export const useGlobalState = create<GlobalState>(
   (set: SetState, get: GetState) => ({
-    profiles: null,
+    profiles: [],
     selectedProfile: null,
     loadedKeys: new Set<string>(),
+    lastUsedProfileId: null,
 
     setProfiles: (profiles: Profile[]) => set({ profiles }),
 
-    setSelectedProfile: (profile: Profile | null) =>
-      set({ selectedProfile: profile }),
+    setSelectedProfile: (profile: Profile | null) => {
+      set({ selectedProfile: profile });
+      if (profile) {
+        set({ lastUsedProfileId: profile.id });
+      }
+    },
+
+    setLastUsedProfileId: (id: string | null) => set({ lastUsedProfileId: id }),
 
     addLoadedKey: (key: string) =>
       set((state: GlobalState) => ({

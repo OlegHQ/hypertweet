@@ -7,13 +7,14 @@ import type { Profile } from "../data";
 export default function ProfileSelector() {
   const { profiles, setProfiles, setSelectedProfile } = useGlobalState();
   const [showCreateForm, setShowCreateForm] = useState(false);
-  const [editingProfile, setEditingProfile] = useState<Profile | undefined>(undefined);
+  const [editingProfile, setEditingProfile] = useState<Profile | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     async function loadProfiles() {
       try {
         const profiles = await app.dataLayer.profile.getAll();
-        console.log("profiles", profiles);
         setProfiles(profiles);
       } catch (error) {
         console.error("Failed to load profiles:", error);
@@ -59,17 +60,12 @@ export default function ProfileSelector() {
 
       <div className="space-y-2">
         {profiles.map((profile) => (
-          <div
-            key={profile.id}
-            className="group relative"
-          >
+          <div key={profile.id} className="group relative">
             <button
               onClick={() => setSelectedProfile(profile)}
               className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
-              <div className="font-medium">
-                {profile.name}
-              </div>
+              <div className="font-medium">{profile.name}</div>
               <div className="text-sm text-gray-600">{profile.linkedInUrl}</div>
             </button>
             <button

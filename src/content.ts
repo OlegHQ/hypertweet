@@ -1,6 +1,6 @@
 import { browserApi } from "./browser-api";
 
-browserApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
+browserApi.runtime.onMessage.addListener((message) => {
   if (message.action === "copyTweets") {
     const jsonThread = (() => {
       function getTweet(tweet: HTMLElement) {
@@ -39,11 +39,54 @@ browserApi.runtime.onMessage.addListener((message, sender, sendResponse) => {
         replies: replies.map(getTweet),
       };
     })();
-    const tweets = JSON.stringify(jsonThread, null, 2);
-    // Copy to clipboard
-    navigator.clipboard
-      .writeText(tweets)
-      .then(() => console.log("Tweets copied to clipboard."))
-      .catch((err) => console.error("Failed to copy: ", err));
+
+    return Promise.resolve(jsonThread);
+  } else if (message.action === "scrapeProfile") {
+    const name =
+      document.querySelector('[data-testid="UserName"]')?.textContent?.trim() ||
+      "";
+    const username =
+      document
+        .querySelector('[data-testid="User-Name"] a[href^="/"]')
+        ?.getAttribute("href")
+        ?.slice(1) || "";
+    const bio = document
+      .querySelector('[data-testid="UserDescription"]')
+      ?.textContent?.trim();
+    const location = document
+      .querySelector('[data-testid="UserLocation"]')
+      ?.textContent?.trim();
+    const website = document
+      .querySelector('[data-testid="UserUrl"]')
+      ?.textContent?.trim();
+    const joinDate = document
+      .querySelector('[data-testid="UserJoinDate"]')
+      ?.textContent?.trim();
+
+    // Get following and followers counts
+    const followingElement = document.querySelector(
+      'a[href$="/following"] span'
+    );
+    const followersElement = document.querySelector(
+      'a[href$="/followers"] span'
+    );
+
+    const following = followingElement
+      ? parseInt(followingElement.textContent?.replace(/,/g, "") || "0")
+      : undefined;
+    const followers = followersElement
+      ? parseInt(followersElement.textContent?.replace(/,/g, "") || "0")
+      : undefined;
+
+    return Promise.resolve({
+      name,
+      username,
+      bio,
+      location,
+      website,
+      joinDate,
+      following,
+      followers,
+    });
   }
 });

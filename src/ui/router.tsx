@@ -1,17 +1,42 @@
-import React from "react";
-
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
-import SidebarUI from "./sidebar-ui";
-import ProfileSelector from "./profile-selector";
+import MainApp from "./main-app";
 
 export default function Router() {
-  const { selectedProfile } = useGlobalState();
+  const {
+    selectedProfile,
+    setSelectedProfile,
+    lastUsedProfileId,
+    setLastUsedProfileId,
+  } = useGlobalState();
 
-  if (!selectedProfile) {
-    return <ProfileSelector />;
-  }
+  useEffect(() => {
+    async function loadLastUsedProfile() {
+      try {
+        const lastId = await app.dataLayer.config.get<string>(
+          "lastUsedProfileId"
+        );
+        console.log("lastId", lastId);
+        if (lastId) {
+          setLastUsedProfileId(lastId);
+          const profile = await app.dataLayer.profile.get(lastId);
+          if (profile) {
+            setSelectedProfile(profile);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load last used profile:", error);
+      }
+    }
+    loadLastUsedProfile();
+  }, [setSelectedProfile, setLastUsedProfileId]);
 
-  return <pre>A: {JSON.stringify(selectedProfile, null, 2)}</pre>;
+  useEffect(() => {
+    if (lastUsedProfileId && typeof lastUsedProfileId === "string") {
+      app.dataLayer.config.set("lastUsedProfileId", lastUsedProfileId);
+    }
+  }, [lastUsedProfileId]);
+
+  return <MainApp />;
 }

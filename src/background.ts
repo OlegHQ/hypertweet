@@ -1,7 +1,8 @@
 // Use a unified API reference for Chrome & Firefox
 
+import { setupBackgroundApp } from "./background-app";
 import { browserApi } from "./browser-api";
-import { createDataLayer, setupBackgroundApp } from "./data";
+import { createDataLayer } from "./data";
 import { makePathInvoker } from "./data/proxy-handler";
 
 // Listen for extension icon click
@@ -13,7 +14,7 @@ browserApi.action.onClicked.addListener((tab) => {
 
 const invoker: { current: any } = { current: null };
 
-const app = setupBackgroundApp().then((app) => {
+setupBackgroundApp().then((app) => {
   invoker.current = makePathInvoker(app);
 });
 

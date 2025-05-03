@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Copy Tweets",
+  "name": "hypertweet",
   "version": "1.0",
   "description": "Copies tweets and their replies to the clipboard when clicked.",
   "permissions": ["activeTab", "scripting", "clipboardWrite", "sidePanel"],
@@ -9,7 +9,7 @@
     "scripts": ["out/background.js"]
   },
   "action": {
-    "default_title": "Copy Tweets"
+    "default_title": "hypertweet"
   },
   "side_panel": {
     "default_path": "out/sidebar.html"
@@ -19,7 +19,7 @@
       "16": "img/icon-16.png",
       "48": "img/icon-48.png"
     },
-    "default_title": "Copy Tweets",
+    "default_title": "hypertweet",
     "default_panel": "out/sidebar.html",
     "open_at_install": true
   },

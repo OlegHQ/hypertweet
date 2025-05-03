@@ -12,5 +12,9 @@ install({
 // Initialize React
 const root = document.getElementById("root");
 if (root) {
-  createRoot(root).render(<Router />);
+  createRoot(root).render(
+    <div className="h-full w-full text-sm">
+      <Router />
+    </div>
+  );
 }

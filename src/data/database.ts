@@ -1,4 +1,4 @@
-import { browserApi } from '../browser-api';
+import { browserApi } from "../browser-api";
 
 interface Profile {
   id: string;
@@ -25,12 +25,12 @@ interface Settings {
   openAiKey: string;
 }
 
-const DB_NAME = 'hypertweet';
+const DB_NAME = "hypertweet";
 const DB_VERSION = 1;
 
-const STORES = {
-  PROFILES: 'profiles',
-  SETTINGS: 'settings'
+export const STORES = {
+  PROFILES: "profiles",
+  SETTINGS: "settings",
 } as const;
 
 export class Database {
@@ -51,13 +51,17 @@ export class Database {
 
         // Create profiles store
         if (!db.objectStoreNames.contains(STORES.PROFILES)) {
-          const profilesStore = db.createObjectStore(STORES.PROFILES, { keyPath: 'id' });
-          profilesStore.createIndex('linkedInUrl', 'linkedInUrl', { unique: true });
+          const profilesStore = db.createObjectStore(STORES.PROFILES, {
+            keyPath: "id",
+          });
+          profilesStore.createIndex("linkedInUrl", "linkedInUrl", {
+            unique: true,
+          });
         }
 
         // Create settings store
         if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
-          db.createObjectStore(STORES.SETTINGS, { keyPath: 'id' });
+          db.createObjectStore(STORES.SETTINGS, { keyPath: "id" });
         }
       };
     });
@@ -65,9 +69,9 @@ export class Database {
 
   async put<T>(storeName: string, value: T): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error('Database not initialized'));
+      if (!this.db) return reject(new Error("Database not initialized"));
 
-      const transaction = this.db.transaction(storeName, 'readwrite');
+      const transaction = this.db.transaction(storeName, "readwrite");
       const store = transaction.objectStore(storeName);
       const request = store.put(value);
 
@@ -78,9 +82,9 @@ export class Database {
 
   async get<T>(storeName: string, key: string): Promise<T | undefined> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error('Database not initialized'));
+      if (!this.db) return reject(new Error("Database not initialized"));
 
-      const transaction = this.db.transaction(storeName, 'readonly');
+      const transaction = this.db.transaction(storeName, "readonly");
       const store = transaction.objectStore(storeName);
       const request = store.get(key);
 
@@ -89,11 +93,15 @@ export class Database {
     });
   }
 
-  async getByIndex<T>(storeName: string, indexName: string, key: string): Promise<T | undefined> {
+  async getByIndex<T>(
+    storeName: string,
+    indexName: string,
+    key: string
+  ): Promise<T | undefined> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error('Database not initialized'));
+      if (!this.db) return reject(new Error("Database not initialized"));
 
-      const transaction = this.db.transaction(storeName, 'readonly');
+      const transaction = this.db.transaction(storeName, "readonly");
       const store = transaction.objectStore(storeName);
       const index = store.index(indexName);
       const request = index.get(key);
@@ -105,9 +113,9 @@ export class Database {
 
   async getAll<T>(storeName: string): Promise<T[]> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error('Database not initialized'));
+      if (!this.db) return reject(new Error("Database not initialized"));
 
-      const transaction = this.db.transaction(storeName, 'readonly');
+      const transaction = this.db.transaction(storeName, "readonly");
       const store = transaction.objectStore(storeName);
       const request = store.getAll();
 
@@ -118,9 +126,9 @@ export class Database {
 
   async delete(storeName: string, key: string): Promise<void> {
     return new Promise((resolve, reject) => {
-      if (!this.db) return reject(new Error('Database not initialized'));
+      if (!this.db) return reject(new Error("Database not initialized"));
 
-      const transaction = this.db.transaction(storeName, 'readwrite');
+      const transaction = this.db.transaction(storeName, "readwrite");
       const store = transaction.objectStore(storeName);
       const request = store.delete(key);
 
@@ -130,7 +138,7 @@ export class Database {
   }
 
   // Profile methods
-  async addProfile(profile: Omit<Profile, 'id'>): Promise<string> {
+  async addProfile(profile: Omit<Profile, "id">): Promise<string> {
     const id = crypto.randomUUID();
     await this.put(STORES.PROFILES, { ...profile, id });
     return id;
@@ -146,7 +154,7 @@ export class Database {
   }
 
   async getProfileByLinkedInUrl(url: string): Promise<Profile | undefined> {
-    return this.getByIndex(STORES.PROFILES, 'linkedInUrl', url);
+    return this.getByIndex(STORES.PROFILES, "linkedInUrl", url);
   }
 
   async getAllProfiles(): Promise<Profile[]> {
@@ -159,11 +167,11 @@ export class Database {
 
   // Settings methods
   async setOpenAiKey(key: string): Promise<void> {
-    await this.put(STORES.SETTINGS, { id: 'openAiKey', openAiKey: key });
+    await this.put(STORES.SETTINGS, { id: "openAiKey", openAiKey: key });
   }
 
   async getOpenAiKey(): Promise<string | undefined> {
-    const settings = await this.get<Settings>(STORES.SETTINGS, 'openAiKey');
+    const settings = await this.get<Settings>(STORES.SETTINGS, "openAiKey");
     return settings?.openAiKey;
   }
 }

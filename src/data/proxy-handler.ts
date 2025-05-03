@@ -32,13 +32,11 @@ export function makePathInvoker<T extends object>(
 
     // Walk to the parent of the final property
     for (let i = 0; i < parts.length - 1; i++) {
-      console.log("ctx: ", ctx, parts[i]);
       ctx = ctx?.[parts?.[i] ?? 0];
     }
 
     const fnKey = parts[parts.length - 1];
     const fn = ctx?.[fnKey ?? 0];
-    console.log("fn", fnKey, fn);
     if (typeof fn !== "function") {
       throw new Error(
         `Path "${path}" is not a function on the target object, it's ${typeof fn}; ${JSON.stringify(
