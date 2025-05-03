@@ -1,8 +1,9 @@
+import React from "react";
 import { install } from "@twind/core";
 import presetAutoprefix from "@twind/preset-autoprefix";
 import presetTailwind from "@twind/preset-tailwind";
 import { createRoot } from 'react-dom/client';
-import App from './App';
+import SidebarUI from "./ui/sidebar-ui";
 
 // Initialize Twind
 install({
@@ -10,7 +11,7 @@ install({
 });
 
 // Initialize React
-const root = document.getElementById('root');
+const root = document.getElementById("root");
 if (root) {
-  createRoot(root).render(<App />);
+  createRoot(root).render(<SidebarUI />);
 }

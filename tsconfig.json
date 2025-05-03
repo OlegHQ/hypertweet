@@ -1,6 +1,10 @@
 {
   "compilerOptions": {
     // Environment setup & latest features
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
     "lib": ["ES2020", "DOM"],
     "target": "ES2020",
     "module": "ESNext",

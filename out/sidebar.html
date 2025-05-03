@@ -2,63 +2,8 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <style>
-    body {
-      width: 300px;
-      margin: 0;
-      padding: 16px;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    }
-    .container {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }
-    .header {
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a1a1a;
-    }
-    .content {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .tweet-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .tweet-item {
-      padding: 12px;
-      border: 1px solid #e1e8ed;
-      border-radius: 8px;
-      background: #fff;
-    }
-    .copy-button {
-      padding: 8px 16px;
-      background: #1d9bf0;
-      color: white;
-      border: none;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: 600;
-      transition: background 0.2s;
-    }
-    .copy-button:hover {
-      background: #1a8cd8;
-    }
-  </style>
-</head>
 <body>
-  <div class="container">
-    <div class="header">Copy Tweets</div>
-    <div class="content">
-      <div class="tweet-list" id="tweetList">
-        <!-- Tweet items will be added here dynamically -->
-      </div>
-    </div>
-  </div>
+  <div id="root"></div>
   <script type="module" src="sidebar.js"></script>
 </body>
 </html> 
