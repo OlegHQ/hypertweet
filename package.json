@@ -4,8 +4,7 @@
   "description": "Browser extension for copying tweets",
   "type": "module",
   "scripts": {
-    "build": "bun build src/background.ts --outfile out/background.js && bun build src/content.ts --outfile out/content.js",
-    "dev": "bun build src/background.ts --outfile out/background.js && bun build src/content.ts --outfile out/content.js --watch"
+    "dev": "bun build --entrypoints ./src/background.ts --entrypoints ./src/content.ts --entrypoints ./src/sidebar.ts --outdir ./out --watch"
   },
   "dependencies": {
     "@types/chrome": "^0.0.260",

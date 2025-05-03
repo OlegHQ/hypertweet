@@ -5,3 +5,4 @@ declare global {
 }
 
 export const browserApi = typeof browser !== "undefined" ? browser : chrome;
+export const isChrome = typeof chrome !== "undefined";

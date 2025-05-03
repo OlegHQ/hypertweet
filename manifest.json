@@ -1,15 +1,27 @@
 {
   "manifest_version": 3,
-  "name": "hypertweet",
+  "name": "Copy Tweets",
   "version": "1.0",
-  "description": "AI assist for replies. Reply like a pro.",
-  "permissions": ["activeTab", "scripting", "clipboardWrite"],
+  "description": "Copies tweets and their replies to the clipboard when clicked.",
+  "permissions": ["activeTab", "scripting", "clipboardWrite", "sidePanel"],
   "host_permissions": ["https://x.com/*"],
   "background": {
     "scripts": ["out/background.js"]
   },
   "action": {
     "default_title": "Copy Tweets"
+  },
+  "side_panel": {
+    "default_path": "out/sidebar.html"
+  },
+  "sidebar_action": {
+    "default_icon": {
+      "16": "img/icon-16.png",
+      "48": "img/icon-48.png"
+    },
+    "default_title": "Copy Tweets",
+    "default_panel": "out/sidebar.html",
+    "open_at_install": false
   },
   "content_scripts": [
     {

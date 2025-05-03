@@ -4,6 +4,7 @@ node_modules
 # output
 out/**/*
 !out/.gitkeep
+!out/sidebar.html
 dist
 *.tgz
 
