@@ -1,5 +1,5 @@
 import React from "react";
-import type { Tweet } from "../data/models/social-profile";
+import type { Tweet } from "../background-app/data/models/social-profile";
 import { ProfileSection } from "./profile-section";
 
 interface TwitterProfileProps {

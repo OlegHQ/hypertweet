@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
-import type { ReplyType } from "../data/models/reply-type";
+import type { ReplyType } from "../background-app/data/models/reply-type";
 import { PageHeader } from "./components/page-header";
 
 export default function ReplyTypeEditPage() {

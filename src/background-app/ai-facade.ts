@@ -1,6 +1,6 @@
-import type { DataLayer, LinkedInProfile, XProfile } from "../data";
-import { buildPersonalitySnippet } from "../ai/context";
-import { buildPersonaPayload } from "../ai/system-prompt-gen";
+import type { DataLayer, LinkedInProfile, XProfile } from "./data";
+import { buildPersonalitySnippet } from "./ai/context";
+import { buildPersonaPayload } from "./ai/system-prompt-gen";
 
 export function newAI(dataLayer: DataLayer) {
   return {

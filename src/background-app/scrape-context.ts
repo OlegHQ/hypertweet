@@ -1,7 +1,7 @@
 import type { ContentApp } from "@/src/content-app/context";
-import { browserApi } from "../browser-api";
-import type { LinkedInProfile, XProfile } from "../data";
-import { createProxyHandler } from "@/src/data/proxy-handler";
+import { browserApi } from "../utils/browser-api";
+import type { LinkedInProfile, XProfile } from "./data";
+import { createProxyHandler } from "@/src/utils/proxy-handler";
 
 function getContentApp(tabId: number): ContentApp {
   return createProxyHandler<ContentApp>(async (path, args) => {

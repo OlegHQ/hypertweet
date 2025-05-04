@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
-import type { Profile } from "../data";
+import type { Profile } from "../background-app/data";
 
 interface Props {
   profile?: Profile;

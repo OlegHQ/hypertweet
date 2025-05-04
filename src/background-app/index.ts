@@ -1,6 +1,6 @@
-import { defaultReplyTypes } from "../ai/replies";
-import { createDataLayer } from "../data";
-import { ReplyTypeRepository } from "../data/repositories/reply-type-repository";
+import { defaultReplyTypes } from "./ai/replies";
+import { createDataLayer } from "./data";
+import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
 import { ScrapingContext } from "./scrape-context";
 import { newAI } from "./ai-facade";
 
@@ -40,8 +40,9 @@ export async function setupBackgroundApp() {
       },
       async getReplyType(profileId: string, id: string) {
         let item =
-          defaultReplyTypes(profileId).find((replyType) => replyType.id === id) ??
-          null;
+          defaultReplyTypes(profileId).find(
+            (replyType) => replyType.id === id
+          ) ?? null;
         if (!item) {
           item = await replyTypeRepository.get(profileId, id);
           if (!item) {

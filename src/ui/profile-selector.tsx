@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
 import CreateProfileForm from "./create-profile-form";
-import type { Profile } from "../data";
+import type { Profile } from "../background-app/data";
 
 export default function ProfileSelector() {
   const { profiles, setProfiles, setSelectedProfile } = useGlobalState();
