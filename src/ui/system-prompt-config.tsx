@@ -1,15 +1,15 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 
 export default function SystemPromptConfig() {
-  const { selectedProfile, hasProfileKey } = useGlobalState();
+  const { selectedProfile, hasProfileKey, setCurrentRoute } = useGlobalState();
   const [systemPrompt, setSystemPrompt] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedProfile) {
       const loadSystemPrompt = async () => {
         try {
@@ -97,15 +97,34 @@ export default function SystemPromptConfig() {
 
   if (!selectedProfile) return null;
 
-  const hasOpenAIKey = selectedProfile ? hasProfileKey(selectedProfile.id, "openAiKey") : false;
+  const hasOpenAIKey = selectedProfile
+    ? hasProfileKey(selectedProfile.id, "openAiKey")
+    : false;
 
   return (
     <div className="space-y-4 mb-6">
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">System Prompt</h2>
         <p className="text-gray-600">
-          Personalize your replies and tweets. Keep it concise to minimize costs.
+          Personalize your replies and tweets. Keep it concise to minimize
+          costs.
         </p>
+        {!hasOpenAIKey && (
+          <p className="mt-2 text-amber-600">
+            ⚠️ OpenAI API key is not set.{" "}
+            <a
+              href="#/api-config"
+              onClick={(e) => {
+                e.preventDefault();
+                setCurrentRoute("/api-config");
+              }}
+              className="text-amber-700 underline hover:text-amber-800"
+            >
+              Set up your API key
+            </a>{" "}
+            to enable prompt generation.
+          </p>
+        )}
       </div>
 
       {error && (
@@ -129,14 +148,15 @@ export default function SystemPromptConfig() {
               >
                 {isLoading ? "Saving..." : "Save Prompt"}
               </button>
-              <button
-                onClick={handleGenerate}
-                disabled={isLoading || !hasOpenAIKey}
-                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
-                title={!hasOpenAIKey ? "Please set up your OpenAI API key first" : undefined}
-              >
-                Generate
-              </button>
+              {hasOpenAIKey && (
+                <button
+                  onClick={handleGenerate}
+                  disabled={isLoading}
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+                >
+                  Generate Prompt
+                </button>
+              )}
               <button
                 onClick={() => setIsEditing(false)}
                 className="px-4 py-2 border rounded-md hover:bg-gray-50"

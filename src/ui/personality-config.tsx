@@ -58,6 +58,9 @@ export default function PersonalityConfig() {
   const [linkedInUrl, setLinkedInUrl] = React.useState(
     selectedProfile?.linkedInUrl || ""
   );
+  const [twitterUrl, setTwitterUrl] = React.useState(
+    selectedProfile?.twitterUrl || ""
+  );
 
   const handleUrlSave = async (
     platform: "twitter" | "linkedIn",
@@ -88,16 +91,12 @@ export default function PersonalityConfig() {
         selectedProfile.id,
         "twitterProfile"
       );
-      if (twitterData) {
-        setPersonalityConfig(selectedProfile.id, "twitter", twitterData);
-      }
       const linkedInData = await app.dataLayer.config.get<any>(
         selectedProfile.id,
         "linkedInProfile"
       );
-      if (linkedInData) {
-        setPersonalityConfig(selectedProfile.id, "linkedIn", linkedInData);
-      }
+      setPersonalityConfig(selectedProfile.id, "twitter", twitterData);
+      setPersonalityConfig(selectedProfile.id, "linkedIn", linkedInData);
     } catch (error) {
       console.error("Error loading stored configs:", error);
     }
@@ -163,7 +162,26 @@ export default function PersonalityConfig() {
             {isLoading ? "Loading..." : "Load twitter data"}
           </button>
         </div>
-      ) : null}
+      ) : (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Twitter profile</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter Twitter profile URL"
+              className="flex-1 px-4 py-2 border rounded"
+              value={twitterUrl}
+              onChange={(e) => setTwitterUrl(e.target.value)}
+            />
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={() => handleUrlSave("twitter", twitterUrl)}
+            >
+              Save URL
+            </button>
+          </div>
+        </div>
+      )}
 
       {linkedInConfig?.isFetched && linkedInConfig.data ? (
         <LinkedInProfile
