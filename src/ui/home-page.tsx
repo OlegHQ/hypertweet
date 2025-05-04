@@ -1,8 +1,43 @@
+import { useEffect } from "react";
+import { app } from "./app";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 
 export default function HomePage() {
-  const { setCurrentRoute } = useGlobalState();
+  const {
+    setSelectedProfile,
+    lastUsedProfileId,
+    setCurrentRoute,
+    setLastUsedProfileId,
+    selectedProfile,
+  } = useGlobalState();
+
+  useEffect(() => {
+    async function loadLastUsedProfile() {
+      try {
+        const lastId = await app.dataLayer.config.get<string>(
+          null,
+          "lastUsedProfileId"
+        );
+        if (lastId) {
+          setLastUsedProfileId(lastId);
+          const profile = await app.dataLayer.profile.get(lastId);
+          if (profile) {
+            setSelectedProfile(profile);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load last used profile:", error);
+      }
+    }
+    loadLastUsedProfile();
+  }, [setSelectedProfile, setLastUsedProfileId]);
+
+  useEffect(() => {
+    if (selectedProfile?.id) {
+      app.dataLayer.config.set(null, "lastUsedProfileId", selectedProfile.id);
+    }
+  }, [selectedProfile]);
 
   return (
     <Layout>
