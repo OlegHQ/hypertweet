@@ -5,6 +5,7 @@ import { ScrapingContext } from "../scraping/context";
 import { app } from "./app";
 import ApiConfig from "./api-config";
 import PersonalityConfig from "./personality-config";
+import SystemPromptConfig from "./system-prompt-config";
 
 export default function MainApp() {
   const { selectedProfile } = useGlobalState();
@@ -58,6 +59,7 @@ export default function MainApp() {
         </div>
       </div>
 
+      <SystemPromptConfig />
       <ApiConfig />
       <PersonalityConfig />
     </div>
