@@ -9,12 +9,16 @@ export async function setupBackgroundApp() {
     dataLayer,
     scraping: new ScrapingContext(),
     replyTypes: {
-      getReplyType(profileId: string, id: string) {
+      async getReplyType(profileId: string, id: string) {
         const item = defaultReplyTypes().find(
           (replyType) => replyType.id === id
         );
         if (!item) {
-          // TOOD
+          const replyType = await dataLayer.replyType.get(profileId, id);
+          if (!replyType) {
+            return null;
+          }
+          return replyType;
         }
         return item;
       },

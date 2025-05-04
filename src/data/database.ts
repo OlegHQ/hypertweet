@@ -21,16 +21,27 @@ interface Profile {
   };
 }
 
+interface ReplyType {
+  id: string;
+  profileId: string;
+  name: string;
+  prompt: string;
+  createdAt: Date;
+  updatedAt: Date;
+  isSystem: boolean;
+}
+
 interface Settings {
   openAiKey: string;
 }
 
 const DB_NAME = "hypertweet";
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 export const STORES = {
   PROFILES: "profiles",
   SETTINGS: "settings",
+  REPLY_TYPES: "replyTypes",
 } as const;
 
 export class Database {
@@ -63,6 +74,14 @@ export class Database {
         if (!db.objectStoreNames.contains(STORES.SETTINGS)) {
           db.createObjectStore(STORES.SETTINGS, { keyPath: "id" });
         }
+
+        // Create replyTypes store
+        if (!db.objectStoreNames.contains(STORES.REPLY_TYPES)) {
+          const replyTypesStore = db.createObjectStore(STORES.REPLY_TYPES, {
+            keyPath: ["profileId", "id"],
+          });
+          replyTypesStore.createIndex("profileId", "profileId");
+        }
       };
     });
   }
@@ -80,7 +99,7 @@ export class Database {
     });
   }
 
-  async get<T>(storeName: string, key: string): Promise<T | null> {
+  async get<T>(storeName: string, key: string | [string, string]): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 
@@ -126,7 +145,25 @@ export class Database {
     });
   }
 
-  async delete(storeName: string, key: string): Promise<void> {
+  async getAllByIndex<T>(
+    storeName: string,
+    indexName: string,
+    key: string
+  ): Promise<T[]> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) return reject(new Error("Database not initialized"));
+
+      const transaction = this.db.transaction(storeName, "readonly");
+      const store = transaction.objectStore(storeName);
+      const index = store.index(indexName);
+      const request = index.getAll(key);
+
+      request.onsuccess = () => resolve(request.result ?? []);
+      request.onerror = () => reject(request.error);
+    });
+  }
+
+  async delete(storeName: string, key: string | [string, string]): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 
@@ -141,4 +178,4 @@ export class Database {
 }
 
 export const db = new Database();
-export type { Profile, Settings };
+export type { Profile, Settings, ReplyType };
