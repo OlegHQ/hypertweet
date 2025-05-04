@@ -1,50 +1,36 @@
-import { buildPersonaPayload } from "../ai/system-prompt-gen";
 import { createDataLayer } from "../data";
 import { ScrapingContext } from "../scraping/context";
-import type { XProfile, LinkedInProfile } from "../data";
-import { buildPersonalitySnippet } from "../ai/context";
+import { newAI } from "./ai-facade";
+
 export async function setupBackgroundApp() {
   const dataLayer = await createDataLayer();
-  let cnt = 0;
   return {
     dataLayer,
     scraping: new ScrapingContext(),
-    ai: {
-      buildPersonaPayload: async (profileId: string) => {
-        const twitterConfig = await dataLayer.config.get<XProfile>(
-          profileId,
-          "twitterProfile"
-        );
-        const linkedInConfig = await dataLayer.config.get<LinkedInProfile>(
-          profileId,
-          "linkedInProfile"
-        );
-        const openAiKey = await dataLayer.config.get<string>(
-          profileId,
-          "openAiKey"
-        );
+    replyTypes: {
+      async setSystemOneHidden(profileId: string, id: string, option: boolean) {
+        let replyTypes =
+          (await dataLayer.config.get<string[]>(
+            profileId,
+            "hiddenSystemReplies"
+          )) ?? [];
 
-        console.log("twitterConfig", {
-          twitterConfig,
-          linkedInConfig,
-          openAiKey,
-        });
-        if (!twitterConfig || !linkedInConfig || !openAiKey) {
-          throw new Error("Missing required config");
+        if (option) {
+          replyTypes.push(id);
+        } else {
+          replyTypes = replyTypes.filter((r) => r !== id);
         }
 
-        const payload = buildPersonaPayload(twitterConfig, linkedInConfig);
-        const personalitySnippet = await buildPersonalitySnippet(
-          openAiKey,
-          payload
-        );
+        replyTypes = Array.from(new Set(replyTypes));
 
-        return personalitySnippet;
+        await dataLayer.config.set(
+          profileId,
+          "hiddenSystemReplies",
+          replyTypes
+        );
       },
     },
-    testStuff: async () => {
-      return ++cnt;
-    },
+    ai: newAI(dataLayer),
   };
 }
 
