@@ -1,7 +1,7 @@
 import { defaultReplyTypes } from "../ai/replies";
 import { createDataLayer } from "../data";
 import { ReplyTypeRepository } from "../data/repositories/reply-type-repository";
-import { ScrapingContext } from "../scraping/context";
+import { ScrapingContext } from "./scrape-context";
 import { newAI } from "./ai-facade";
 
 export async function setupBackgroundApp() {
