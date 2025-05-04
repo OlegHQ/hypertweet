@@ -3,6 +3,7 @@ import { app } from "./app";
 import { useGlobalState } from "./state";
 import HomePage from "./home-page";
 import KnowledgeBasePage from "./knowledge-base-page";
+import ReplyTypesPage from "./reply-types-page";
 
 export default function Router() {
   const {
@@ -45,6 +46,8 @@ export default function Router() {
       return <HomePage />;
     case "/knowledge-base":
       return <KnowledgeBasePage />;
+    case "/reply-types":
+      return <ReplyTypesPage />;
     default:
       return <HomePage />;
   }

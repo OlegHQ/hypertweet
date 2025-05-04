@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Profile } from "../data";
 
-export type Route = "/" | "/knowledge-base";
+export type Route = "/" | "/knowledge-base" | "/reply-types";
 
 interface ApiKey {
   id: string;
@@ -71,7 +71,12 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
         ...(state.profileKeys || {}),
         [profileId]: {
           ...(state.profileKeys?.[profileId] || {}),
-          [keyType]: { id: keyType, key: value, name: keyType, platform: "openai" },
+          [keyType]: {
+            id: keyType,
+            key: value,
+            name: keyType,
+            platform: "openai",
+          },
         },
       },
     })),
