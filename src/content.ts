@@ -1,5 +1,65 @@
 import { browserApi } from "./browser-api";
 import type { LinkedInProfile } from "./data/models/linkedin-profile";
+import type { Tweet, XProfile } from "./data/models/twitter-profile";
+
+const getRecentTweets = async (
+  maxRetries = 3,
+  delay = 1000
+): Promise<Tweet[]> => {
+  const getNumberFromText = (text: string) => {
+    const num = text.replace(/[^0-9]/g, "");
+    return num ? parseInt(num) : 0;
+  };
+
+  const getTweets = (): Tweet[] => {
+    const tweetElements = Array.from(
+      document.querySelectorAll('[data-testid="tweet"]')
+    ).slice(0, 5); // Get only first 5 tweets
+
+    return tweetElements.map((tweet) => {
+      const text =
+        tweet.querySelector('[data-testid="tweetText"]')?.textContent?.trim() ||
+        "";
+      const time = tweet.querySelector("time")?.getAttribute("datetime") || "";
+      const url =
+        (tweet.querySelector('a[href*="/status/"]') as HTMLAnchorElement)
+          ?.href || "";
+
+      // Get engagement metrics
+      const getEngagementCount = (selector: string) => {
+        const element = tweet.querySelector(selector);
+        const text = element?.textContent?.trim() || "0";
+        return getNumberFromText(text);
+      };
+
+      return {
+        text,
+        time,
+        url,
+        likes: getEngagementCount('[data-testid="like"]'),
+        retweets: getEngagementCount('[data-testid="retweet"]'),
+        replies: getEngagementCount('[data-testid="reply"]'),
+      };
+    });
+  };
+
+  // Initial attempt
+  let tweets = getTweets();
+  if (tweets.length > 0) {
+    return tweets;
+  }
+
+  // Retry with delay if no tweets found
+  for (let i = 0; i < maxRetries; i++) {
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    tweets = getTweets();
+    if (tweets.length > 0) {
+      return tweets;
+    }
+  }
+
+  return [];
+};
 
 const linkedInRules = {
   fullName: ".artdeco-card h1",
@@ -52,14 +112,13 @@ browserApi.runtime.onMessage.addListener((message) => {
 
     return Promise.resolve(jsonThread);
   } else if (message.action === "scrapeProfile") {
-    const name =
+    const nameAndUsername =
       document.querySelector('[data-testid="UserName"]')?.textContent?.trim() ||
       "";
-    const username =
-      document
-        .querySelector('[data-testid="User-Name"] a[href^="/"]')
-        ?.getAttribute("href")
-        ?.slice(1) || "";
+    const [name, username] = nameAndUsername
+      .split("@")
+      .filter((x) => x != "")
+      .map((x) => x.trim());
     const bio = document
       .querySelector('[data-testid="UserDescription"]')
       ?.textContent?.trim();
@@ -88,15 +147,19 @@ browserApi.runtime.onMessage.addListener((message) => {
       ? parseInt(followersElement.textContent?.replace(/,/g, "") || "0")
       : undefined;
 
-    return Promise.resolve({
-      name,
-      username,
-      bio,
-      location,
-      website,
-      joinDate,
-      following,
-      followers,
+    return getRecentTweets().then((recentTweets) => {
+      const profile: XProfile = {
+        name: name ?? "",
+        username: username ?? "",
+        bio,
+        location,
+        website,
+        joinDate,
+        following,
+        followers,
+        recentTweets,
+      };
+      return profile;
     });
   } else if (message.action === "scrapeLinkedInProfile") {
     const getTextContent = (selector: string) =>
