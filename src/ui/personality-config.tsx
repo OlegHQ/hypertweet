@@ -1,7 +1,7 @@
 import React from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
-import type { XProfile } from "../data";
+import type { LinkedInProfile } from "../data/models/linkedin-profile";
 
 interface ProfileSectionProps {
   title: string;
@@ -11,7 +11,13 @@ interface ProfileSectionProps {
   onUrlChange: (newUrl: string) => Promise<void>;
 }
 
-function ProfileSection({ title, onRefresh, children, profileUrl, onUrlChange }: ProfileSectionProps) {
+function ProfileSection({
+  title,
+  onRefresh,
+  children,
+  profileUrl,
+  onUrlChange,
+}: ProfileSectionProps) {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [isEditingUrl, setIsEditingUrl] = React.useState(false);
@@ -157,8 +163,15 @@ export default function PersonalityConfig() {
   const handleRefreshLinkedIn = async () => {
     if (!selectedProfile?.linkedInUrl) return;
     try {
-      // TODO: Implement LinkedIn scraping
-      setPersonalityConfig(selectedProfile.id, "linkedIn", null);
+      const data = await app.scraping.scrapeLinkedInProfile(
+        selectedProfile.linkedInUrl
+      );
+      setPersonalityConfig(selectedProfile.id, "linkedIn", data);
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        "linkedInProfile",
+        data
+      );
       setError(null);
     } catch (error) {
       console.error("Error refreshing LinkedIn profile:", error);
@@ -166,12 +179,15 @@ export default function PersonalityConfig() {
     }
   };
 
-  const handleUrlChange = async (platform: 'twitter' | 'linkedIn', newUrl: string) => {
+  const handleUrlChange = async (
+    platform: "twitter" | "linkedIn",
+    newUrl: string
+  ) => {
     if (!selectedProfile) return;
     try {
       const updatedProfile = {
         ...selectedProfile,
-        [`${platform}Url`]: newUrl
+        [`${platform}Url`]: newUrl,
       };
       await app.dataLayer.profile.update(selectedProfile.id, updatedProfile);
       setSelectedProfile(updatedProfile);
@@ -216,11 +232,11 @@ export default function PersonalityConfig() {
         <div className="p-2 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
-      <ProfileSection 
-        title="Twitter Profile" 
+      <ProfileSection
+        title="Twitter Profile"
         onRefresh={handleRefreshTwitter}
         profileUrl={selectedProfile.twitterUrl}
-        onUrlChange={(newUrl) => handleUrlChange('twitter', newUrl)}
+        onUrlChange={(newUrl) => handleUrlChange("twitter", newUrl)}
       >
         <div className="space-y-4">
           {twitterConfig?.isFetched ? (
@@ -308,13 +324,70 @@ export default function PersonalityConfig() {
         title="LinkedIn Profile"
         onRefresh={handleRefreshLinkedIn}
         profileUrl={selectedProfile.linkedInUrl}
-        onUrlChange={(newUrl) => handleUrlChange('linkedIn', newUrl)}
+        onUrlChange={(newUrl) => handleUrlChange("linkedIn", newUrl)}
       >
         <div className="space-y-4">
           {linkedInConfig?.isFetched ? (
             linkedInConfig.data ? (
-              <div className="text-gray-500">
-                LinkedIn profile data will be displayed here when implemented.
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Name
+                  </label>
+                  <div className="mt-1">{linkedInConfig.data.name}</div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Location
+                  </label>
+                  <div className="mt-1">{linkedInConfig.data.location}</div>
+                </div>
+                <div className="col-span-2">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Description
+                  </label>
+                  <div className="mt-1 whitespace-pre-wrap">
+                    {linkedInConfig.data.description}
+                  </div>
+                </div>
+                {linkedInConfig.data.positions.length > 0 && (
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Positions
+                    </label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {linkedInConfig.data.positions.map(
+                        (position: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-gray-100 rounded-full text-sm"
+                          >
+                            {position}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
+                {linkedInConfig.data.companies.length > 0 && (
+                  <div className="col-span-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Companies
+                    </label>
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {linkedInConfig.data.companies.map(
+                        (company: string, index: number) => (
+                          <span
+                            key={index}
+                            className="px-2 py-1 bg-gray-100 rounded-full text-sm"
+                          >
+                            {company}
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-gray-500">
@@ -324,7 +397,7 @@ export default function PersonalityConfig() {
             )
           ) : (
             <div className="text-gray-500">
-              LinkedIn profile scraping is not yet implemented.
+              Loading LinkedIn profile data...
             </div>
           )}
         </div>

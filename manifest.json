@@ -4,7 +4,7 @@
   "version": "1.0",
   "description": "Copies tweets and their replies to the clipboard when clicked.",
   "permissions": ["activeTab", "scripting", "clipboardWrite", "sidePanel"],
-  "host_permissions": ["https://x.com/*"],
+  "host_permissions": ["https://x.com/*", "*://*.linkedin.com/*"],
   "background": {
     "scripts": ["out/background.js"]
   },
@@ -25,7 +25,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://x.com/*"],
+      "matches": ["https://x.com/*", "*://*.linkedin.com/*"],
       "js": ["out/content.js"]
     }
   ],
