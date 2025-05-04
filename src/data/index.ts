@@ -6,18 +6,21 @@ import { ReplyTypeRepository } from "./repositories/reply-type-repository";
 export interface DataLayer {
   profile: ProfileRepository;
   config: ConfigRepository;
-  replyType: ReplyTypeRepository;
+  // replyType: ReplyTypeRepository;
 }
 
-export async function createDataLayer(): Promise<DataLayer> {
+export async function createDataLayer(): Promise<[DataLayer, Database]> {
   const db = new Database();
   await db.init();
 
-  return {
-    profile: new ProfileRepository(db),
-    config: new ConfigRepository(db),
-    replyType: new ReplyTypeRepository(db),
-  };
+  return [
+    {
+      profile: new ProfileRepository(db),
+      config: new ConfigRepository(db),
+      // replyType: new ReplyTypeRepository(db),
+    },
+    db,
+  ];
 }
 export * from "./models/profile";
 export * from "./models/settings";

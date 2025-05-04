@@ -5,4 +5,5 @@ export interface ReplyType {
   createdAt: Date;
   updatedAt: Date;
   isSystem: boolean;
+  isHidden?: boolean;
 }
