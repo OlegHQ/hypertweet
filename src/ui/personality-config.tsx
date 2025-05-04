@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import { TwitterProfile } from "./twitter-profile";
@@ -8,10 +8,12 @@ export default function PersonalityConfig() {
   const { selectedProfile, setSelectedProfile } = useGlobalState();
   const { setPersonalityConfig, getPersonalityConfig } = useGlobalState();
   const [error, setError] = React.useState<string | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const handleRefreshTwitter = async () => {
     if (!selectedProfile?.twitterUrl) return;
     try {
+      setIsLoading(true);
       const data = await app.scraping.scrapeTwitterProfile(
         selectedProfile.twitterUrl
       );
@@ -25,6 +27,8 @@ export default function PersonalityConfig() {
     } catch (error) {
       console.error("Error refreshing Twitter profile:", error);
       setError("Failed to refresh Twitter profile");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -67,7 +71,7 @@ export default function PersonalityConfig() {
     }
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedProfile) {
       // Load stored configs if they exist
       const loadStoredConfigs = async () => {
@@ -119,14 +123,25 @@ export default function PersonalityConfig() {
         <div className="p-2 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
-      {twitterConfig?.isFetched && (
+      {twitterConfig?.isFetched ? (
         <TwitterProfile
           data={twitterConfig.data}
           onRefresh={handleRefreshTwitter}
           profileUrl={selectedProfile.twitterUrl}
           onUrlChange={(newUrl) => handleUrlChange("twitter", newUrl)}
         />
-      )}
+      ) : selectedProfile.twitterUrl ? (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">Twitter profile</h2>
+          <button
+            className="bg-blue-500 w-full block text-white px-4 py-2 rounded"
+            onClick={handleRefreshTwitter}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Load twitter data"}
+          </button>
+        </div>
+      ) : null}
 
       {linkedInConfig?.isFetched && (
         <LinkedInProfile
