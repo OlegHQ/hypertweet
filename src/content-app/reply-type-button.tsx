@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import type { ReplyType } from "../background-app/data";
 import { typeTweet } from "./type-tweet";
+import { app } from "../ui/app";
 
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
@@ -54,8 +55,12 @@ export default function ReplyTypeButton({
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const message = "facts!";
-    typeTweet(message);
+    const reply = await app.ai.generateReply(
+      replyType.profileId,
+      tweetText,
+      replyType.prompt
+    );
+    typeTweet(reply);
     onSuperLoading(false);
   };
 

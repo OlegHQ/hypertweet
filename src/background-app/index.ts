@@ -1,4 +1,4 @@
-import { defaultReplyTypes } from "./ai/replies";
+import { defaultReplyTypes } from "./ai/default-reply-types";
 import { createDataLayer } from "./data";
 import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
 import { ScrapingContext } from "./scrape-context";
