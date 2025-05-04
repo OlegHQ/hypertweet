@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Profile } from "../data";
+import type { Profile, ReplyType } from "../data";
 
 export type Route =
   | "/"
@@ -35,6 +35,7 @@ interface GlobalState {
   personalityConfigs: { [profileId: string]: PersonalityConfig } | null;
   lastUsedProfileId: string | null;
   currentRoute: Route;
+  replyTypes: { [profileId: string]: ReplyType[] } | null;
   setProfiles: (profiles: Profile[]) => void;
   setSelectedProfile: (profile: Profile | null) => void;
   setLastUsedProfileId: (id: string | null) => void;
@@ -48,6 +49,8 @@ interface GlobalState {
     platform: "twitter" | "linkedIn"
   ) => PersonalityConfig["twitter"] | PersonalityConfig["linkedIn"] | undefined;
   setCurrentRoute: (route: Route) => void;
+  setReplyTypes: (profileId: string, replyTypes: ReplyType[]) => void;
+  getReplyTypes: (profileId: string) => ReplyType[] | undefined;
 
   profileKeys: { [profileId: string]: ProfileKeys } | null;
   areKeysFetched: boolean;
@@ -66,6 +69,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   personalityConfigs: null,
   lastUsedProfileId: null,
   currentRoute: "/",
+  replyTypes: null,
 
   setAreKeysFetched: (fetched: boolean) => set({ areKeysFetched: fetched }),
 
@@ -127,4 +131,12 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   getPersonalityConfig: (profileId: string, platform: "twitter" | "linkedIn") =>
     get().personalityConfigs?.[profileId]?.[platform],
   setCurrentRoute: (route: Route) => set({ currentRoute: route }),
+  setReplyTypes: (profileId: string, replyTypes: ReplyType[]) =>
+    set((state: GlobalState) => ({
+      replyTypes: {
+        ...(state.replyTypes || {}),
+        [profileId]: replyTypes,
+      },
+    })),
+  getReplyTypes: (profileId: string) => get().replyTypes?.[profileId],
 }));

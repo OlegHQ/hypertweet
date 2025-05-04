@@ -1,8 +1,37 @@
+import { useEffect } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
+import { app } from "./app";
 
 export default function ReplyTypesPage() {
-  const { setCurrentRoute } = useGlobalState();
+  const {
+    setCurrentRoute,
+    selectedProfile,
+    replyTypes,
+    setReplyTypes,
+    getReplyTypes,
+  } = useGlobalState();
+
+  useEffect(() => {
+    async function fetchReplyTypes() {
+      if (!selectedProfile) return;
+      const currentReplyTypes = getReplyTypes(selectedProfile.id);
+      if (currentReplyTypes === undefined) {
+        const types = await app.replyTypes.getAll(selectedProfile.id);
+        setReplyTypes(selectedProfile.id, types);
+      }
+    }
+    fetchReplyTypes();
+  }, [selectedProfile, getReplyTypes, setReplyTypes]);
+
+  const currentReplyTypes = selectedProfile
+    ? getReplyTypes(selectedProfile.id)
+    : undefined;
+  const systemReplyTypes =
+    currentReplyTypes?.filter((type) => type.isSystem) ?? [];
+  const userReplyTypes =
+    currentReplyTypes?.filter((type) => !type.isSystem) ?? [];
+
   return (
     <Layout>
       <div className="flex items-center gap-4 mb-8">
@@ -25,6 +54,44 @@ export default function ReplyTypesPage() {
           </svg>
         </button>
         <h1>Reply Types</h1>
+      </div>
+
+      <div className="space-y-8">
+        <section>
+          <h2 className="text-lg font-medium mb-4">Your Reply Types</h2>
+          {userReplyTypes.length === 0 ? (
+            <div className="text-gray-500 italic">
+              No custom reply types created yet
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {userReplyTypes.map((type) => (
+                <div key={type.id} className="p-4 bg-white rounded-lg shadow">
+                  <h3 className="font-medium">{type.name}</h3>
+                  <p className="text-gray-600 mt-1">{type.prompt}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <h2 className="text-lg font-medium mb-4">System Reply Types</h2>
+          {systemReplyTypes.length === 0 ? (
+            <div className="text-gray-500 italic">
+              No system reply types available
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {systemReplyTypes.map((type) => (
+                <div key={type.id} className="p-4 bg-white rounded-lg shadow">
+                  <h3 className="font-medium">{type.name}</h3>
+                  <p className="text-gray-600 mt-1">{type.prompt}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </Layout>
   );
