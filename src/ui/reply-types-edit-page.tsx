@@ -35,7 +35,9 @@ export default function ReplyTypeEditPage() {
   }, [id, selectedProfile]);
 
   const handleSave = async () => {
-    if (!selectedProfile || !id || !replyType) return;
+    if (!selectedProfile || !id || !replyType) {
+      return;
+    }
 
     try {
       if (replyType.isSystem) {
@@ -129,7 +131,7 @@ export default function ReplyTypeEditPage() {
                 type="text"
                 value={editedName}
                 onChange={(e) => setEditedName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
               />
             </div>
             <div>
@@ -140,7 +142,7 @@ export default function ReplyTypeEditPage() {
                 disabled={replyType.isSystem}
                 value={editedPrompt}
                 onChange={(e) => setEditedPrompt(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed"
                 rows={4}
               />
             </div>
@@ -168,7 +170,7 @@ export default function ReplyTypeEditPage() {
             <button
               disabled={replyType.isSystem}
               onClick={handleDelete}
-              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
             >
               Delete
             </button>

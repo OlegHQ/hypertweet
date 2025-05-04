@@ -30,17 +30,25 @@ export async function setupBackgroundApp() {
         return [...allItems, ...defaultOnes];
       },
       async getReplyType(profileId: string, id: string) {
-        const item = defaultReplyTypes().find(
-          (replyType) => replyType.id === id
-        );
+        let item =
+          defaultReplyTypes().find((replyType) => replyType.id === id) ?? null;
         if (!item) {
-          const replyType = await replyTypeRepository.get(profileId, id);
-          if (!replyType) {
+          item = await replyTypeRepository.get(profileId, id);
+          if (!item) {
             return null;
           }
-          return replyType;
         }
-        return item;
+        const hiddenSystemReplies =
+          (await dataLayer.config.get<string[]>(
+            profileId,
+            "hiddenSystemReplies"
+          )) ?? [];
+        return item.isSystem && hiddenSystemReplies?.includes(item.id)
+          ? {
+              ...item,
+              isHidden: true,
+            }
+          : item;
       },
       async setSystemOneHidden(profileId: string, id: string, option: boolean) {
         let replyTypes =
