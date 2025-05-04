@@ -52,16 +52,45 @@ export default function SystemPromptConfig() {
     setIsLoading(true);
     setError(null);
     try {
-      await app.dataLayer.config.set(
-        selectedProfile.id,
-        "systemPrompt",
-        null
-      );
+      await app.dataLayer.config.set(selectedProfile.id, "systemPrompt", null);
       setSystemPrompt("");
       setIsEditing(false);
     } catch (error) {
       setError("Failed to delete system prompt");
       console.error("Error deleting system prompt:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGenerate = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      const twitterConfig = await app.dataLayer.config.get<any>(
+        selectedProfile.id,
+        "twitterProfile"
+      );
+      const linkedInConfig = await app.dataLayer.config.get<any>(
+        selectedProfile.id,
+        "linkedInProfile"
+      );
+
+      if (!twitterConfig || !linkedInConfig) {
+        throw new Error("Please fetch Twitter and LinkedIn profiles first");
+      }
+
+      const payload = await app.ai.buildPersonaPayload(
+        twitterConfig,
+        linkedInConfig
+      );
+      setSystemPrompt(JSON.stringify(payload, null, 2));
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to generate prompt"
+      );
+      console.error("Error generating system prompt:", error);
     } finally {
       setIsLoading(false);
     }
@@ -74,7 +103,8 @@ export default function SystemPromptConfig() {
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">System Prompt</h2>
         <p className="text-gray-600">
-          Personalize your replies and tweets. Keep it concise to minimize costs.
+          Personalize your replies and tweets. Keep it concise to minimize
+          costs.
         </p>
       </div>
 
@@ -98,6 +128,13 @@ export default function SystemPromptConfig() {
                 className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
               >
                 {isLoading ? "Saving..." : "Save Prompt"}
+              </button>
+              <button
+                onClick={handleGenerate}
+                disabled={isLoading}
+                className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+              >
+                Generate
               </button>
               <button
                 onClick={() => setIsEditing(false)}
@@ -138,4 +175,4 @@ export default function SystemPromptConfig() {
       </div>
     </div>
   );
-} 
+}
