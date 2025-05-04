@@ -1,7 +1,11 @@
 import { create } from "zustand";
 import type { Profile } from "../data";
 
-export type Route = "/" | "/knowledge-base" | "/reply-types";
+export type Route =
+  | "/"
+  | "/knowledge-base"
+  | "/reply-types"
+  | "/reply-types/edit/:id";
 
 interface ApiKey {
   id: string;
