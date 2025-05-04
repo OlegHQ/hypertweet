@@ -1,8 +1,17 @@
-# HyperTweet
+# hypertweet
 
 <img src="img/copy-tweets-logo.png" width="50" height="50" />
 
-**HyperTweet** is an AI-powered Chrome extension that helps you craft engaging and contextually relevant replies to tweets. Using advanced language models, HyperTweet analyzes tweet content and generates thoughtful responses that match your style and intent.
+> ⚠️ **Alpha Version Notice**  
+> hypertweet is in early development. Some features are still in progress or subject to change. Use at your own risk—and if something breaks, let us know so we can pretend it was intentional.
+
+> 💫 **Want to stay in the loop?**
+>
+> - Star this repo to show some love
+> - Follow [@nexo_v1](https://x.com/nexo_v1) on X for updates and memes
+> - Follow [@nexo-tech](https://github.com/nexo-tech) on GitHub for more cool stuff
+
+**hypertweet** is your sidekick for X (formerly Twitter) replies. It's a Chrome extension (ok, Firefox for now, Chrome is being annoying) that uses AI to help you come up with smart, spicy, or just-not-awkward replies to tweets, without sounding like a bot or your dad trying to be cool.
 
 ## Features
 
@@ -33,6 +42,13 @@
   - Standalone tweet generation
 
 ## Installation
+
+### Firefox (Currently Supported)
+
+1. Download the extension files
+2. Open Firefox and go to `about:debugging`
+3. Click **This Firefox** in the sidebar
+4. Click **Load Temporary Add-on** and select the `manifest.json` file from the extension folder
 
 ### Chrome (Coming Soon)
 
@@ -109,6 +125,7 @@ Please check our [Contributing Guidelines](CONTRIBUTING.md) for more details.
 **Personal-Use Source-Available License (PUSAL) v1.0**
 
 Key points:
+
 - ✅ Free for personal, non-commercial use
 - ✅ You can modify and run the software privately
 - ❌ Cannot be distributed or sold
@@ -123,5 +140,4 @@ For full details, see the [LICENSE](LICENSE) file.
 For support, feature requests, or bug reports, please:
 
 1. Open an issue in this repository
-2. Join our [Discord community](link-to-be-added)
-3. Follow us on Twitter [@HyperTweet](link-to-be-added)
+2. Follow twitter [@nexo_v1](https://x.com/nexo_v1)
