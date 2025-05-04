@@ -10,6 +10,15 @@ export async function setupBackgroundApp() {
   return {
     dataLayer,
     scraping: new ScrapingContext(),
+    system: {
+      async getCurrentProfileId() {
+        const lastId = await dataLayer.config.get<string>(
+          null,
+          "lastUsedProfileId"
+        );
+        return lastId;
+      },
+    },
     replyTypes: {
       add: replyTypeRepository.add.bind(replyTypeRepository),
       update: replyTypeRepository.update.bind(replyTypeRepository),
