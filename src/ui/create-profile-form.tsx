@@ -30,7 +30,7 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -45,7 +45,10 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
       }
 
       // Validate LinkedIn URL format
-      if (formData.linkedInUrl && !formData.linkedInUrl.includes("linkedin.com/in/")) {
+      if (
+        formData.linkedInUrl &&
+        !formData.linkedInUrl.includes("linkedin.com/in/")
+      ) {
         throw new Error("Please enter a valid LinkedIn profile URL");
       }
 
@@ -64,7 +67,7 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
           linkedInUrl: formData.linkedInUrl,
         });
       }
-      
+
       // Refresh profiles list
       const profiles = await app.dataLayer.profile.getAll();
       setProfiles(profiles);
@@ -81,10 +84,13 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
       <h2 className="text-lg font-semibold mb-4">
         {profile ? "Edit Profile" : "Create New Profile"}
       </h2>
-      
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             Name *
           </label>
           <input
@@ -100,8 +106,11 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
         </div>
 
         <div>
-          <label htmlFor="twitterUrl" className="block text-sm font-medium text-gray-700 mb-1">
-            Twitter Profile URL *
+          <label
+            htmlFor="twitterUrl"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
+            X Profile URL *
           </label>
           <input
             type="url"
@@ -116,7 +125,10 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
         </div>
 
         <div>
-          <label htmlFor="linkedInUrl" className="block text-sm font-medium text-gray-700 mb-1">
+          <label
+            htmlFor="linkedInUrl"
+            className="block text-sm font-medium text-gray-700 mb-1"
+          >
             LinkedIn Profile URL (Optional)
           </label>
           <input
@@ -130,9 +142,7 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
           />
         </div>
 
-        {error && (
-          <div className="text-red-500 text-sm">{error}</div>
-        )}
+        {error && <div className="text-red-500 text-sm">{error}</div>}
 
         <div className="flex justify-end space-x-3">
           <button
@@ -147,7 +157,11 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
             disabled={isSubmitting}
             className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isSubmitting ? "Saving..." : (profile ? "Save Changes" : "Create Profile")}
+            {isSubmitting
+              ? "Saving..."
+              : profile
+              ? "Save Changes"
+              : "Create Profile"}
           </button>
         </div>
       </form>

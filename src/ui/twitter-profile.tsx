@@ -29,7 +29,7 @@ export function TwitterProfile({
 
   return (
     <ProfileSection
-      title="Twitter Profile"
+      title="X Profile"
       onRefresh={onRefresh}
       profileUrl={profileUrl}
       onUrlChange={onUrlChange}

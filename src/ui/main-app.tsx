@@ -43,21 +43,8 @@ export default function MainApp() {
                 rel="noopener noreferrer"
                 className="text-blue-500 hover:underline"
               >
-                View Twitter Profile
+                View X Profile
               </a>
-            ) : null}
-            {selectedProfile.linkedInUrl ? (
-              <>
-                {selectedProfile.twitterUrl ? " • " : ""}
-                <a
-                  href={selectedProfile.linkedInUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
-                >
-                  View LinkedIn Profile
-                </a>
-              </>
             ) : null}
           </p>
         </div>
