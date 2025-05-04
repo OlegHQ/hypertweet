@@ -3,6 +3,7 @@ import { useGlobalState } from "./state";
 import ProfileSelector from "./profile-selector";
 import { ScrapingContext } from "../scraping/context";
 import { app } from "./app";
+import ApiConfig from "./api-config";
 
 export default function MainApp() {
   const { selectedProfile, setSelectedProfile } = useGlobalState();
@@ -90,6 +91,8 @@ export default function MainApp() {
           </button>
         </div>
       </div>
+
+      <ApiConfig />
 
       <div className="bg-white rounded-lg border p-4">
         <h2 className="text-lg font-medium mb-4">Your Activity</h2>

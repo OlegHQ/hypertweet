@@ -21,6 +21,12 @@ setupBackgroundApp().then((app) => {
 browserApi.runtime.onMessage.addListener(async (message: any) => {
   const { name, path, args } = message;
   if (name === "proxy") {
-    return await invoker.current(path, args);
+    for (let i = 0; i < 10; i++) {
+      if (typeof invoker.current === "function") {
+        return await invoker.current(path, args);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    }
+    throw new Error("Failed to invoke proxy");
   }
 });

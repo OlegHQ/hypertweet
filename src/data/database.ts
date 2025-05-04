@@ -26,7 +26,7 @@ interface Settings {
 }
 
 const DB_NAME = "hypertweet";
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 export const STORES = {
   PROFILES: "profiles",
@@ -80,7 +80,7 @@ export class Database {
     });
   }
 
-  async get<T>(storeName: string, key: string): Promise<T | undefined> {
+  async get<T>(storeName: string, key: string): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 
@@ -88,7 +88,9 @@ export class Database {
       const store = transaction.objectStore(storeName);
       const request = store.get(key);
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => {
+        resolve(request.result ?? null);
+      };
       request.onerror = () => reject(request.error);
     });
   }
@@ -97,7 +99,7 @@ export class Database {
     storeName: string,
     indexName: string,
     key: string
-  ): Promise<T | undefined> {
+  ): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 
@@ -106,7 +108,7 @@ export class Database {
       const index = store.index(indexName);
       const request = index.get(key);
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => resolve(request.result ?? null);
       request.onerror = () => reject(request.error);
     });
   }
@@ -119,7 +121,7 @@ export class Database {
       const store = transaction.objectStore(storeName);
       const request = store.getAll();
 
-      request.onsuccess = () => resolve(request.result);
+      request.onsuccess = () => resolve(request.result ?? []);
       request.onerror = () => reject(request.error);
     });
   }
@@ -135,44 +137,6 @@ export class Database {
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
     });
-  }
-
-  // Profile methods
-  async addProfile(profile: Omit<Profile, "id">): Promise<string> {
-    const id = crypto.randomUUID();
-    await this.put(STORES.PROFILES, { ...profile, id });
-    return id;
-  }
-
-  async updateProfile(id: string, profile: Partial<Profile>): Promise<void> {
-    const existing = await this.get<Profile>(STORES.PROFILES, id);
-    await this.put(STORES.PROFILES, { ...existing, ...profile, id });
-  }
-
-  async getProfile(id: string): Promise<Profile | undefined> {
-    return this.get<Profile>(STORES.PROFILES, id);
-  }
-
-  async getProfileByLinkedInUrl(url: string): Promise<Profile | undefined> {
-    return this.getByIndex(STORES.PROFILES, "linkedInUrl", url);
-  }
-
-  async getAllProfiles(): Promise<Profile[]> {
-    return this.getAll<Profile>(STORES.PROFILES);
-  }
-
-  async deleteProfile(id: string): Promise<void> {
-    await this.delete(STORES.PROFILES, id);
-  }
-
-  // Settings methods
-  async setOpenAiKey(key: string): Promise<void> {
-    await this.put(STORES.SETTINGS, { id: "openAiKey", openAiKey: key });
-  }
-
-  async getOpenAiKey(): Promise<string | undefined> {
-    const settings = await this.get<Settings>(STORES.SETTINGS, "openAiKey");
-    return settings?.openAiKey;
   }
 }
 

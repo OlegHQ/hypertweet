@@ -15,12 +15,8 @@ export class ProfileRepository {
     await this.db.put("profiles", { ...existing, ...profile, id });
   }
 
-  async get(id: string): Promise<Profile | undefined> {
+  async get(id: string): Promise<Profile | null> {
     return this.db.get<Profile>("profiles", id);
-  }
-
-  async getByLinkedInUrl(url: string): Promise<Profile | undefined> {
-    return this.db.getByIndex<Profile>("profiles", "linkedInUrl", url);
   }
 
   async getAll(): Promise<Profile[]> {

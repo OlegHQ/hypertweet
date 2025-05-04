@@ -15,6 +15,7 @@ export default function Router() {
     async function loadLastUsedProfile() {
       try {
         const lastId = await app.dataLayer.config.get<string>(
+          null,
           "lastUsedProfileId"
         );
         console.log("lastId", lastId);
@@ -34,7 +35,7 @@ export default function Router() {
 
   useEffect(() => {
     if (lastUsedProfileId && typeof lastUsedProfileId === "string") {
-      app.dataLayer.config.set("lastUsedProfileId", lastUsedProfileId);
+      app.dataLayer.config.set(null, "lastUsedProfileId", lastUsedProfileId);
     }
   }, [lastUsedProfileId]);
 

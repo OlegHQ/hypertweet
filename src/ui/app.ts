@@ -1,5 +1,5 @@
 import { createProxyHandler } from "../data/proxy-handler";
-import type { App } from "../data";
+import type { App } from "../background-app";
 import { browserApi } from "../browser-api";
 
 export const app = createProxyHandler<App>(async (path, args) => {

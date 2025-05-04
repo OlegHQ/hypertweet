@@ -1,4 +1,6 @@
 export interface Settings {
   id: string;
-  openAiKey: string;
+  profileId: string;
+  openAiKey?: string;
+  [key: string]: any; // Allow for other settings
 } 

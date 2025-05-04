@@ -1,17 +1,29 @@
 import { create } from "zustand";
 import type { Profile } from "../data";
 
+interface ApiKey {
+  type: string;
+  value: string;
+}
+
+interface ProfileKeys {
+  [keyType: string]: ApiKey;
+}
+
 interface GlobalState {
   profiles: Profile[];
   selectedProfile: Profile | null;
-  loadedKeys: Set<string>;
+  profileKeys: { [profileId: string]: ProfileKeys } | null;
+  areKeysFetched: boolean;
   lastUsedProfileId: string | null;
   setProfiles: (profiles: Profile[]) => void;
   setSelectedProfile: (profile: Profile | null) => void;
   setLastUsedProfileId: (id: string | null) => void;
-  addLoadedKey: (key: string) => void;
-  removeLoadedKey: (key: string) => void;
-  isKeyLoaded: (key: string) => boolean;
+  setProfileKey: (profileId: string, keyType: string, value: string) => void;
+  removeProfileKey: (profileId: string, keyType: string) => void;
+  getProfileKey: (profileId: string, keyType: string) => ApiKey | undefined;
+  hasProfileKey: (profileId: string, keyType: string) => boolean;
+  setAreKeysFetched: (fetched: boolean) => void;
 }
 
 type SetState = (
@@ -23,7 +35,8 @@ export const useGlobalState = create<GlobalState>(
   (set: SetState, get: GetState) => ({
     profiles: [],
     selectedProfile: null,
-    loadedKeys: new Set<string>(),
+    profileKeys: null,
+    areKeysFetched: false,
     lastUsedProfileId: null,
 
     setProfiles: (profiles: Profile[]) => set({ profiles }),
@@ -37,18 +50,37 @@ export const useGlobalState = create<GlobalState>(
 
     setLastUsedProfileId: (id: string | null) => set({ lastUsedProfileId: id }),
 
-    addLoadedKey: (key: string) =>
+    setAreKeysFetched: (fetched: boolean) => set({ areKeysFetched: fetched }),
+
+    setProfileKey: (profileId: string, keyType: string, value: string) =>
       set((state: GlobalState) => ({
-        loadedKeys: new Set([...state.loadedKeys, key]),
+        profileKeys: {
+          ...(state.profileKeys || {}),
+          [profileId]: {
+            ...(state.profileKeys?.[profileId] || {}),
+            [keyType]: { type: keyType, value },
+          },
+        },
       })),
 
-    removeLoadedKey: (key: string) =>
+    removeProfileKey: (profileId: string, keyType: string) =>
       set((state: GlobalState) => {
-        const newKeys = new Set(state.loadedKeys);
-        newKeys.delete(key);
-        return { loadedKeys: newKeys };
+        if (!state.profileKeys) return state;
+        
+        const newProfileKeys = { ...state.profileKeys };
+        if (newProfileKeys[profileId]) {
+          delete newProfileKeys[profileId][keyType];
+          if (Object.keys(newProfileKeys[profileId]).length === 0) {
+            delete newProfileKeys[profileId];
+          }
+        }
+        return { profileKeys: newProfileKeys };
       }),
 
-    isKeyLoaded: (key: string) => get().loadedKeys.has(key),
+    getProfileKey: (profileId: string, keyType: string) =>
+      get().profileKeys?.[profileId]?.[keyType],
+
+    hasProfileKey: (profileId: string, keyType: string) =>
+      Boolean(get().profileKeys?.[profileId]?.[keyType]),
   })
 );

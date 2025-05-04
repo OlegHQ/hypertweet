@@ -1,11 +1,9 @@
 import { Database } from "./database";
 import { ProfileRepository } from "./repositories/profile-repository";
-import { SettingsRepository } from "./repositories/settings-repository";
 import { ConfigRepository } from "./repositories/config-repository";
 
 export interface DataLayer {
   profile: ProfileRepository;
-  settings: SettingsRepository;
   config: ConfigRepository;
 }
 
@@ -15,7 +13,6 @@ export async function createDataLayer(): Promise<DataLayer> {
 
   return {
     profile: new ProfileRepository(db),
-    settings: new SettingsRepository(db),
     config: new ConfigRepository(db),
   };
 }
