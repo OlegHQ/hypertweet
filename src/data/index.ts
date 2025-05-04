@@ -18,3 +18,4 @@ export async function createDataLayer(): Promise<DataLayer> {
 }
 export * from "./models/profile";
 export * from "./models/settings";
+export * from "./models/twitter-profile";

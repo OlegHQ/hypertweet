@@ -4,24 +4,11 @@ import ProfileSelector from "./profile-selector";
 import { ScrapingContext } from "../scraping/context";
 import { app } from "./app";
 import ApiConfig from "./api-config";
+import PersonalityConfig from "./personality-config";
 
 export default function MainApp() {
-  const { selectedProfile, setSelectedProfile } = useGlobalState();
+  const { selectedProfile } = useGlobalState();
   const [showProfileSelector, setShowProfileSelector] = React.useState(false);
-  const [scrapedData, setScrapedData] = React.useState<string | null>(null);
-
-  const handleScrapeProfile = async () => {
-    if (!selectedProfile?.twitterUrl) return;
-    try {
-      const data = await app.scraping.scrapeTwitterProfile(
-        selectedProfile.twitterUrl
-      );
-      setScrapedData(JSON.stringify(data, null, 2));
-    } catch (error) {
-      console.error("Error scraping profile:", error);
-      setScrapedData("Error scraping profile: " + (error as Error).message);
-    }
-  };
 
   if (!selectedProfile) {
     return <ProfileSelector />;
@@ -46,7 +33,7 @@ export default function MainApp() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-xl font-semibold">
-            Welcome?, {selectedProfile.name}!
+            Welcome, {selectedProfile.name}!
           </h1>
           <p className="text-sm text-gray-600">
             {selectedProfile.twitterUrl ? (
@@ -75,14 +62,6 @@ export default function MainApp() {
           </p>
         </div>
         <div className="flex gap-2">
-          {selectedProfile.twitterUrl && (
-            <button
-              onClick={handleScrapeProfile}
-              className="px-4 py-2 border rounded-md hover:bg-gray-50"
-            >
-              Scrape Profile
-            </button>
-          )}
           <button
             onClick={() => setShowProfileSelector(true)}
             className="px-4 py-2 border rounded-md hover:bg-gray-50"
@@ -93,19 +72,7 @@ export default function MainApp() {
       </div>
 
       <ApiConfig />
-
-      <div className="bg-white rounded-lg border p-4">
-        <h2 className="text-lg font-medium mb-4">Your Activity</h2>
-        {scrapedData ? (
-          <pre className="bg-gray-100 p-4 rounded overflow-auto max-h-96">
-            {scrapedData}
-          </pre>
-        ) : (
-          <div className="text-gray-500">
-            No recent activity. Start by copying some tweets!
-          </div>
-        )}
-      </div>
+      <PersonalityConfig />
     </div>
   );
 }

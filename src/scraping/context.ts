@@ -1,18 +1,8 @@
 import { browserApi } from "../browser-api";
-
-interface ScrapedProfile {
-  name: string;
-  username: string;
-  bio?: string;
-  location?: string;
-  website?: string;
-  joinDate?: string;
-  following?: number;
-  followers?: number;
-}
+import type { XProfile } from "../data";
 
 export class ScrapingContext {
-  async scrapeTwitterProfile(twitterUrl: string): Promise<ScrapedProfile> {
+  async scrapeTwitterProfile(twitterUrl: string): Promise<XProfile> {
     // Create a new tab in the background
     const tab = await browserApi.tabs.create({
       url: twitterUrl,
@@ -35,7 +25,7 @@ export class ScrapingContext {
         throw new Error("Failed to scrape profile data");
       }
 
-      return result as ScrapedProfile;
+      return result as XProfile;
     } catch (error) {
       console.error("Error scraping profile:", error);
       throw error;
@@ -68,7 +58,7 @@ export class ScrapingContext {
     });
   }
 
-  private async scrapeProfilePage(): Promise<ScrapedProfile> {
+  private async scrapeProfilePage(): Promise<XProfile> {
     // Wait for content to be ready
     await new Promise((resolve) => setTimeout(resolve, 3000));
     return {
