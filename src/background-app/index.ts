@@ -31,7 +31,7 @@ export async function setupBackgroundApp() {
             "hiddenSystemReplies"
           )) ?? [];
 
-        const defaultOnes = defaultReplyTypes().map((x) => ({
+        const defaultOnes = defaultReplyTypes(profileId).map((x) => ({
           ...x,
           isHidden: hiddenSystemReplies?.includes(x.id),
         }));
@@ -40,7 +40,8 @@ export async function setupBackgroundApp() {
       },
       async getReplyType(profileId: string, id: string) {
         let item =
-          defaultReplyTypes().find((replyType) => replyType.id === id) ?? null;
+          defaultReplyTypes(profileId).find((replyType) => replyType.id === id) ??
+          null;
         if (!item) {
           item = await replyTypeRepository.get(profileId, id);
           if (!item) {

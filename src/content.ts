@@ -57,28 +57,34 @@ function injectReplyStuff() {
 
     const wrapper = document.createElement("div");
     wrapper.className = "ai-tone-buttons";
-    wrapper.style.marginTop = "8px";
-    wrapper.style.display = "flex";
-    wrapper.style.flexWrap = "wrap";
-    wrapper.style.gap = "4px";
-    wrapper.style.paddingLeft = "16px";
-    wrapper.style.paddingRight = "16px";
+    wrapper.style.cssText = `
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      margin-top: -10px;
+      margin-bottom: 8px;
+      padding-left: 16px;
+      padding-right: 16px;
+      justify-content: center;
+      z-index: 2;
+    `;
 
     replyTypes.forEach((t) => {
       const btn = document.createElement("button");
       btn.textContent = t.name;
       btn.className = "ai-tone-button";
       btn.style.cssText = `
-        padding: 4px 12px;
+        padding: 3px 8px;
         border-radius: 9999px;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 500;
-        border: 1px solid rgb(83, 100, 113);
+        border: 1px solid rgba(83, 100, 113, 0.5);
         background-color: transparent;
         color: rgb(29, 155, 240);
         transition: background-color 0.2s;
         cursor: pointer;
         white-space: nowrap;
+        letter-spacing: 0.02em;
       `;
 
       // Add hover and active states
@@ -131,8 +137,7 @@ function injectReplyStuff() {
       }
     `;
     document.head.appendChild(style);
-
-    container.appendChild(wrapper);
+    container.parentNode?.insertBefore(wrapper, container.nextSibling);
   }
 }
 console.log("injecting reply stuff");

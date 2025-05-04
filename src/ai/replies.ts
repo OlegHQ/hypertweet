@@ -1,46 +1,51 @@
 import type { ReplyType } from "../data/models/reply-type";
 
-export function defaultReplyTypes(): ReplyType[] {
+export function defaultReplyTypes(profileId: string): ReplyType[] {
   return [
     {
       id: "nice",
-      name: "Nice",
+      name: "😊 Nice",
       prompt: "Upbeat & kind, 1–2 sentences.",
       createdAt: new Date(),
       updatedAt: new Date(),
       isSystem: true,
+      profileId,
     },
     {
       id: "thanks",
-      name: "Thanks",
+      name: "🙏 Thanks",
       prompt: "Brief thank‑you, 1 sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),
       isSystem: true,
+      profileId,
     },
     {
       id: "asking",
-      name: "Asking",
+      name: "❓ Asking",
       prompt: "Friendly question, 1 sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),
       isSystem: true,
+      profileId,
     },
     {
       id: "insightful",
-      name: "Insightful",
+      name: "💡 Insightful",
       prompt: "Thoughtful insight, ≤2 sentences.",
       createdAt: new Date(),
       updatedAt: new Date(),
       isSystem: true,
+      profileId,
     },
     {
       id: "sarcastic",
-      name: "Sarcastic",
+      name: "😏 Sarcastic",
       prompt: "Light sarcasm, 1 witty sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),
       isSystem: true,
+      profileId,
     },
   ];
 }
