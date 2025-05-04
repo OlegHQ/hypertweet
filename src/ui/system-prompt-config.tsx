@@ -3,7 +3,7 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 
 export default function SystemPromptConfig() {
-  const { selectedProfile } = useGlobalState();
+  const { selectedProfile, hasProfileKey } = useGlobalState();
   const [systemPrompt, setSystemPrompt] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -81,11 +81,10 @@ export default function SystemPromptConfig() {
         throw new Error("Please fetch Twitter and LinkedIn profiles first");
       }
 
-      const payload = await app.ai.buildPersonaPayload(
-        twitterConfig,
-        linkedInConfig
+      const personalityString = await app.ai.buildPersonaPayload(
+        selectedProfile.id
       );
-      setSystemPrompt(JSON.stringify(payload, null, 2));
+      setSystemPrompt(personalityString);
     } catch (error) {
       setError(
         error instanceof Error ? error.message : "Failed to generate prompt"
@@ -98,13 +97,14 @@ export default function SystemPromptConfig() {
 
   if (!selectedProfile) return null;
 
+  const hasOpenAIKey = selectedProfile ? hasProfileKey(selectedProfile.id, "openAiKey") : false;
+
   return (
     <div className="space-y-4 mb-6">
       <div className="mb-4">
         <h2 className="text-xl font-semibold mb-2">System Prompt</h2>
         <p className="text-gray-600">
-          Personalize your replies and tweets. Keep it concise to minimize
-          costs.
+          Personalize your replies and tweets. Keep it concise to minimize costs.
         </p>
       </div>
 
@@ -131,8 +131,9 @@ export default function SystemPromptConfig() {
               </button>
               <button
                 onClick={handleGenerate}
-                disabled={isLoading}
+                disabled={isLoading || !hasOpenAIKey}
                 className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+                title={!hasOpenAIKey ? "Please set up your OpenAI API key first" : undefined}
               >
                 Generate
               </button>

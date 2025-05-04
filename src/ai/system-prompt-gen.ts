@@ -4,33 +4,39 @@ import type { LinkedInProfile, Tweet, XProfile } from "../data";
 
 export type PersonaPayload = ReturnType<typeof buildPersonaPayload>;
 export function buildPersonaPayload(
-  twitter: XProfile,
-  linkedin: LinkedInProfile,
-  toneKey = "friendly"
+  twitter: XProfile | null,
+  linkedin: LinkedInProfile | null
 ) {
   // ------------- pull raw lines we MIGHT keep --------------
-  const rawLines: string[] = [
-    linkedin.description,
-    linkedin.positions[0],
-    linkedin.companies[0],
-    linkedin.location && `Based in ${linkedin.location}`,
-    twitter.bio,
-    twitter.location && `Based in ${twitter.location}`,
-    ...topLikedTweets(twitter.recentTweets ?? [], 2),
-  ].filter(Boolean) as string[];
+  const rawLines: string[] = [];
+
+  if (linkedin) {
+    rawLines.push(linkedin.description);
+    // if (linkedin.positions[0]) rawLines.push(linkedin.positions[0]);
+    for (const position of linkedin.positions) {
+      rawLines.push(position);
+    }
+    if (linkedin.companies[0]) rawLines.push(linkedin.companies[0]);
+    if (linkedin.location) rawLines.push(`Based in ${linkedin.location}`);
+  }
+
+  if (twitter) {
+    if (twitter.bio) rawLines.push(twitter.bio);
+    if (twitter.location) rawLines.push(`Based in ${twitter.location}`);
+    rawLines.push(...topLikedTweets(twitter.recentTweets ?? [], 2));
+  }
 
   // ------------- extract keywords --------------------------
   const keywords = extractKeywords(rawLines.join(". "), 8); // ≤8 best tokens/phrases
 
   // ------------- select up to 2 "must‑include" -------------
-  const mustInclude = pickMustInclude(keywords, ["Ukraine", "Tech lead"]);
+  const mustInclude = pickMustInclude(keywords, []);
 
   // ------------- craft payload -----------------------------
   return {
     persona_corpus: rawLines,
     target_tokens: 20,
     must_include: mustInclude,
-    tone_key: toneKey,
     return: "personality_snippet",
   };
 }

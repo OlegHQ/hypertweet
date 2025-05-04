@@ -1,6 +1,5 @@
 import { browserApi } from "../browser-api";
-import type { XProfile } from "../data";
-import type { LinkedInProfile } from "../data/models/linkedin-profile";
+import type { LinkedInProfile, XProfile } from "../data";
 
 export class ScrapingContext {
   async scrapeTwitterProfile(twitterUrl: string): Promise<XProfile> {
@@ -52,7 +51,6 @@ export class ScrapingContext {
       // Wait for content to be ready - LinkedIn might need more time to load
       await this.waitForContent(tab.id!);
 
-      console.log("Scraping LinkedIn profile...", tab.id);
       // Execute the scraping script
       const result = await browserApi.tabs.sendMessage(tab.id!, {
         action: "scrapeLinkedInProfile",

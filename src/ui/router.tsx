@@ -18,7 +18,6 @@ export default function Router() {
           null,
           "lastUsedProfileId"
         );
-        console.log("lastId", lastId);
         if (lastId) {
           setLastUsedProfileId(lastId);
           const profile = await app.dataLayer.profile.get(lastId);

@@ -101,13 +101,6 @@ export default function PersonalityConfig() {
   const twitterConfig = getPersonalityConfig(selectedProfile.id, "twitter");
   const linkedInConfig = getPersonalityConfig(selectedProfile.id, "linkedIn");
 
-  console.log(
-    JSON.stringify(
-      { twitter: twitterConfig?.data, linkedIn: linkedInConfig?.data },
-      null,
-      2
-    )
-  );
   return (
     <div className="space-y-4">
       <div className="mb-6">

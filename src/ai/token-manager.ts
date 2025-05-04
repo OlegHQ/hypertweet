@@ -51,6 +51,7 @@ class TokenManager {
 
     const client = new OpenAI({
       apiKey: apiKey,
+      dangerouslyAllowBrowser: true,
     });
 
     this.clients.set(hash, {
