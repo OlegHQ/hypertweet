@@ -1,6 +1,9 @@
 import { browserApi } from "./browser-api";
-import type { LinkedInProfile } from "./data/models/linkedin-profile";
-import type { Tweet, XProfile } from "./data/models/twitter-profile";
+import type {
+  Tweet,
+  XProfile,
+  LinkedInProfile,
+} from "./data/models/social-profile";
 
 const getRecentTweets = async (
   maxRetries = 3,
