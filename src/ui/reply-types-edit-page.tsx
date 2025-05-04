@@ -3,7 +3,7 @@ import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import type { ReplyType } from "../background-app/data/models/reply-type";
-import { PageHeader } from "./components/page-header";
+import { PageHeader } from "./page-header";
 
 export default function ReplyTypeEditPage() {
   const { currentRoute, setCurrentRoute, selectedProfile, setReplyTypes } = useGlobalState();

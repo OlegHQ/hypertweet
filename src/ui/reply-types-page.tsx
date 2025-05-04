@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
-import { PageHeader } from "./components/page-header";
+import { PageHeader } from "./page-header";
 
 export default function ReplyTypesPage() {
   const {

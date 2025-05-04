@@ -3,7 +3,7 @@ import { Layout } from "./layout";
 import SystemPromptConfig from "./system-prompt-config";
 import PersonalityConfig from "./personality-config";
 import { useGlobalState } from "./state";
-import { PageHeader } from "./components/page-header";
+import { PageHeader } from "./page-header";
 export default function KnowledgeBasePage() {
   return (
     <Layout>

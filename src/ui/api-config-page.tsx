@@ -1,6 +1,6 @@
 import { Layout } from "./layout";
 import ApiConfig from "./api-config";
-import { PageHeader } from "./components/page-header";
+import { PageHeader } from "./page-header";
 export default function ApiConfigPage() {
   return (
     <Layout>
