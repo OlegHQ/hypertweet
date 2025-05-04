@@ -48,7 +48,7 @@ interface GlobalState {
     profileId: string,
     platform: "twitter" | "linkedIn"
   ) => PersonalityConfig["twitter"] | PersonalityConfig["linkedIn"] | undefined;
-  setCurrentRoute: (route: Route) => void;
+  setCurrentRoute: (route: string) => void;
   setReplyTypes: (profileId: string, replyTypes: ReplyType[]) => void;
   getReplyTypes: (profileId: string) => ReplyType[] | undefined;
 
@@ -130,7 +130,7 @@ export const useGlobalState = create<GlobalState>((set, get) => ({
   },
   getPersonalityConfig: (profileId: string, platform: "twitter" | "linkedIn") =>
     get().personalityConfigs?.[profileId]?.[platform],
-  setCurrentRoute: (route: Route) => set({ currentRoute: route }),
+  setCurrentRoute: (route: string) => set({ currentRoute: route as Route }),
   setReplyTypes: (profileId: string, replyTypes: ReplyType[]) =>
     set((state: GlobalState) => ({
       replyTypes: {

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
-import type { ReplyType } from "../data/models/reply-type";
 
 export default function ReplyTypesPage() {
   const {
@@ -110,7 +109,13 @@ export default function ReplyTypesPage() {
           ) : (
             <div className="grid gap-4">
               {userReplyTypes.map((type) => (
-                <div key={type.id} className="p-4 bg-white rounded-lg shadow">
+                <div
+                  key={type.id}
+                  className="p-4 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() =>
+                    setCurrentRoute(`/reply-types/edit/${type.id}`)
+                  }
+                >
                   <h3 className="font-medium">{type.name}</h3>
                   <p className="text-gray-600 mt-1">{type.prompt}</p>
                 </div>
@@ -128,7 +133,11 @@ export default function ReplyTypesPage() {
           ) : (
             <div className="grid gap-4">
               {systemReplyTypes.map((type) => (
-                <div key={type.id} className="p-4 bg-white rounded-lg shadow">
+                <div
+                  key={type.id}
+                  className="p-4 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 transition-colors"
+                  onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                >
                   <h3 className="font-medium">{type.name}</h3>
                   <p className="text-gray-600 mt-1">{type.prompt}</p>
                 </div>
