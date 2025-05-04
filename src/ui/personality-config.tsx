@@ -35,6 +35,8 @@ export default function PersonalityConfig() {
   const handleRefreshLinkedIn = async () => {
     if (!selectedProfile?.linkedInUrl) return;
     try {
+      setIsLoading(true);
+
       const data = await app.scraping.scrapeLinkedInProfile(
         selectedProfile.linkedInUrl
       );
@@ -48,10 +50,16 @@ export default function PersonalityConfig() {
     } catch (error) {
       console.error("Error refreshing LinkedIn profile:", error);
       setError("Failed to refresh LinkedIn profile");
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleUrlChange = async (
+  const [linkedInUrl, setLinkedInUrl] = React.useState(
+    selectedProfile?.linkedInUrl || ""
+  );
+
+  const handleUrlSave = async (
     platform: "twitter" | "linkedIn",
     newUrl: string
   ) => {
@@ -71,32 +79,46 @@ export default function PersonalityConfig() {
     }
   };
 
+  const loadStoredConfigs = async () => {
+    try {
+      if (!selectedProfile?.id) {
+        return;
+      }
+      const twitterData = await app.dataLayer.config.get<any>(
+        selectedProfile.id,
+        "twitterProfile"
+      );
+      if (twitterData) {
+        setPersonalityConfig(selectedProfile.id, "twitter", twitterData);
+      }
+      const linkedInData = await app.dataLayer.config.get<any>(
+        selectedProfile.id,
+        "linkedInProfile"
+      );
+      if (linkedInData) {
+        setPersonalityConfig(selectedProfile.id, "linkedIn", linkedInData);
+      }
+    } catch (error) {
+      console.error("Error loading stored configs:", error);
+    }
+  };
+
   useEffect(() => {
     if (selectedProfile) {
-      // Load stored configs if they exist
-      const loadStoredConfigs = async () => {
-        try {
-          const twitterData = await app.dataLayer.config.get<any>(
-            selectedProfile.id,
-            "twitterProfile"
-          );
-          if (twitterData) {
-            setPersonalityConfig(selectedProfile.id, "twitter", twitterData);
-          }
-          const linkedInData = await app.dataLayer.config.get<any>(
-            selectedProfile.id,
-            "linkedInProfile"
-          );
-          if (linkedInData) {
-            setPersonalityConfig(selectedProfile.id, "linkedIn", linkedInData);
-          }
-        } catch (error) {
-          console.error("Error loading stored configs:", error);
-        }
-      };
       loadStoredConfigs();
     }
   }, [selectedProfile]);
+
+  const handleClearProfile = async (platform: "twitter" | "linkedIn") => {
+    if (!selectedProfile?.id) {
+      return;
+    }
+    await app.dataLayer.config.delete(
+      selectedProfile?.id,
+      `${platform}Profile`
+    );
+    loadStoredConfigs();
+  };
 
   if (!selectedProfile) {
     return null;
@@ -104,7 +126,6 @@ export default function PersonalityConfig() {
 
   const twitterConfig = getPersonalityConfig(selectedProfile.id, "twitter");
   const linkedInConfig = getPersonalityConfig(selectedProfile.id, "linkedIn");
-  console.log({ twitterConfig, linkedInConfig });
 
   return (
     <div className="space-y-4">
@@ -123,12 +144,13 @@ export default function PersonalityConfig() {
         <div className="p-2 bg-red-100 text-red-700 rounded">{error}</div>
       )}
 
-      {twitterConfig?.isFetched ? (
+      {twitterConfig?.isFetched && twitterConfig.data ? (
         <TwitterProfile
           data={twitterConfig.data}
           onRefresh={handleRefreshTwitter}
           profileUrl={selectedProfile.twitterUrl}
-          onUrlChange={(newUrl) => handleUrlChange("twitter", newUrl)}
+          onUrlChange={(newUrl) => handleUrlSave("twitter", newUrl)}
+          onClear={() => handleClearProfile("twitter")}
         />
       ) : selectedProfile.twitterUrl ? (
         <div>
@@ -143,13 +165,44 @@ export default function PersonalityConfig() {
         </div>
       ) : null}
 
-      {linkedInConfig?.isFetched && (
+      {linkedInConfig?.isFetched && linkedInConfig.data ? (
         <LinkedInProfile
           data={linkedInConfig.data}
           onRefresh={handleRefreshLinkedIn}
           profileUrl={selectedProfile.linkedInUrl}
-          onUrlChange={(newUrl) => handleUrlChange("linkedIn", newUrl)}
+          onUrlChange={(newUrl) => handleUrlSave("linkedIn", newUrl)}
+          onClear={() => handleClearProfile("linkedIn")}
         />
+      ) : selectedProfile.linkedInUrl ? (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">LinkedIn profile</h2>
+          <button
+            className="bg-blue-500 w-full block text-white px-4 py-2 rounded"
+            onClick={handleRefreshLinkedIn}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : "Load linkedin data"}
+          </button>
+        </div>
+      ) : (
+        <div>
+          <h2 className="text-lg font-semibold mb-2">LinkedIn profile</h2>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Enter LinkedIn profile URL"
+              className="flex-1 px-4 py-2 border rounded"
+              value={linkedInUrl}
+              onChange={(e) => setLinkedInUrl(e.target.value)}
+            />
+            <button
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+              onClick={() => handleUrlSave("linkedIn", linkedInUrl)}
+            >
+              Save URL
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
