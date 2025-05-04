@@ -1,16 +1,11 @@
-import React from "react";
-import { useGlobalState } from "./state";
+import type React from "react";
 import ProfileSelector from "./profile-selector";
-import { ScrapingContext } from "../scraping/context";
-import { app } from "./app";
-import ApiConfig from "./api-config";
-import PersonalityConfig from "./personality-config";
-import SystemPromptConfig from "./system-prompt-config";
-import KnowledgeBase from "./knowledge-base";
+import { useGlobalState } from "./state";
+import { useState } from "react";
 
-function Layout({ children }: { children: React.ReactNode }) {
+export function Layout({ children }: { children: React.ReactNode }) {
   const { selectedProfile } = useGlobalState();
-  const [showProfileSelector, setShowProfileSelector] = React.useState(false);
+  const [showProfileSelector, setShowProfileSelector] = useState(false);
 
   if (!selectedProfile) {
     return <ProfileSelector />;
@@ -61,14 +56,5 @@ function Layout({ children }: { children: React.ReactNode }) {
       </div>
       {children}
     </div>
-  );
-}
-
-export default function MainApp() {
-  return (
-    <Layout>
-      <KnowledgeBase />
-      <ApiConfig />
-    </Layout>
   );
 }

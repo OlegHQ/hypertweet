@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
-import MainApp from "./main-app";
+import HomePage from "./home-page";
+import KnowledgeBasePage from "./knowledge-base-page";
 
 export default function Router() {
   const {
@@ -9,6 +10,7 @@ export default function Router() {
     setSelectedProfile,
     lastUsedProfileId,
     setLastUsedProfileId,
+    currentRoute,
   } = useGlobalState();
 
   useEffect(() => {
@@ -38,5 +40,12 @@ export default function Router() {
     }
   }, [lastUsedProfileId]);
 
-  return <MainApp />;
+  switch (currentRoute) {
+    case "/":
+      return <HomePage />;
+    case "/knowledge-base":
+      return <KnowledgeBasePage />;
+    default:
+      return <HomePage />;
+  }
 }
