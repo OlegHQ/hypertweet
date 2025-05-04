@@ -6,8 +6,9 @@ import { app } from "./app";
 import ApiConfig from "./api-config";
 import PersonalityConfig from "./personality-config";
 import SystemPromptConfig from "./system-prompt-config";
+import KnowledgeBase from "./knowledge-base";
 
-export default function MainApp() {
+function Layout({ children }: { children: React.ReactNode }) {
   const { selectedProfile } = useGlobalState();
   const [showProfileSelector, setShowProfileSelector] = React.useState(false);
 
@@ -58,10 +59,16 @@ export default function MainApp() {
           </button>
         </div>
       </div>
-
-      <SystemPromptConfig />
-      <ApiConfig />
-      <PersonalityConfig />
+      {children}
     </div>
+  );
+}
+
+export default function MainApp() {
+  return (
+    <Layout>
+      <KnowledgeBase />
+      <ApiConfig />
+    </Layout>
   );
 }
