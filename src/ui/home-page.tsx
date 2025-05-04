@@ -27,6 +27,16 @@ export default function HomePage() {
             understanding of your expertise and preferences.
           </p>
         </div>
+        <div
+          className="bg-white rounded-lg border p-4 cursor-pointer hover:border-blue-500 transition-colors"
+          onClick={() => setCurrentRoute("/api-config")}
+        >
+          <h2 className="text-lg font-medium mb-2">API Config</h2>
+          <p className="text-gray-600">
+            Configure and manage your API keys to enhance the AI's understanding
+            of your expertise and preferences.
+          </p>
+        </div>
       </div>
     </Layout>
   );

@@ -45,7 +45,7 @@ export default function ApiConfig() {
   };
 
   const openAiKey = selectedProfile
-    ? getProfileKey(selectedProfile.id, "openAiKey")?.value || ""
+    ? getProfileKey(selectedProfile.id, "openAiKey")?.key || ""
     : "";
 
   const handleSave = async () => {

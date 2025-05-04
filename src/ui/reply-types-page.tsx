@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
+import { PageHeader } from "./components/page-header";
 
 export default function ReplyTypesPage() {
   const {
@@ -71,37 +72,19 @@ export default function ReplyTypesPage() {
 
   return (
     <Layout>
-      <div className="flex items-center gap-4 mb-8">
-        <button
-          onClick={() => setCurrentRoute("/")}
-          className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors"
-          aria-label="Go back to home"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            className="h-5 w-5 text-gray-600"
-            viewBox="0 0 20 20"
-            fill="currentColor"
-          >
-            <path
-              fillRule="evenodd"
-              d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </button>
-        <h1>Reply Types</h1>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Add Reply Type
-        </button>
-      </div>
+      <PageHeader title="Reply Types" backRoute="/" />
 
       <div className="space-y-8">
         <section>
-          <h2 className="text-lg font-medium mb-4">Your Reply Types</h2>
+          <div className="flex items-center gap-4 mb-4">
+            <h2 className="text-lg font-medium">Your Reply Types</h2>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            >
+              Add Reply Type
+            </button>
+          </div>
           {userReplyTypes.length === 0 ? (
             <div className="text-gray-500 italic">
               No custom reply types created yet
@@ -136,7 +119,9 @@ export default function ReplyTypesPage() {
                 <div
                   key={type.id}
                   className="p-4 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                  onClick={() =>
+                    setCurrentRoute(`/reply-types/edit/${type.id}`)
+                  }
                 >
                   <h3 className="font-medium">{type.name}</h3>
                   <p className="text-gray-600 mt-1">{type.prompt}</p>
