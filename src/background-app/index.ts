@@ -1,3 +1,4 @@
+import { defaultReplyTypes } from "../ai/replies";
 import { createDataLayer } from "../data";
 import { ScrapingContext } from "../scraping/context";
 import { newAI } from "./ai-facade";
@@ -8,6 +9,15 @@ export async function setupBackgroundApp() {
     dataLayer,
     scraping: new ScrapingContext(),
     replyTypes: {
+      getReplyType(profileId: string, id: string) {
+        const item = defaultReplyTypes().find(
+          (replyType) => replyType.id === id
+        );
+        if (!item) {
+          // TOOD
+        }
+        return item;
+      },
       async setSystemOneHidden(profileId: string, id: string, option: boolean) {
         let replyTypes =
           (await dataLayer.config.get<string[]>(

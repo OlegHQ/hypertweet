@@ -4,6 +4,7 @@ import { useGlobalState } from "./state";
 import HomePage from "./home-page";
 import KnowledgeBasePage from "./knowledge-base-page";
 import ReplyTypesPage from "./reply-types-page";
+import ReplyTypeEditPage from "./reply-types-edit-page";
 
 export default function Router() {
   const {
@@ -41,14 +42,21 @@ export default function Router() {
     }
   }, [lastUsedProfileId]);
 
-  switch (currentRoute) {
-    case "/":
-      return <HomePage />;
-    case "/knowledge-base":
-      return <KnowledgeBasePage />;
-    case "/reply-types":
-      return <ReplyTypesPage />;
-    default:
-      return <HomePage />;
+  if (currentRoute === "/") {
+    return <HomePage />;
   }
+
+  if (currentRoute === "/knowledge-base") {
+    return <KnowledgeBasePage />;
+  }
+
+  if (currentRoute === "/reply-types") {
+    return <ReplyTypesPage />;
+  }
+
+  if (currentRoute.startsWith("/reply-types/edit/")) {
+    return <ReplyTypeEditPage />;
+  }
+
+  return <HomePage />;
 }
