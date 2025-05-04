@@ -1,4 +1,4 @@
-import { useGlobalState } from "../state";
+import { useGlobalState } from "./state";
 
 interface PageHeaderProps {
   title: string;

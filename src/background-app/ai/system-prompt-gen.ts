@@ -7,12 +7,10 @@ export function buildPersonaPayload(
   twitter: XProfile | null,
   linkedin: LinkedInProfile | null
 ) {
-  // ------------- pull raw lines we MIGHT keep --------------
   const rawLines: string[] = [];
 
   if (linkedin) {
     rawLines.push(linkedin.description);
-    // if (linkedin.positions[0]) rawLines.push(linkedin.positions[0]);
     for (const position of linkedin.positions) {
       rawLines.push(position);
     }
@@ -26,13 +24,9 @@ export function buildPersonaPayload(
     rawLines.push(...topLikedTweets(twitter.recentTweets ?? [], 2));
   }
 
-  // ------------- extract keywords --------------------------
   const keywords = extractKeywords(rawLines.join(". "), 8); // ≤8 best tokens/phrases
-
-  // ------------- select up to 2 "must‑include" -------------
   const mustInclude = pickMustInclude(keywords, []);
 
-  // ------------- craft payload -----------------------------
   return {
     persona_corpus: rawLines,
     target_tokens: 20,

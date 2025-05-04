@@ -6,7 +6,6 @@ export async function buildPersonalitySnippet(
   key: string,
   payload: PersonaPayload
 ): Promise<string> {
-  // 3. hit GPT‑3.5‑turbo  ---------------------------------
   const openai = tokenManager.getClient(key);
   const chat = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
@@ -46,7 +45,6 @@ export async function generateReply(
     content: `Tweet: """${postText.slice(0, 400)}"""`,
   });
 
-  // 3. hit GPT‑3.5‑turbo  ---------------------------------
   const openai = tokenManager.getClient(key);
   const res = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
