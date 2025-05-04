@@ -1,4 +1,4 @@
-import { browserApi } from "../browser-api";
+import type { ReplyType } from "./models/reply-type";
 
 interface Profile {
   id: string;
@@ -19,16 +19,6 @@ interface Profile {
     }>;
     skills?: string[];
   };
-}
-
-interface ReplyType {
-  id: string;
-  profileId: string;
-  name: string;
-  prompt: string;
-  createdAt: Date;
-  updatedAt: Date;
-  isSystem: boolean;
 }
 
 interface Settings {
@@ -99,7 +89,10 @@ export class Database {
     });
   }
 
-  async get<T>(storeName: string, key: string | [string, string]): Promise<T | null> {
+  async get<T>(
+    storeName: string,
+    key: string | [string, string]
+  ): Promise<T | null> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 
@@ -163,7 +156,10 @@ export class Database {
     });
   }
 
-  async delete(storeName: string, key: string | [string, string]): Promise<void> {
+  async delete(
+    storeName: string,
+    key: string | [string, string]
+  ): Promise<void> {
     return new Promise((resolve, reject) => {
       if (!this.db) return reject(new Error("Database not initialized"));
 

@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
+import type { ReplyType } from "../data/models/reply-type";
 
 export default function ReplyTypesPage() {
   const {
@@ -11,6 +12,11 @@ export default function ReplyTypesPage() {
     setReplyTypes,
     getReplyTypes,
   } = useGlobalState();
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [newReplyType, setNewReplyType] = useState({
+    name: "",
+    prompt: "",
+  });
 
   useEffect(() => {
     async function fetchReplyTypes() {
@@ -23,6 +29,38 @@ export default function ReplyTypesPage() {
     }
     fetchReplyTypes();
   }, [selectedProfile, getReplyTypes, setReplyTypes]);
+
+  const handleAddReplyType = async () => {
+    if (!selectedProfile || !newReplyType.name || !newReplyType.prompt) return;
+
+    try {
+      const id = await app.replyTypes.add({
+        ...newReplyType,
+        profileId: selectedProfile.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isSystem: false,
+      });
+
+      const currentTypes = getReplyTypes(selectedProfile.id) ?? [];
+      setReplyTypes(selectedProfile.id, [
+        ...currentTypes,
+        {
+          id,
+          ...newReplyType,
+          profileId: selectedProfile.id,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          isSystem: false,
+        },
+      ]);
+
+      setNewReplyType({ name: "", prompt: "" });
+      setIsAddModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add reply type:", error);
+    }
+  };
 
   const currentReplyTypes = selectedProfile
     ? getReplyTypes(selectedProfile.id)
@@ -54,6 +92,12 @@ export default function ReplyTypesPage() {
           </svg>
         </button>
         <h1>Reply Types</h1>
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          Add Reply Type
+        </button>
       </div>
 
       <div className="space-y-8">
@@ -93,6 +137,59 @@ export default function ReplyTypesPage() {
           )}
         </section>
       </div>
+
+      {isAddModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h2 className="text-xl font-medium mb-4">Add New Reply Type</h2>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newReplyType.name}
+                  onChange={(e) =>
+                    setNewReplyType({ ...newReplyType, name: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter reply type name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Prompt
+                </label>
+                <textarea
+                  value={newReplyType.prompt}
+                  onChange={(e) =>
+                    setNewReplyType({ ...newReplyType, prompt: e.target.value })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter reply type prompt"
+                  rows={3}
+                />
+              </div>
+            </div>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddReplyType}
+                disabled={!newReplyType.name || !newReplyType.prompt}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

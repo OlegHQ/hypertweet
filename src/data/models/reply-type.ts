@@ -3,6 +3,7 @@ export interface ReplyType {
   name: string;
   prompt: string;
   createdAt: Date;
+  profileId: string;
   updatedAt: Date;
   isSystem: boolean;
   isHidden?: boolean;
