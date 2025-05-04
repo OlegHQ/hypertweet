@@ -47,7 +47,7 @@ async function doOnTab<T>(
   try {
     await waitForTabLoad(tab.id!);
     await waitForContent(tab.id!);
-    return fn(tab.id!);
+    return await fn(tab.id!);
   } catch (error) {
     console.error("Error scraping profile:", error);
     throw error;

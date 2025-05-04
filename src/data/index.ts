@@ -1,7 +1,6 @@
 import { Database } from "./database";
 import { ProfileRepository } from "./repositories/profile-repository";
 import { ConfigRepository } from "./repositories/config-repository";
-import { ReplyTypeRepository } from "./repositories/reply-type-repository";
 
 export interface DataLayer {
   profile: ProfileRepository;
