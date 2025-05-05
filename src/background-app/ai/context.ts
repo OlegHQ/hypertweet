@@ -47,7 +47,7 @@ export async function generateReply(
 
   const openai = tokenManager.getClient(key);
   const res = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model: "gpt-4.1-mini",
     messages,
     max_tokens: 60,
     temperature: 0.7,
