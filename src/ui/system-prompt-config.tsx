@@ -3,11 +3,45 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 
 export default function SystemPromptConfig() {
-  const { selectedProfile, hasProfileKey, setCurrentRoute } = useGlobalState();
+  const {
+    selectedProfile,
+    hasProfileKey,
+    setCurrentRoute,
+    setProfileKey,
+    areKeysFetched,
+    setAreKeysFetched,
+  } = useGlobalState();
   const [systemPrompt, setSystemPrompt] = React.useState("");
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
+
+  useEffect(() => {
+    if (selectedProfile && !areKeysFetched) {
+      loadProfileKeys();
+    }
+  }, [selectedProfile, areKeysFetched]);
+
+  const loadProfileKeys = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    try {
+      const openAiKey = await app.dataLayer.config.get<string>(
+        selectedProfile.id,
+        "openAiKey"
+      );
+
+      if (openAiKey) {
+        setProfileKey(selectedProfile.id, "openAiKey", openAiKey);
+      }
+      setAreKeysFetched(true);
+    } catch (error) {
+      console.error("Error loading profile keys:", error);
+      setError("Failed to load profile keys");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (selectedProfile) {

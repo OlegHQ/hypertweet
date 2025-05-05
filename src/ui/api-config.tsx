@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 
@@ -17,7 +17,7 @@ export default function ApiConfig() {
   const [success, setSuccess] = React.useState<string | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (selectedProfile && !areKeysFetched) {
       loadProfileKeys();
     }
