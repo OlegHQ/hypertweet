@@ -47,28 +47,6 @@ export default function Panel() {
           />
         ))}
       </div>
-      <Rest />
-    </div>
-  );
-}
-
-function Rest() {
-  return (
-    <div>
-      <Button
-        onClick={() => {
-          typeTweet("Hello, world!" + Math.random());
-        }}
-      >
-        Replace
-      </Button>
-      <Button
-        onClick={() => {
-          typeTweet("");
-        }}
-      >
-        Clear
-      </Button>
     </div>
   );
 }
