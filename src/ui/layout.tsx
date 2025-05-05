@@ -20,7 +20,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
         >
           ← Back
         </button>
-        <ProfileSelector />
+        <ProfileSelector
+          onProfileSelected={() => setShowProfileSelector(false)}
+        />
       </div>
     );
   }

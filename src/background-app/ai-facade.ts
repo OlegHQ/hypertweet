@@ -32,11 +32,6 @@ export function newAI(dataLayer: DataLayer) {
         "openAiKey"
       );
 
-      console.log("twitterConfig", {
-        twitterConfig,
-        linkedInConfig,
-        openAiKey,
-      });
       if (!twitterConfig || !linkedInConfig || !openAiKey) {
         throw new Error("Missing required config");
       }

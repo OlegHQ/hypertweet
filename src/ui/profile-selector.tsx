@@ -4,7 +4,11 @@ import { useGlobalState } from "./state";
 import CreateProfileForm from "./create-profile-form";
 import type { Profile } from "../background-app/data";
 
-export default function ProfileSelector() {
+export default function ProfileSelector({
+  onProfileSelected,
+}: {
+  onProfileSelected?: () => void;
+}) {
   const { profiles, setProfiles, setSelectedProfile, setCurrentRoute } =
     useGlobalState();
   const [showCreateForm, setShowCreateForm] = useState(false);
@@ -63,7 +67,10 @@ export default function ProfileSelector() {
         {profiles.map((profile) => (
           <div key={profile.id} className="group relative">
             <button
-              onClick={() => setSelectedProfile(profile)}
+              onClick={() => {
+                setSelectedProfile(profile);
+                onProfileSelected?.();
+              }}
               className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
             >
               <div className="font-medium">{profile.name}</div>
