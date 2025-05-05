@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { bgApp } from "./bg-app";
 import type { ReplyType } from "../background-app/data";
 import ReplyTypeButton from "./reply-type-button";
+import { Button } from "./button";
+import { typeTweet } from "./type-tweet";
 
 export default function Panel() {
   const [replyTypes, setReplyTypes] = useState<ReplyType[]>([]);
@@ -22,26 +24,51 @@ export default function Panel() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <div
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "4px",
-        marginTop: "-10px",
-        marginBottom: "8px",
-        paddingLeft: "16px",
-        paddingRight: "16px",
-        justifyContent: "center",
-      }}
-    >
-      {replyTypes.map((replyType) => (
-        <ReplyTypeButton
-          key={replyType.id}
-          replyType={replyType}
-          disabled={loading}
-          onLoading={setLoading}
-        />
-      ))}
+    <div style={{ display: "flex", flexDirection: "row", gap: "8px" }}>
+      <div
+        style={{
+          flex: 1,
+          display: "flex",
+          flexWrap: "wrap",
+          gap: "4px",
+          marginTop: "-10px",
+          marginBottom: "8px",
+          paddingLeft: "16px",
+          paddingRight: "16px",
+          justifyContent: "center",
+        }}
+      >
+        {replyTypes.map((replyType) => (
+          <ReplyTypeButton
+            key={replyType.id}
+            replyType={replyType}
+            disabled={loading}
+            onLoading={setLoading}
+          />
+        ))}
+      </div>
+      <Rest />
+    </div>
+  );
+}
+
+function Rest() {
+  return (
+    <div>
+      <Button
+        onClick={() => {
+          typeTweet("Hello, world!" + Math.random());
+        }}
+      >
+        Replace
+      </Button>
+      <Button
+        onClick={() => {
+          typeTweet("");
+        }}
+      >
+        Clear
+      </Button>
     </div>
   );
 }
