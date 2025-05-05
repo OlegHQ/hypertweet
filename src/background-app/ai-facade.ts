@@ -9,7 +9,7 @@ export function newAI(dataLayer: DataLayer) {
         profileId,
         "systemPrompt"
       );
-      const openAiKey = await dataLayer.config.get<string>(
+      const openAiKey = await dataLayer.config.getCredential(
         profileId,
         "openAiKey"
       );
@@ -27,7 +27,7 @@ export function newAI(dataLayer: DataLayer) {
         profileId,
         "linkedInProfile"
       );
-      const openAiKey = await dataLayer.config.get<string>(
+      const openAiKey = await dataLayer.config.getCredential(
         profileId,
         "openAiKey"
       );

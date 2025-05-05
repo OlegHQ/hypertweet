@@ -27,7 +27,7 @@ export default function ApiConfig() {
     if (!selectedProfile) return;
     setIsLoading(true);
     try {
-      const openAiKey = await app.dataLayer.config.get<string>(
+      const openAiKey = await app.dataLayer.config.getCredential(
         selectedProfile.id,
         "openAiKey"
       );
@@ -58,7 +58,11 @@ export default function ApiConfig() {
 
       // Update both global state and persistent storage
       setProfileKey(selectedProfile.id, "openAiKey", value);
-      await app.dataLayer.config.set(selectedProfile.id, "openAiKey", value);
+      await app.dataLayer.config.setCredential(
+        selectedProfile.id,
+        "openAiKey",
+        value
+      );
 
       setIsEditing(false);
       setSuccess("OpenAI key saved successfully");

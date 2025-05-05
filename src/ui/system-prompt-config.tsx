@@ -26,7 +26,7 @@ export default function SystemPromptConfig() {
     if (!selectedProfile) return;
     setIsLoading(true);
     try {
-      const openAiKey = await app.dataLayer.config.get<string>(
+      const openAiKey = await app.dataLayer.config.getCredential(
         selectedProfile.id,
         "openAiKey"
       );
