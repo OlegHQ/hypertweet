@@ -3,7 +3,7 @@ import ApiConfig from "./api-config";
 import { PageHeader } from "./page-header";
 import { useGlobalState } from "./state";
 
-export default function ApiConfigPage() {
+export default function MiscPage() {
   const { setCurrentRoute } = useGlobalState();
 
   return (

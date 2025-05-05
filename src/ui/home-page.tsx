@@ -6,7 +6,6 @@ import { useGlobalState } from "./state";
 export default function HomePage() {
   const {
     setSelectedProfile,
-    lastUsedProfileId,
     setCurrentRoute,
     setLastUsedProfileId,
     selectedProfile,
@@ -64,7 +63,7 @@ export default function HomePage() {
         </div>
         <div
           className="bg-white rounded-lg border p-4 cursor-pointer hover:border-blue-500 transition-colors"
-          onClick={() => setCurrentRoute("/api-config")}
+          onClick={() => setCurrentRoute("/misc")}
         >
           <h2 className="text-lg font-medium mb-2">API Config</h2>
           <p className="text-gray-600">

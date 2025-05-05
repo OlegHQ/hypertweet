@@ -3,7 +3,7 @@ import HomePage from "./home-page";
 import KnowledgeBasePage from "./knowledge-base-page";
 import ReplyTypesPage from "./reply-types-page";
 import ReplyTypeEditPage from "./reply-types-edit-page";
-import ApiConfigPage from "./api-config-page";
+import MiscPage from "./misc-page";
 import DataBackup from "./data-backup";
 export default function Router() {
   const { currentRoute } = useGlobalState();
@@ -28,8 +28,8 @@ export default function Router() {
     return <ReplyTypeEditPage />;
   }
 
-  if (currentRoute === "/api-config") {
-    return <ApiConfigPage />;
+  if (currentRoute === "/misc") {
+    return <MiscPage />;
   }
 
   return <HomePage />;

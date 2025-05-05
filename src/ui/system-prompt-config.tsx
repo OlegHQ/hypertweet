@@ -147,10 +147,10 @@ export default function SystemPromptConfig() {
           <p className="mt-2 text-amber-600">
             ⚠️ OpenAI API key is not set.{" "}
             <a
-              href="#/api-config"
+              href="#/misc"
               onClick={(e) => {
                 e.preventDefault();
-                setCurrentRoute("/api-config");
+                setCurrentRoute("/misc");
               }}
               className="text-amber-700 underline hover:text-amber-800"
             >
