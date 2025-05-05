@@ -3,7 +3,7 @@
   "name": "hypertweet",
   "version": "1.0",
   "description": "Copies tweets and their replies to the clipboard when clicked.",
-  "permissions": ["activeTab", "scripting", "clipboardWrite", "sidePanel"],
+  "permissions": ["activeTab", "tabs", "scripting", "clipboardWrite", "sidePanel"],
   "host_permissions": ["https://x.com/*", "*://*.linkedin.com/*"],
   "background": {
     "scripts": ["out/background.js"]

@@ -110,6 +110,9 @@ export function makeContentApp() {
         return {
           status: getTweet(first!),
           replies: replies.map(getTweet),
+          currentResponse: document
+            .querySelector(".public-DraftStyleDefault-block")
+            ?.textContent?.trim(),
         };
       })();
 

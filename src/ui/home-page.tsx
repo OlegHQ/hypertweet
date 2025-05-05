@@ -65,10 +65,10 @@ export default function HomePage() {
           className="bg-white rounded-lg border p-4 cursor-pointer hover:border-blue-500 transition-colors"
           onClick={() => setCurrentRoute("/misc")}
         >
-          <h2 className="text-lg font-medium mb-2">API Config</h2>
+          <h2 className="text-lg font-medium mb-2">Miscellaneous</h2>
           <p className="text-gray-600">
-            Configure and manage your API keys to enhance the AI's understanding
-            of your expertise and preferences.
+            Access various tools and utilities including API configuration, data backup,
+            and thread copying functionality.
           </p>
         </div>
       </div>

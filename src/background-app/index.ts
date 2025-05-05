@@ -1,9 +1,15 @@
 import { defaultReplyTypes } from "./ai/default-reply-types";
-import { createDataLayer } from "./data";
+import { createDataLayer, type XProfile } from "./data";
 import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
-import { ScrapingContext } from "./scrape-context";
+import { getContentApp, ScrapingContext } from "./scrape-context";
 import { newAI } from "./ai-facade";
-import { STORES, db, type Profile, type Settings, type ReplyType } from "./data/database";
+import {
+  STORES,
+  type Profile,
+  type Settings,
+  type ReplyType,
+} from "./data/database";
+import { browserApi } from "../utils/browser-api";
 
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
@@ -20,58 +26,54 @@ export async function setupBackgroundApp() {
         return lastId;
       },
     },
-    backup: {
-      async exportData() {
-        const profiles = await db.getAll<Profile>(STORES.PROFILES);
-        const settings = await db.getAll<Settings>(STORES.SETTINGS);
-        const replyTypes = await db.getAll<ReplyType>(STORES.REPLY_TYPES);
-        
-        const backupData = {
-          version: 1,
-          timestamp: new Date().toISOString(),
-          data: {
-            profiles,
-            settings,
-            replyTypes
-          }
-        };
+    content: {
+      async getCurrentTweetThreadJSON(profileId: string) {
+        const tabs = await browserApi.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        console.log({ tabs });
+        if (!tabs[0]) {
+          return null;
+        }
+        const contentApp = getContentApp(tabs[0].id!);
+        const twitterThread = await contentApp.copyTweets();
 
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `hypertweet-backup-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      },
-
-      async importData(file: File): Promise<void> {
-        const text = await file.text();
-        const backupData = JSON.parse(text);
-
-        if (!backupData.version || !backupData.data) {
-          throw new Error('Invalid backup file format');
+        const profile = await dataLayer.profile.get(profileId);
+        const prompt = await dataLayer.config.get<string>(
+          profileId,
+          "systemPrompt"
+        );
+        const twitterProfile = await dataLayer.config.get<XProfile>(
+          profileId,
+          "twitterProfile"
+        );
+        const result: Record<string, any> = {};
+        const author: Record<string, any> = {};
+        author.name = twitterProfile?.name ?? profile?.name ?? "user";
+        if (twitterProfile) {
+          author.username = twitterProfile.username;
+          author.bio = twitterProfile.bio;
+          author.website = twitterProfile.website;
         }
 
-        // Clear existing data
-        await Promise.all([
-          db.clearStore(STORES.PROFILES),
-          db.clearStore(STORES.SETTINGS),
-          db.clearStore(STORES.REPLY_TYPES)
-        ]);
+        if (prompt) {
+          author.persona = prompt;
+        }
 
-        // Import new data
-        const { profiles, settings, replyTypes } = backupData.data;
+        result.author = author;
+        result.twitterThread = twitterThread;
+        result.task =
+          "you have to reply to the .twitterThread accounting to the author's persona, give 5 options";
 
-        await Promise.all([
-          ...profiles.map((profile: Profile) => db.put(STORES.PROFILES, profile)),
-          ...settings.map((setting: Settings) => db.put(STORES.SETTINGS, setting)),
-          ...replyTypes.map((replyType: ReplyType) => db.put(STORES.REPLY_TYPES, replyType))
-        ]);
-      }
+        if (twitterThread.currentResponse) {
+          result.task =
+            "if the .currentResponse good enough, clean it up or use it as base for coming up with 5 options for replies to this .twitterThread";
+          result.currentResponse = twitterThread.currentResponse;
+        }
+
+        return result;
+      },
     },
     replyTypes: {
       add: replyTypeRepository.add.bind(replyTypeRepository),
@@ -135,6 +137,70 @@ export async function setupBackgroundApp() {
           "hiddenSystemReplies",
           replyTypes
         );
+      },
+    },
+
+    backup: {
+      async exportData() {
+        const profiles = await db.getAll<Profile>(STORES.PROFILES);
+        const settings = await db.getAll<Settings>(STORES.SETTINGS);
+        const replyTypes = await db.getAll<ReplyType>(STORES.REPLY_TYPES);
+
+        const backupData = {
+          version: 1,
+          timestamp: new Date().toISOString(),
+          data: {
+            profiles,
+            settings,
+            replyTypes,
+          },
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], {
+          type: "application/json",
+        });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `hypertweet-backup-${
+          new Date().toISOString().split("T")[0]
+        }.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+
+      async importData(file: File): Promise<void> {
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+
+        if (!backupData.version || !backupData.data) {
+          throw new Error("Invalid backup file format");
+        }
+
+        // Clear existing data
+        await Promise.all([
+          db.clearStore(STORES.PROFILES),
+          db.clearStore(STORES.SETTINGS),
+          db.clearStore(STORES.REPLY_TYPES),
+        ]);
+
+        // Import new data
+        const { profiles, settings, replyTypes } = backupData.data;
+
+        await Promise.all([
+          ...profiles.map((profile: Profile) =>
+            db.put(STORES.PROFILES, profile)
+          ),
+          ...settings.map((setting: Settings) =>
+            db.put(STORES.SETTINGS, setting)
+          ),
+          ...replyTypes.map((replyType: ReplyType) =>
+            db.put(STORES.REPLY_TYPES, replyType)
+          ),
+        ]);
       },
     },
     ai: newAI(dataLayer),

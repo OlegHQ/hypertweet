@@ -3,7 +3,7 @@ import { browserApi } from "../utils/browser-api";
 import type { LinkedInProfile, XProfile } from "./data";
 import { createProxyHandler } from "@/src/utils/proxy-handler";
 
-function getContentApp(tabId: number): ContentApp {
+export function getContentApp(tabId: number): ContentApp {
   return createProxyHandler<ContentApp>(async (path, args) => {
     const result = await browserApi.tabs.sendMessage(tabId, {
       name: "content-proxy",
