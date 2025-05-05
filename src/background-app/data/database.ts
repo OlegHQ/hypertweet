@@ -171,6 +171,19 @@ export class Database {
       request.onerror = () => reject(request.error);
     });
   }
+
+  async clearStore(storeName: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) return reject(new Error("Database not initialized"));
+
+      const transaction = this.db.transaction(storeName, "readwrite");
+      const store = transaction.objectStore(storeName);
+      const request = store.clear();
+
+      request.onsuccess = () => resolve();
+      request.onerror = () => reject(request.error);
+    });
+  }
 }
 
 export const db = new Database();

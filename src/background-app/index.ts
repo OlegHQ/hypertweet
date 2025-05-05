@@ -3,6 +3,7 @@ import { createDataLayer } from "./data";
 import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
 import { ScrapingContext } from "./scrape-context";
 import { newAI } from "./ai-facade";
+import { STORES, db, type Profile, type Settings, type ReplyType } from "./data/database";
 
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
@@ -18,6 +19,59 @@ export async function setupBackgroundApp() {
         );
         return lastId;
       },
+    },
+    backup: {
+      async exportData() {
+        const profiles = await db.getAll<Profile>(STORES.PROFILES);
+        const settings = await db.getAll<Settings>(STORES.SETTINGS);
+        const replyTypes = await db.getAll<ReplyType>(STORES.REPLY_TYPES);
+        
+        const backupData = {
+          version: 1,
+          timestamp: new Date().toISOString(),
+          data: {
+            profiles,
+            settings,
+            replyTypes
+          }
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hypertweet-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      },
+
+      async importData(file: File): Promise<void> {
+        const text = await file.text();
+        const backupData = JSON.parse(text);
+
+        if (!backupData.version || !backupData.data) {
+          throw new Error('Invalid backup file format');
+        }
+
+        // Clear existing data
+        await Promise.all([
+          db.clearStore(STORES.PROFILES),
+          db.clearStore(STORES.SETTINGS),
+          db.clearStore(STORES.REPLY_TYPES)
+        ]);
+
+        // Import new data
+        const { profiles, settings, replyTypes } = backupData.data;
+
+        await Promise.all([
+          ...profiles.map((profile: Profile) => db.put(STORES.PROFILES, profile)),
+          ...settings.map((setting: Settings) => db.put(STORES.SETTINGS, setting)),
+          ...replyTypes.map((replyType: ReplyType) => db.put(STORES.REPLY_TYPES, replyType))
+        ]);
+      }
     },
     replyTypes: {
       add: replyTypeRepository.add.bind(replyTypeRepository),

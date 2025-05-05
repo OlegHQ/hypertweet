@@ -6,7 +6,8 @@ export type Route =
   | "/knowledge-base"
   | "/reply-types"
   | "/reply-types/edit/:id"
-  | "/api-config";
+  | "/api-config"
+  | "/data-backup";
 
 interface ApiKey {
   id: string;

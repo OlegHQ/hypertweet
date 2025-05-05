@@ -5,7 +5,8 @@ import CreateProfileForm from "./create-profile-form";
 import type { Profile } from "../background-app/data";
 
 export default function ProfileSelector() {
-  const { profiles, setProfiles, setSelectedProfile } = useGlobalState();
+  const { profiles, setProfiles, setSelectedProfile, setCurrentRoute } =
+    useGlobalState();
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingProfile, setEditingProfile] = useState<Profile | undefined>(
     undefined
@@ -58,7 +59,7 @@ export default function ProfileSelector() {
         </button>
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2 mb-8">
         {profiles.map((profile) => (
           <div key={profile.id} className="group relative">
             <button
@@ -76,13 +77,26 @@ export default function ProfileSelector() {
             </button>
           </div>
         ))}
+
+        {profiles.length === 0 && (
+          <div className="text-center py-8 text-gray-600">
+            No profiles found. Click "Create Profile" to get started.
+          </div>
+        )}
       </div>
 
-      {profiles.length === 0 && (
-        <div className="text-center py-8 text-gray-600">
-          No profiles found. Click "Create Profile" to get started.
+      <div className="border-t pt-6">
+        <div
+          onClick={() => setCurrentRoute("/data-backup")}
+          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+        >
+          <h2 className="text-lg font-semibold mb-2">Data Backup & Restore</h2>
+          <p className="text-gray-600">
+            Create backups of your data including profiles, settings, and reply
+            types. You can also restore your data from a previous backup file.
+          </p>
         </div>
-      )}
+      </div>
     </div>
   );
 }
