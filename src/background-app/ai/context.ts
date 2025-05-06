@@ -59,5 +59,17 @@ export async function generateReply(
     stop: ["\n"],
   });
 
-  return res?.choices?.[0]?.message?.content?.trim() ?? "";
+  return postProcess(res?.choices?.[0]?.message?.content?.trim() ?? "");
+}
+
+function postProcess(text: string): string {
+  // replace “ and ” with "
+  text = text.replace(/“/g, '"');
+  text = text.replace(/”/g, '"');
+
+  // replace ’ with '
+  text = text.replace(/’/g, "'");
+  text = text.replace(/—/g, ",");
+
+  return text;
 }
