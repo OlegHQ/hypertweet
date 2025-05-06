@@ -41,6 +41,11 @@ export async function generateReply(
   messages.push({ role: "system", content: TWEET_CONTEXT });
   messages.push({ role: "system", content: prompt });
   messages.push({
+    role: "system",
+    content:
+      "Format: lowercase (except names), break lines freely, use commas & periods naturally",
+  });
+  messages.push({
     role: "user",
     content: `Tweet: """${postText.slice(0, 400)}"""`,
   });
