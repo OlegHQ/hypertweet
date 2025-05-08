@@ -27,6 +27,8 @@ export async function buildPersonalitySnippet(
 
 const TWEET_CONTEXT =
   "You are composing a reply tweet. Output only the reply text, no greeting, no hashtags unless present in the post.";
+const FORMAT_INSTRUCTIONS =
+  "Format: lowercase (except names), break lines freely, use commas & periods naturally, no newlines";
 
 export async function generateReply(
   key: string,
@@ -42,8 +44,7 @@ export async function generateReply(
   messages.push({ role: "system", content: prompt });
   messages.push({
     role: "system",
-    content:
-      "Format: lowercase (except names), break lines freely, use commas & periods naturally",
+    content: FORMAT_INSTRUCTIONS,
   });
   messages.push({
     role: "user",
