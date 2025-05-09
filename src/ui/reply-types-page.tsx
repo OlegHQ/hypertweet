@@ -90,10 +90,7 @@ export default function ReplyTypesPage() {
             <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
               Your Reply Types
             </h2>
-            <Button
-              onClick={() => setIsAddModalOpen(true)}
-              className="ml-auto"
-            >
+            <Button onClick={() => setIsAddModalOpen(true)} className="ml-auto">
               <Plus className="h-4 w-4 mr-2" />
               Add Reply Type
             </Button>
@@ -103,10 +100,7 @@ export default function ReplyTypesPage() {
               No custom reply types created yet
             </div>
           ) : (
-            <motion.div
-              layout
-              className="grid gap-4"
-            >
+            <motion.div layout className="grid gap-4">
               {userReplyTypes.map((type) => (
                 <motion.div
                   key={type.id}
@@ -119,7 +113,9 @@ export default function ReplyTypesPage() {
                 >
                   <Card
                     className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
-                    onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                    onClick={() =>
+                      setCurrentRoute(`/reply-types/edit/${type.id}`)
+                    }
                   >
                     <CardContent className="p-4">
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">
@@ -145,10 +141,7 @@ export default function ReplyTypesPage() {
               No system reply types available
             </div>
           ) : (
-            <motion.div
-              layout
-              className="grid gap-4"
-            >
+            <motion.div layout className="grid gap-4">
               {systemReplyTypes.map((type) => (
                 <motion.div
                   key={type.id}
@@ -161,7 +154,9 @@ export default function ReplyTypesPage() {
                 >
                   <Card
                     className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
-                    onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                    onClick={() =>
+                      setCurrentRoute(`/reply-types/edit/${type.id}`)
+                    }
                   >
                     <CardContent className="p-4">
                       <h3 className="font-medium text-gray-900 dark:text-gray-100">
@@ -217,7 +212,10 @@ export default function ReplyTypesPage() {
                   <Textarea
                     value={newReplyType.prompt}
                     onChange={(e) =>
-                      setNewReplyType({ ...newReplyType, prompt: e.target.value })
+                      setNewReplyType({
+                        ...newReplyType,
+                        prompt: e.target.value,
+                      })
                     }
                     placeholder="Enter reply type prompt"
                     rows={3}
