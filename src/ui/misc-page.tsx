@@ -1,3 +1,4 @@
+import React from "react";
 import { Layout } from "./layout";
 import ApiConfig from "./api-config";
 import { PageHeader } from "./page-header";
@@ -7,19 +8,44 @@ import FormatInstructionBuilder from "./prompt-builder";
 import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { Database, Copy, ArrowRight } from "lucide-react";
+import { Toast } from "./library/toast";
 
 export default function MiscPage() {
   const { setCurrentRoute, selectedProfile } = useGlobalState();
+  const [showToast, setShowToast] = React.useState(false);
+  const [toastMessage, setToastMessage] = React.useState("");
+  const [toastVariant, setToastVariant] = React.useState<"success" | "error">("success");
 
   const handleCopyTweetJson = async () => {
-    const data = await app.content.getCurrentTweetThreadJSON(
-      selectedProfile?.id ?? ""
-    );
-    if (!data) {
-      return;
+    try {
+      const data = await app.content.getCurrentTweetThreadJSON(
+        selectedProfile?.id ?? ""
+      );
+      if (!data) {
+        setToastMessage("No thread data found. Make sure you're on a thread page.");
+        setToastVariant("error");
+        setShowToast(true);
+        return;
+      }
+      await navigator.clipboard.writeText(JSON.stringify(data, null, 2));
+      setToastMessage("Thread JSON copied to clipboard!");
+      setToastVariant("success");
+      setShowToast(true);
+    } catch (error) {
+      setToastMessage("Failed to copy thread JSON to clipboard");
+      setToastVariant("error");
+      setShowToast(true);
     }
-    navigator.clipboard.writeText(JSON.stringify(data, null, 2));
   };
+
+  React.useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast]);
 
   return (
     <Layout>
@@ -64,6 +90,7 @@ export default function MiscPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="relative"
         >
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
@@ -89,6 +116,13 @@ export default function MiscPage() {
               </div>
             </CardContent>
           </Card>
+          {showToast && (
+            <Toast
+              message={toastMessage}
+              variant={toastVariant}
+              onClose={() => setShowToast(false)}
+            />
+          )}
         </motion.div>
       </motion.div>
       <FormatInstructionBuilder />
