@@ -3,6 +3,8 @@ node_modules
 
 # output
 out/**/*
+out-firefox
+out-chrome
 !out/.gitkeep
 !out/sidebar.html
 dist
