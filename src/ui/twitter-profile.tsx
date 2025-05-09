@@ -1,6 +1,10 @@
 import React from "react";
 import type { Tweet } from "../background-app/data/models/social-profile";
 import { ProfileSection } from "./profile-section";
+import { Button } from "./library/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, Repeat2, Heart, ExternalLink, Trash2 } from "lucide-react";
+import { cn } from "./library/utils";
 
 interface TwitterProfileProps {
   data: {
@@ -39,31 +43,31 @@ export function TwitterProfile({
       <div className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Name
             </label>
-            <div className="mt-1">{data.name}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.name}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Username
             </label>
-            <div className="mt-1">@{data.username}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">@{data.username}</div>
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Bio
             </label>
-            <div className="mt-1">{data.bio}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.bio}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Location
             </label>
-            <div className="mt-1">{data.location}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.location}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Website
             </label>
             <div className="mt-1">
@@ -72,142 +76,106 @@ export function TwitterProfile({
                   href={data.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-blue-500 hover:underline"
+                  className="text-primary-600 dark:text-primary-400 hover:underline inline-flex items-center gap-1"
                 >
                   {data.website}
+                  <ExternalLink className="h-3 w-3" />
                 </a>
               ) : (
-                "Not specified"
+                <span className="text-gray-500 dark:text-gray-400">Not specified</span>
               )}
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Join Date
             </label>
-            <div className="mt-1">{data.joinDate}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.joinDate}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Following
             </label>
-            <div className="mt-1">{data.following?.toLocaleString()}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.following?.toLocaleString()}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Followers
             </label>
-            <div className="mt-1">{data.followers?.toLocaleString()}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.followers?.toLocaleString()}</div>
           </div>
           {(data?.recentTweets?.length ?? 0) > 0 && (
             <div className="col-span-2">
               <div className="flex items-center justify-between">
-                <label className="block text-sm font-medium text-gray-700">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                   Recent Tweets
                 </label>
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => setShowRecentTweets(!showRecentTweets)}
-                  className="text-sm text-blue-500 hover:text-blue-700 flex items-center gap-1"
+                  className="text-primary-600 dark:text-primary-400"
                 >
                   {showRecentTweets ? "Hide" : "Show"} Tweets
-                  <svg
-                    className={`w-4 h-4 transition-transform ${
-                      showRecentTweets ? "rotate-180" : ""
-                    }`}
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M19 9l-7 7-7-7"
-                    />
-                  </svg>
-                </button>
+                </Button>
               </div>
-              {showRecentTweets && (
-                <div className="mt-2 space-y-4">
-                  {data?.recentTweets?.map((tweet: Tweet, index: number) => (
-                    <div
-                      key={index}
-                      className="border rounded-lg p-4 hover:bg-gray-50"
-                    >
-                      <div className="text-sm text-gray-500 mb-2">
-                        {new Date(tweet.time).toLocaleString()}
-                      </div>
-                      <div className="whitespace-pre-wrap mb-3">
-                        {tweet.text}
-                      </div>
-                      <div className="flex gap-4 text-sm text-gray-500">
-                        <div className="flex items-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-                            />
-                          </svg>
-                          {tweet.replies}
+              <AnimatePresence>
+                {showRecentTweets && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="mt-2 space-y-4"
+                  >
+                    {data?.recentTweets?.map((tweet: Tweet, index: number) => (
+                      <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                      >
+                        <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                          {new Date(tweet.time).toLocaleString()}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-                            />
-                          </svg>
-                          {tweet.retweets}
+                        <div className="whitespace-pre-wrap mb-3 text-gray-900 dark:text-gray-100">
+                          {tweet.text}
                         </div>
-                        <div className="flex items-center gap-1">
-                          <svg
-                            className="w-4 h-4"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
+                        <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400">
+                          <div className="flex items-center gap-1">
+                            <MessageSquare className="h-4 w-4" />
+                            {tweet.replies}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Repeat2 className="h-4 w-4" />
+                            {tweet.retweets}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Heart className="h-4 w-4" />
+                            {tweet.likes}
+                          </div>
+                          <a
+                            href={tweet.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary-600 dark:text-primary-400 hover:underline ml-auto inline-flex items-center gap-1"
                           >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
-                            />
-                          </svg>
-                          {tweet.likes}
+                            View Tweet
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
                         </div>
-                        <a
-                          href={tweet.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-blue-500 hover:underline ml-auto"
-                        >
-                          View Tweet
-                        </a>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           )}
         </div>
       </div>
-      <div className="mt-6 pt-4 border-t">
-        <button
+      <div className="mt-6 pt-4 border-t dark:border-gray-700">
+        <Button
+          variant="ghost"
           onClick={async () => {
             if (
               window.confirm(
@@ -217,23 +185,11 @@ export function TwitterProfile({
               await onClear();
             }
           }}
-          className="text-red-600 hover:text-red-800 flex items-center gap-1"
+          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex items-center gap-2"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
+          <Trash2 className="h-4 w-4" />
           Clear Profile Data
-        </button>
+        </Button>
       </div>
     </ProfileSection>
   );

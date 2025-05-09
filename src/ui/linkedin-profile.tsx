@@ -1,13 +1,29 @@
 import React from "react";
+import type { Tweet as Post } from "../background-app/data/models/social-profile";
 import { ProfileSection } from "./profile-section";
+import { Button } from "./library/button";
+import { motion, AnimatePresence } from "framer-motion";
+import { MessageSquare, ThumbsUp, ExternalLink, Trash2 } from "lucide-react";
+import { cn } from "./library/utils";
 
 interface LinkedInProfileProps {
   data: {
     name: string;
+    headline?: string;
     location?: string;
-    description?: string;
-    positions?: string[];
-    companies?: string[];
+    about?: string;
+    experience?: Array<{
+      title: string;
+      company: string;
+      duration: string;
+      description?: string;
+    }>;
+    education?: Array<{
+      school: string;
+      degree: string;
+      duration: string;
+    }>;
+    recentPosts?: Post[];
   };
   onRefresh: () => Promise<void>;
   profileUrl?: string;
@@ -22,6 +38,8 @@ export function LinkedInProfile({
   onUrlChange,
   onClear,
 }: LinkedInProfileProps) {
+  const [showRecentPosts, setShowRecentPosts] = React.useState(false);
+
   return (
     <ProfileSection
       title="LinkedIn Profile"
@@ -29,64 +47,166 @@ export function LinkedInProfile({
       profileUrl={profileUrl}
       onUrlChange={onUrlChange}
     >
-      <div className="space-y-4">
+      <div className="space-y-6">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Name
             </label>
-            <div className="mt-1">{data.name}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.name}</div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Headline
+            </label>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.headline}</div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Location
             </label>
-            <div className="mt-1">{data.location}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.location}</div>
           </div>
           <div className="col-span-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Description
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              About
             </label>
-            <div className="mt-1 whitespace-pre-wrap">{data.description}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100 whitespace-pre-wrap">
+              {data.about}
+            </div>
           </div>
-          {data.positions && data.positions.length > 0 && (
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Positions
-              </label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {data.positions.map((position, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-gray-100 rounded-full text-sm"
-                  >
-                    {position}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          {data.companies && data.companies.length > 0 && (
-            <div className="col-span-2">
-              <label className="block text-sm font-medium text-gray-700">
-                Companies
-              </label>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {data.companies.map((company, index) => (
-                  <span
-                    key={index}
-                    className="px-2 py-1 bg-gray-100 rounded-full text-sm"
-                  >
-                    {company}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
+
+        {data.experience && data.experience.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+              Experience
+            </h3>
+            <div className="space-y-4">
+              {data.experience.map((exp, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900 dark:text-gray-100">
+                    {exp.title}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {exp.company}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-500">
+                    {exp.duration}
+                  </div>
+                  {exp.description && (
+                    <div className="mt-2 text-sm text-gray-700 dark:text-gray-300">
+                      {exp.description}
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {data.education && data.education.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+              Education
+            </h3>
+            <div className="space-y-4">
+              {data.education.map((edu, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                >
+                  <div className="font-medium text-gray-900 dark:text-gray-100">
+                    {edu.school}
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                    {edu.degree}
+                  </div>
+                  <div className="text-sm text-gray-500 dark:text-gray-500">
+                    {edu.duration}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {(data?.recentPosts?.length ?? 0) > 0 && (
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                Recent Posts
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowRecentPosts(!showRecentPosts)}
+                className="text-primary-600 dark:text-primary-400"
+              >
+                {showRecentPosts ? "Hide" : "Show"} Posts
+              </Button>
+            </div>
+            <AnimatePresence>
+              {showRecentPosts && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="space-y-4"
+                >
+                  {data?.recentPosts?.map((post: Post, index: number) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border dark:border-gray-700 rounded-lg p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
+                    >
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+                        {new Date(post.time).toLocaleString()}
+                      </div>
+                      <div className="whitespace-pre-wrap mb-3 text-gray-900 dark:text-gray-100">
+                        {post.text}
+                      </div>
+                      <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center gap-1">
+                          <MessageSquare className="h-4 w-4" />
+                          {post.replies}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <ThumbsUp className="h-4 w-4" />
+                          {post.likes}
+                        </div>
+                        <a
+                          href={post.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-primary-600 dark:text-primary-400 hover:underline ml-auto inline-flex items-center gap-1"
+                        >
+                          View Post
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        )}
       </div>
-      <div className="mt-6 pt-4 border-t">
-        <button
+      <div className="mt-6 pt-4 border-t dark:border-gray-700">
+        <Button
+          variant="ghost"
           onClick={async () => {
             if (
               window.confirm(
@@ -96,23 +216,11 @@ export function LinkedInProfile({
               await onClear();
             }
           }}
-          className="text-red-600 hover:text-red-800 flex items-center gap-1"
+          className="text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-300 flex items-center gap-2"
         >
-          <svg
-            className="w-4 h-4"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-            />
-          </svg>
+          <Trash2 className="h-4 w-4" />
           Clear Profile Data
-        </button>
+        </Button>
       </div>
     </ProfileSection>
   );
