@@ -1,6 +1,12 @@
 /* bun build script for hypertweet */
 import { spawn } from "bun";
-import { mkdirSync, writeFileSync, existsSync } from "node:fs";
+import {
+  mkdirSync,
+  writeFileSync,
+  existsSync,
+  cpSync,
+  lstatSync,
+} from "node:fs";
 import { join } from "node:path";
 
 // -------------------- CLI FLAGS --------------------
@@ -9,14 +15,23 @@ const watch = cli.includes("--watch");
 const buildAll = cli.includes("--all");
 const singleChrome = cli.includes("--chrome");
 
-// decide targets
+// determine targets
 const targets: ("firefox" | "chrome")[] = buildAll
   ? ["firefox", "chrome"]
   : [singleChrome ? "chrome" : "firefox"];
 
-// -------------------- STATIC HELPERS ---------------
+// -------------------- UTILITIES --------------------
 function ensureDir(dir: string) {
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+}
+
+function copyImages(outDir: string) {
+  const srcImg = "./img";
+  if (!existsSync(srcImg) || !lstatSync(srcImg).isDirectory()) return;
+  const destImg = join(outDir, "img");
+  ensureDir(destImg);
+  // Node 16+ cpSync supports recursive copy
+  cpSync(srcImg, destImg, { recursive: true });
 }
 
 function writeSidebar(outDir: string) {
@@ -64,11 +79,8 @@ function writeManifest(outDir: string, chrome: boolean) {
     },
   };
 
-  if (chrome) {
-    delete (manifest as any).sidebar_action;
-  } else {
-    delete (manifest as any).side_panel;
-  }
+  if (chrome) delete (manifest as any).sidebar_action;
+  else delete (manifest as any).side_panel;
 
   writeFileSync(
     join(outDir, "manifest.json"),
@@ -80,9 +92,10 @@ function prepareStatics(outDir: string, chrome: boolean) {
   ensureDir(outDir);
   writeSidebar(outDir);
   writeManifest(outDir, chrome);
+  copyImages(outDir);
 }
 
-// -------------------- BUILD FUNC -------------------
+// -------------------- BUILD FUNCTION --------------------
 async function runBuild(target: "firefox" | "chrome") {
   const outDir = target === "chrome" ? "./out-chrome" : "./out-firefox";
   const isChrome = target === "chrome";
@@ -115,23 +128,23 @@ async function runBuild(target: "firefox" | "chrome") {
   return proc.exited;
 }
 
-// -------------------- MAIN -------------------------
+// -------------------- MAIN --------------------
 async function main() {
   if (watch) {
-    // start all watchers concurrently and never exit
+    // parallel watch builds
     await Promise.all(targets.map(runBuild));
-    await new Promise(() => {}); // keep alive
+    await new Promise(() => {}); // keep process alive
   } else {
-    // sequential builds so log output isn't jumbled
-    for (const t of targets) {
-      const code = await runBuild(t);
+    // sequential one-off builds
+    for (const target of targets) {
+      const code = await runBuild(target);
       if (code !== 0) process.exit(code);
     }
     console.log("✅ Build complete");
   }
 }
 
-main().catch((e) => {
-  console.error(e);
+main().catch((err) => {
+  console.error(err);
   process.exit(1);
 });

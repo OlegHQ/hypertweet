@@ -46,8 +46,8 @@ export function Button({
     backgroundColor: isActive
       ? "rgba(29, 155, 240, 0.2)"
       : isHovered
-      ? "rgba(29, 155, 240, 0.1)"
-      : "transparent",
+        ? "rgba(29, 155, 240, 0.1)"
+        : "transparent",
     color: "rgb(29, 155, 240)",
     transition: "background-color 0.2s",
     cursor: "pointer",
@@ -74,4 +74,4 @@ export function Button({
       {loading ? loadingText : children}
     </button>
   );
-} 
+}

@@ -160,8 +160,8 @@ export default function CreateProfileForm({ profile, onCancel }: Props) {
             {isSubmitting
               ? "Saving..."
               : profile
-              ? "Save Changes"
-              : "Create Profile"}
+                ? "Save Changes"
+                : "Create Profile"}
           </button>
         </div>
       </form>

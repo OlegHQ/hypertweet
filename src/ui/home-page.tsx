@@ -67,8 +67,8 @@ export default function HomePage() {
         >
           <h2 className="text-lg font-medium mb-2">Miscellaneous</h2>
           <p className="text-gray-600">
-            Access various tools and utilities including API configuration, data backup,
-            and thread copying functionality.
+            Access various tools and utilities including API configuration, data
+            backup, and thread copying functionality.
           </p>
         </div>
       </div>

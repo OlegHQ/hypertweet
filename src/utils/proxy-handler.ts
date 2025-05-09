@@ -9,19 +9,19 @@ type CallFn = (path: string, args: any[]) => Promise<unknown>;
 /**
  * Creates a proxy object that intercepts all property access and function calls,
  * converting them into path-based function calls.
- * 
+ *
  * @example
  * ```typescript
  * const handler = createProxyHandler((path, args) => {
  *   console.log(`Called ${path} with args:`, args);
  *   return Promise.resolve('result');
  * });
- * 
+ *
  * // These will all be handled by the proxy:
  * await handler.foo.bar.baz(1, 2, 3);
  * // Logs: "Called foo.bar.baz with args: [1, 2, 3]"
  * ```
- * 
+ *
  * @typeParam T - The type of the object to create a proxy for
  * @param onCall - Function that handles all proxy calls
  * @returns A proxy object that intercepts all property access and function calls
@@ -48,7 +48,7 @@ export function createProxyHandler<T extends object>(onCall: CallFn): T {
 /**
  * Creates a function that can invoke methods on an object using dot-notation paths.
  * This is useful for converting path-based function calls back into actual method calls.
- * 
+ *
  * @example
  * ```typescript
  * const obj = {
@@ -58,12 +58,12 @@ export function createProxyHandler<T extends object>(onCall: CallFn): T {
  *     }
  *   }
  * };
- * 
+ *
  * const invoker = makePathInvoker(obj);
  * const result = await invoker('foo.bar.baz', [5]);
  * // result === 10
  * ```
- * 
+ *
  * @typeParam T - The type of the target object
  * @param target - The object to create an invoker for
  * @returns A function that can invoke methods on the target object using paths

@@ -1,13 +1,22 @@
 // Use a unified API reference for Chrome & Firefox
 
 import { setupBackgroundApp } from "./background-app";
-import { browserApi } from "./utils/browser-api";
+import { browserApi, onMessage } from "./utils/browser-api";
 import { makePathInvoker } from "./utils/proxy-handler";
 
 // Listen for extension icon click
-browserApi.action.onClicked.addListener((tab) => {
-  if (tab.id) {
+browserApi.action.onClicked.addListener(async function (tab) {
+  if (tab.id && "sidebarAction" in browserApi) {
     browserApi.sidebarAction.open();
+  } else if (tab.id && typeof chrome.sidePanel !== "undefined") {
+    chrome.sidePanel.open(
+      {
+        tabId: tab.id!,
+      },
+      () => {
+        // -> ("Side panel opened");
+      }
+    );
   }
 });
 
@@ -17,12 +26,13 @@ setupBackgroundApp().then((app) => {
   invoker.current = makePathInvoker(app);
 });
 
-browserApi.runtime.onMessage.addListener(async (message: any) => {
+onMessage(async (message: any) => {
   const { name, path, args } = message;
   if (name === "proxy") {
     for (let i = 0; i < 10; i++) {
       if (typeof invoker.current === "function") {
-        return await invoker.current(path, args);
+        const result = await invoker.current(path, args);
+        return result;
       }
       await new Promise((resolve) => setTimeout(resolve, 0));
     }

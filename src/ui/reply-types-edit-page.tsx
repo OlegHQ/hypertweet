@@ -6,7 +6,8 @@ import type { ReplyType } from "../background-app/data/models/reply-type";
 import { PageHeader } from "./page-header";
 
 export default function ReplyTypeEditPage() {
-  const { currentRoute, setCurrentRoute, selectedProfile, setReplyTypes } = useGlobalState();
+  const { currentRoute, setCurrentRoute, selectedProfile, setReplyTypes } =
+    useGlobalState();
   const id = currentRoute.split("/").pop();
   const [replyType, setReplyType] = useState<ReplyType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,11 +54,11 @@ export default function ReplyTypeEditPage() {
           prompt: editedPrompt,
         });
       }
-      
+
       // Refresh reply types in global state
       const updatedTypes = await app.replyTypes.getAll(selectedProfile.id);
       setReplyTypes(selectedProfile.id, updatedTypes);
-      
+
       setCurrentRoute("/reply-types");
     } catch (error) {
       console.error("Failed to update reply type:", error);

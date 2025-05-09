@@ -32,7 +32,6 @@ export async function setupBackgroundApp() {
           active: true,
           currentWindow: true,
         });
-        console.log({ tabs });
         if (!tabs[0]) {
           return null;
         }
@@ -139,7 +138,6 @@ export async function setupBackgroundApp() {
         );
       },
     },
-
     backup: {
       async exportData() {
         const profiles = await db.getAll<Profile>(STORES.PROFILES);
@@ -172,8 +170,7 @@ export async function setupBackgroundApp() {
         URL.revokeObjectURL(url);
       },
 
-      async importData(file: File): Promise<void> {
-        const text = await file.text();
+      async importData(text: string): Promise<void> {
         const backupData = JSON.parse(text);
 
         if (!backupData.version || !backupData.data) {

@@ -31,4 +31,4 @@ export function PageHeader({ title, backRoute }: PageHeaderProps) {
       <h1 className="text-xl font-medium">{title}</h1>
     </div>
   );
-} 
+}

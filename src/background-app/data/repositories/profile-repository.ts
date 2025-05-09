@@ -20,7 +20,7 @@ export class ProfileRepository {
   }
 
   async getAll(): Promise<Profile[]> {
-    return this.db.getAll<Profile>("profiles");
+    return await this.db.getAll<Profile>("profiles");
   }
 
   async delete(id: string): Promise<void> {

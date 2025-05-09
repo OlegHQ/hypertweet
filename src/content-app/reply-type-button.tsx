@@ -25,7 +25,7 @@ const useReplyTypeButton = (
 
   const onSuperLoading = useCallback(
     (loading: boolean) => {
-      setState(prev => ({ ...prev, loading }));
+      setState((prev) => ({ ...prev, loading }));
       onLoading(loading);
     },
     [onLoading]

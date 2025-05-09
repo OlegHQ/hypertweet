@@ -27,7 +27,9 @@ export default function DataBackup() {
     try {
       setError(null);
       setSuccess(null);
-      await app.backup.importData(file);
+
+      const text = await file.text();
+      await app.backup.importData(text);
       setSuccess("Backup has been imported successfully!");
     } catch (err) {
       setError(
