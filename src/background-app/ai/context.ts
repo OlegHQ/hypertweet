@@ -13,7 +13,7 @@ export async function buildPersonalitySnippet(
       {
         role: "system",
         content:
-          "You distill profile text into a first‑person personality blurb, ≤20 tokens, casual English. Must include: Tech lead, Ukraine. Return ONLY the blurb.",
+          "You distill profile text into a first‑person personality blurb, ≤20 tokens, casual English. Return ONLY the blurb.",
       },
       { role: "user", content: JSON.stringify(payload) },
     ],
