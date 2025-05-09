@@ -16,7 +16,8 @@ export default function Panel() {
         return;
       }
 
-      const replyTypes = await bgApp.replyTypes.getAll(profileId);
+      let replyTypes = await bgApp.replyTypes.getAll(profileId);
+      replyTypes = replyTypes.filter((x) => !x.isHidden);
       setReplyTypes(replyTypes);
     }
     load();

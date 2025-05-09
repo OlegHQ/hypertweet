@@ -3,6 +3,10 @@ import { app } from "./app";
 import { useGlobalState } from "./state";
 import CreateProfileForm from "./create-profile-form";
 import type { Profile } from "../background-app/data";
+import { motion, AnimatePresence } from "framer-motion";
+import { Card, CardContent, CardHeader } from "./library/card";
+import { Button } from "./library/button";
+import { Plus, Edit2, Database } from "lucide-react";
 
 export default function ProfileSelector({
   onProfileSelected,
@@ -44,66 +48,120 @@ export default function ProfileSelector({
     return (
       <div className="p-4">
         <div className="flex flex-col items-center justify-center h-64 space-y-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          <p className="text-gray-600">Loading profiles...</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="rounded-full h-8 w-8 border-2 border-primary-600 dark:border-primary-400 border-t-transparent"
+          />
+          <p className="text-gray-600 dark:text-gray-400">
+            Loading profiles...
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="p-4 max-w-4xl mx-auto"
+    >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-semibold">Select a Profile</h2>
-        <button
-          onClick={() => setShowCreateForm(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-        >
+        <h2 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+          Select a Profile
+        </h2>
+        <Button onClick={() => setShowCreateForm(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
           Create Profile
-        </button>
+        </Button>
       </div>
 
-      <div className="space-y-2 mb-8">
-        {profiles.map((profile) => (
-          <div key={profile.id} className="group relative">
-            <button
-              onClick={() => {
-                setSelectedProfile(profile);
-                onProfileSelected?.();
-              }}
-              className="w-full p-3 text-left rounded border hover:border-blue-500 hover:bg-blue-50 transition-colors"
+      <div className="space-y-4 mb-8">
+        <AnimatePresence mode="popLayout">
+          {profiles.map((profile, index) => (
+            <motion.div
+              key={profile.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: index * 0.1 }}
             >
-              <div className="font-medium">{profile.name}</div>
-              <div className="text-sm text-gray-600">{profile.linkedInUrl}</div>
-            </button>
-            <button
-              onClick={() => setEditingProfile(profile)}
-              className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 p-1 text-gray-500 hover:text-gray-700"
-            >
-              Edit
-            </button>
-          </div>
-        ))}
+              <Card className="group hover:border-primary-500 dark:hover:border-primary-400 transition-colors">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <button
+                        onClick={() => {
+                          setSelectedProfile(profile);
+                          onProfileSelected?.();
+                        }}
+                        className="w-full text-left"
+                      >
+                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                          {profile.name}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {profile.linkedInUrl}
+                        </p>
+                      </button>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => setEditingProfile(profile)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
 
-        {profiles.length === 0 && (
-          <div className="text-center py-8 text-gray-600">
-            No profiles found. Click "Create Profile" to get started.
-          </div>
-        )}
+          {profiles.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <p className="text-gray-600 dark:text-gray-400">
+                No profiles found. Click "Create Profile" to get started.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      <div className="border-t pt-6">
-        <div
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+      >
+        <Card
+          className="cursor-pointer hover:border-primary-500 dark:hover:border-primary-400 transition-colors"
           onClick={() => setCurrentRoute("/data-backup")}
-          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
         >
-          <h2 className="text-lg font-semibold mb-2">Data Backup & Restore</h2>
-          <p className="text-gray-600">
-            Create backups of your data including profiles, settings, and reply
-            types. You can also restore your data from a previous backup file.
-          </p>
-        </div>
-      </div>
-    </div>
+          <CardContent className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                <Database className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                  Data Backup & Restore
+                </h2>
+                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                  Create backups of your data including profiles, settings, and
+                  reply types. You can also restore your data from a previous
+                  backup file.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
   );
 }

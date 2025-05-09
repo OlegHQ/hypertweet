@@ -4,6 +4,9 @@ import { PageHeader } from "./page-header";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import FormatInstructionBuilder from "./prompt-builder";
+import { Card, CardContent } from "./library/card";
+import { motion } from "framer-motion";
+import { Database, Copy, ArrowRight } from "lucide-react";
 
 export default function MiscPage() {
   const { setCurrentRoute, selectedProfile } = useGlobalState();
@@ -21,31 +24,73 @@ export default function MiscPage() {
   return (
     <Layout>
       <PageHeader title="Miscellaneous" backRoute="/" />
-      <div className="space-y-6 p-4">
+      <motion.div
+        className="space-y-6 p-4"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ staggerChildren: 0.1 }}
+      >
         <ApiConfig />
-        <div
-          onClick={() => setCurrentRoute("/data-backup")}
-          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-lg font-semibold mb-2">Data Backup & Restore</h2>
-          <p className="text-gray-600">
-            Create backups of your data including profiles, settings, and reply
-            types. You can also restore your data from a previous backup file.
-          </p>
-        </div>
-        <div
-          onClick={handleCopyTweetJson}
-          className="bg-white rounded-lg shadow p-6 cursor-pointer hover:shadow-md transition-shadow"
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setCurrentRoute("/data-backup")}
+          >
+            <CardContent className="flex items-start gap-4 p-6">
+              <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                <Database className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Data Backup & Restore
+                  </h2>
+                  <ArrowRight className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  Create backups of your data including profiles, settings, and
+                  reply types. You can also restore your data from a previous
+                  backup file.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
         >
-          <h2 className="text-lg font-semibold mb-2">Copy X Thread JSON</h2>
-          <p className="text-gray-600">
-            When you're on an X (Twitter) thread page, click this button to copy
-            a formatted JSON with the thread ID and URL. This makes it easy to
-            share thread context with ChatGPT for analysis or response
-            generation.
-          </p>
-        </div>
-      </div>
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={handleCopyTweetJson}
+          >
+            <CardContent className="flex items-start gap-4 p-6">
+              <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                <Copy className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Copy X Thread JSON
+                  </h2>
+                  <ArrowRight className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  When you're on an X (Twitter) thread page, click this button
+                  to copy a formatted JSON with the thread ID and URL. This
+                  makes it easy to share thread context with ChatGPT for
+                  analysis or response generation.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
       <FormatInstructionBuilder />
     </Layout>
   );
