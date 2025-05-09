@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { install } from "@twind/core";
 import presetAutoprefix from "@twind/preset-autoprefix";
 import presetTailwind from "@twind/preset-tailwind";
@@ -8,6 +8,7 @@ import Router from "./ui/router";
 // Initialize Twind with custom theme
 install({
   presets: [presetAutoprefix(), presetTailwind()],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -129,11 +130,56 @@ install({
   },
 });
 
+// Dark mode detection component
+const DarkModeDetector: React.FC = () => {
+  useEffect(() => {
+    // Check system preference
+    const darkModeMediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    
+    // Function to update dark mode
+    const updateDarkMode = (e: MediaQueryListEvent | MediaQueryList) => {
+      if (e.matches) {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+    };
+
+    // Set initial value
+    updateDarkMode(darkModeMediaQuery);
+
+    // Listen for changes
+    darkModeMediaQuery.addEventListener('change', updateDarkMode);
+
+    // Cleanup
+    return () => {
+      darkModeMediaQuery.removeEventListener('change', updateDarkMode);
+    };
+  }, []);
+
+  return null;
+};
+
 // Initialize React
 const root = document.getElementById("root");
 if (root) {
+  // Add global styles for html and body
+  const style = document.createElement('style');
+  style.textContent = `
+    html, body {
+      background-color: #ffffff;
+      color: #0f172a;
+    }
+    html.dark, html.dark body {
+      background-color: #0f172a;
+      color: #f8fafc;
+    }
+  `;
+  document.head.appendChild(style);
+
   createRoot(root).render(
-    <div className="h-full w-full text-sm">
+    <div className="h-full w-full text-sm bg-background dark:bg-background-dark text-foreground dark:text-foreground-dark">
+      <DarkModeDetector />
       <Router />
     </div>
   );
