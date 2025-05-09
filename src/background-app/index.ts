@@ -84,15 +84,13 @@ export async function setupBackgroundApp() {
         const hiddenSystemReplies =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenSystemReplies"
+            "hiddenReplyTypes"
           )) ?? [];
 
-        const defaultOnes = defaultReplyTypes(profileId).map((x) => ({
+        return [...allItems, ...defaultReplyTypes(profileId)].map((x) => ({
           ...x,
           isHidden: hiddenSystemReplies?.includes(x.id),
         }));
-
-        return [...allItems, ...defaultOnes];
       },
       async getReplyType(profileId: string, id: string) {
         let item =
@@ -105,23 +103,23 @@ export async function setupBackgroundApp() {
             return null;
           }
         }
-        const hiddenSystemReplies =
+        const hiddenReplyTypes =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenSystemReplies"
+            "hiddenReplyTypes"
           )) ?? [];
-        return item.isSystem && hiddenSystemReplies?.includes(item.id)
+        return hiddenReplyTypes?.includes(item.id)
           ? {
               ...item,
               isHidden: true,
             }
           : item;
       },
-      async setSystemOneHidden(profileId: string, id: string, option: boolean) {
+      async setOneHidden(profileId: string, id: string, option: boolean) {
         let replyTypes =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenSystemReplies"
+            "hiddenReplyTypes"
           )) ?? [];
 
         if (option) {
@@ -132,11 +130,7 @@ export async function setupBackgroundApp() {
 
         replyTypes = Array.from(new Set(replyTypes));
 
-        await dataLayer.config.set(
-          profileId,
-          "hiddenSystemReplies",
-          replyTypes
-        );
+        await dataLayer.config.set(profileId, "hiddenReplyTypes", replyTypes);
       },
     },
     backup: {

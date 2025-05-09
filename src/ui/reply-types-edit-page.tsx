@@ -21,6 +21,7 @@ export default function ReplyTypeEditPage() {
   const [editedName, setEditedName] = useState("");
   const [editedPrompt, setEditedPrompt] = useState("");
   const [isHidden, setIsHidden] = useState(false);
+  const [isHiddenChanged, setIsHiddenChanged] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,13 +56,10 @@ export default function ReplyTypeEditPage() {
     setError(null);
 
     try {
-      if (replyType.isSystem) {
-        await app.replyTypes.setSystemOneHidden(
-          selectedProfile.id,
-          id,
-          isHidden
-        );
-      } else {
+      if (isHiddenChanged) {
+        await app.replyTypes.setOneHidden(selectedProfile.id, id, isHidden);
+      }
+      if (!replyType.isSystem) {
         await app.replyTypes.update(selectedProfile.id, id, {
           name: editedName,
           prompt: editedPrompt,
@@ -86,6 +84,9 @@ export default function ReplyTypeEditPage() {
 
     try {
       await app.replyTypes.delete(selectedProfile.id, id);
+      // Refresh reply types in global state
+      const updatedTypes = await app.replyTypes.getAll(selectedProfile.id);
+      setReplyTypes(selectedProfile.id, updatedTypes);
       setCurrentRoute("/reply-types");
     } catch (error) {
       console.error("Failed to delete reply type:", error);
@@ -187,26 +188,27 @@ export default function ReplyTypeEditPage() {
               />
             </motion.div>
 
-            {replyType.isSystem && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="flex items-center space-x-2"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="flex items-center space-x-2"
+            >
+              <Switch
+                id="hide-reply-type"
+                checked={isHidden}
+                onCheckedChange={(checked) => {
+                  setIsHidden(checked);
+                  setIsHiddenChanged(true);
+                }}
+              />
+              <label
+                htmlFor="hide-reply-type"
+                className="text-sm text-gray-700 dark:text-gray-300"
               >
-                <Switch
-                  id="hide-system"
-                  checked={isHidden}
-                  onCheckedChange={setIsHidden}
-                />
-                <label
-                  htmlFor="hide-system"
-                  className="text-sm text-gray-700 dark:text-gray-300"
-                >
-                  Hide this system reply type
-                </label>
-              </motion.div>
-            )}
+                Hide this reply type
+              </label>
+            </motion.div>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
