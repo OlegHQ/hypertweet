@@ -70,6 +70,7 @@ export async function setupBackgroundApp() {
             "if the .currentResponse good enough, clean it up or use it as base for coming up with 5 options for replies to this .twitterThread";
           result.currentResponse = twitterThread.currentResponse;
         }
+        delete twitterThread.currentResponse;
 
         return result;
       },

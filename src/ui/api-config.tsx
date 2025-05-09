@@ -1,6 +1,10 @@
 import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
+import { Card, CardContent, CardHeader } from "./library/card";
+import { Button } from "./library/button";
+import { Input } from "./library/input";
+import { motion } from "framer-motion";
 
 export default function ApiConfig() {
   const { selectedProfile } = useGlobalState();
@@ -56,7 +60,6 @@ export default function ApiConfig() {
       ) as HTMLInputElement;
       const value = input.value;
 
-      // Update both global state and persistent storage
       setProfileKey(selectedProfile.id, "openAiKey", value);
       await app.dataLayer.config.setCredential(
         selectedProfile.id,
@@ -76,7 +79,6 @@ export default function ApiConfig() {
   const handleDelete = async () => {
     if (!selectedProfile) return;
     try {
-      // Remove from both global state and persistent storage
       removeProfileKey(selectedProfile.id, "openAiKey");
       await app.dataLayer.config.delete(selectedProfile.id, "openAiKey");
 
@@ -95,101 +97,116 @@ export default function ApiConfig() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-4 mb-4">
-        <h2 className="text-lg font-medium mb-4">API Configuration</h2>
-        <div className="text-gray-600">Loading API keys...</div>
-      </div>
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="max-w-4xl mx-auto"
+      >
+        <Card className="rounded-2xl shadow-xl">
+          <CardHeader className="font-semibold text-xl">API Configuration</CardHeader>
+          <CardContent>
+            <div className="text-gray-600">Loading API keys...</div>
+          </CardContent>
+        </Card>
+      </motion.div>
     );
   }
 
   return (
-    <div className="bg-white rounded-lg border p-4 mb-4">
-      <h2 className="text-lg font-medium mb-4">API Configuration</h2>
+    <motion.div
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="max-w-4xl mx-auto"
+    >
+      <Card className="rounded-2xl shadow-xl">
+        <CardHeader className="font-semibold text-xl">API Configuration</CardHeader>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
+          )}
 
-      {error && (
-        <div className="mb-4 p-2 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
-
-      {success && (
-        <div className="mb-4 p-2 bg-green-100 text-green-700 rounded">
-          {success}
-        </div>
-      )}
-
-      <div className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            OpenAI API Key
-          </label>
-          {isEditing ? (
-            <div className="space-y-2">
-              <input
-                type="text"
-                defaultValue={openAiKey}
-                className="w-full px-3 py-2 border rounded-md font-mono"
-                placeholder="Enter your OpenAI API key"
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSave}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsEditing(false)}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
-                >
-                  Cancel
-                </button>
-              </div>
+          {success && (
+            <div className="p-3 bg-green-100 text-green-700 rounded-lg">
+              {success}
             </div>
-          ) : (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <input
-                  type="password"
-                  value={openAiKey || "••••••••••••••••"}
-                  disabled
-                  className="w-full px-3 py-2 border rounded-md bg-gray-50"
-                />
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-4 py-2 border rounded-md hover:bg-gray-50"
-                >
-                  Edit
-                </button>
-                {hasProfileKey(selectedProfile.id, "openAiKey") && (
-                  <button
-                    onClick={handleDelete}
-                    className="px-4 py-2 text-red-500 border border-red-500 rounded-md hover:bg-red-50"
-                  >
-                    Delete
-                  </button>
-                )}
-              </div>
-              {!hasProfileKey(selectedProfile.id, "openAiKey") && (
-                <div className="text-sm text-gray-600">
-                  <p className="mb-2">No OpenAI API key has been added yet.</p>
-                  <p>
-                    You can get an API key from the{" "}
-                    <a
-                      href="https://platform.openai.com/api-keys"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:underline"
+          )}
+
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                OpenAI API Key
+              </label>
+              {isEditing ? (
+                <div className="space-y-3">
+                  <Input
+                    type="text"
+                    defaultValue={openAiKey}
+                    className="font-mono"
+                    placeholder="Enter your OpenAI API key"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleSave}
+                      className="bg-blue-500 hover:bg-blue-600"
                     >
-                      OpenAI API Keys page
-                    </a>
-                    . Once you have your key, click the Edit button above to add
-                    it.
-                  </p>
+                      Save
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={() => setIsEditing(false)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Input
+                      type="password"
+                      value={openAiKey || "••••••••••••••••"}
+                      disabled
+                      className="bg-gray-50 font-mono"
+                    />
+                    <Button
+                      variant="secondary"
+                      onClick={() => setIsEditing(true)}
+                    >
+                      Edit
+                    </Button>
+                    {hasProfileKey(selectedProfile.id, "openAiKey") && (
+                      <Button
+                        variant="destructive"
+                        onClick={handleDelete}
+                      >
+                        Delete
+                      </Button>
+                    )}
+                  </div>
+                  {!hasProfileKey(selectedProfile.id, "openAiKey") && (
+                    <div className="text-sm text-gray-600 space-y-2">
+                      <p>No OpenAI API key has been added yet.</p>
+                      <p>
+                        You can get an API key from the{" "}
+                        <a
+                          href="https://platform.openai.com/api-keys"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:underline"
+                        >
+                          OpenAI API Keys page
+                        </a>
+                        . Once you have your key, click the Edit button above to add
+                        it.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
-    </div>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

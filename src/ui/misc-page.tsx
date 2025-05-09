@@ -3,6 +3,7 @@ import ApiConfig from "./api-config";
 import { PageHeader } from "./page-header";
 import { useGlobalState } from "./state";
 import { app } from "./app";
+import FormatInstructionBuilder from "./prompt-builder";
 
 export default function MiscPage() {
   const { setCurrentRoute, selectedProfile } = useGlobalState();
@@ -45,6 +46,7 @@ export default function MiscPage() {
           </p>
         </div>
       </div>
+      <FormatInstructionBuilder />
     </Layout>
   );
 }

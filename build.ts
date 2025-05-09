@@ -57,7 +57,10 @@ function writeManifest(outDir: string, chrome: boolean) {
       "sidePanel",
     ],
     host_permissions: ["https://x.com/*", "*://*.linkedin.com/*"],
-    background: { service_worker: "background.js" },
+    background: {
+      service_worker: "background.js",
+      scripts: ["background.js"],
+    },
     action: { default_title: "hypertweet" },
     side_panel: { default_path: "sidebar.html" },
     sidebar_action: {
@@ -79,8 +82,20 @@ function writeManifest(outDir: string, chrome: boolean) {
     },
   };
 
-  if (chrome) delete (manifest as any).sidebar_action;
-  else delete (manifest as any).side_panel;
+  if (chrome) {
+    delete (manifest as any).sidebar_action;
+    delete (manifest as any).background.scripts;
+  } else {
+    delete (manifest as any).side_panel;
+    delete (manifest as any).background.service_worker;
+    manifest.permissions = Array.from(
+      (() => {
+        const x = new Set((manifest as any).permissions ?? []);
+        x.delete("sidePanel");
+        return x;
+      })()
+    );
+  }
 
   writeFileSync(
     join(outDir, "manifest.json"),
