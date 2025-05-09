@@ -3,6 +3,12 @@ import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import { PageHeader } from "./page-header";
+import { Button } from "./library/button";
+import { Input } from "./library/input";
+import { Textarea } from "./library/textarea";
+import { Card, CardContent } from "./library/card";
+import { motion, AnimatePresence } from "framer-motion";
+import { Plus } from "lucide-react";
 
 export default function ReplyTypesPage() {
   const {
@@ -74,116 +80,168 @@ export default function ReplyTypesPage() {
     <Layout>
       <PageHeader title="Reply Types" backRoute="/" />
 
-      <div className="space-y-8">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-8"
+      >
         <section>
           <div className="flex items-center gap-4 mb-4">
-            <h2 className="text-lg font-medium">Your Reply Types</h2>
-            <button
+            <h2 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+              Your Reply Types
+            </h2>
+            <Button
               onClick={() => setIsAddModalOpen(true)}
-              className="ml-auto px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="ml-auto"
             >
+              <Plus className="h-4 w-4 mr-2" />
               Add Reply Type
-            </button>
+            </Button>
           </div>
           {userReplyTypes.length === 0 ? (
-            <div className="text-gray-500 italic">
+            <div className="text-gray-500 dark:text-gray-400 italic">
               No custom reply types created yet
             </div>
           ) : (
-            <div className="grid gap-4">
+            <motion.div
+              layout
+              className="grid gap-4"
+            >
               {userReplyTypes.map((type) => (
-                <div
+                <motion.div
                   key={type.id}
-                  className="p-4 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() =>
-                    setCurrentRoute(`/reply-types/edit/${type.id}`)
-                  }
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
-                  <h3 className="font-medium">{type.name}</h3>
-                  <p className="text-gray-600 mt-1">{type.prompt}</p>
-                </div>
+                  <Card
+                    className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
+                    onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                        {type.name}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        {type.prompt}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </section>
 
         <section>
-          <h2 className="text-lg font-medium mb-4">System Reply Types</h2>
+          <h2 className="text-lg font-medium mb-4 text-gray-900 dark:text-gray-100">
+            System Reply Types
+          </h2>
           {systemReplyTypes.length === 0 ? (
-            <div className="text-gray-500 italic">
+            <div className="text-gray-500 dark:text-gray-400 italic">
               No system reply types available
             </div>
           ) : (
-            <div className="grid gap-4">
+            <motion.div
+              layout
+              className="grid gap-4"
+            >
               {systemReplyTypes.map((type) => (
-                <div
+                <motion.div
                   key={type.id}
-                  className="p-4 bg-white rounded-lg shadow cursor-pointer hover:bg-gray-50 transition-colors"
-                  onClick={() =>
-                    setCurrentRoute(`/reply-types/edit/${type.id}`)
-                  }
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
                 >
-                  <h3 className="font-medium">{type.name}</h3>
-                  <p className="text-gray-600 mt-1">{type.prompt}</p>
-                </div>
+                  <Card
+                    className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
+                    onClick={() => setCurrentRoute(`/reply-types/edit/${type.id}`)}
+                  >
+                    <CardContent className="p-4">
+                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                        {type.name}
+                      </h3>
+                      <p className="text-gray-600 dark:text-gray-400 mt-1">
+                        {type.prompt}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           )}
         </section>
-      </div>
+      </motion.div>
 
-      {isAddModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h2 className="text-xl font-medium mb-4">Add New Reply Type</h2>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  value={newReplyType.name}
-                  onChange={(e) =>
-                    setNewReplyType({ ...newReplyType, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter reply type name"
-                />
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md shadow-xl"
+            >
+              <h2 className="text-xl font-medium mb-4 text-gray-900 dark:text-gray-100">
+                Add New Reply Type
+              </h2>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Name
+                  </label>
+                  <Input
+                    type="text"
+                    value={newReplyType.name}
+                    onChange={(e) =>
+                      setNewReplyType({ ...newReplyType, name: e.target.value })
+                    }
+                    placeholder="Enter reply type name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Prompt
+                  </label>
+                  <Textarea
+                    value={newReplyType.prompt}
+                    onChange={(e) =>
+                      setNewReplyType({ ...newReplyType, prompt: e.target.value })
+                    }
+                    placeholder="Enter reply type prompt"
+                    rows={3}
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Prompt
-                </label>
-                <textarea
-                  value={newReplyType.prompt}
-                  onChange={(e) =>
-                    setNewReplyType({ ...newReplyType, prompt: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter reply type prompt"
-                  rows={3}
-                />
+              <div className="mt-6 flex justify-end gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddModalOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddReplyType}
+                  disabled={!newReplyType.name || !newReplyType.prompt}
+                >
+                  Add
+                </Button>
               </div>
-            </div>
-            <div className="mt-6 flex justify-end gap-3">
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAddReplyType}
-                disabled={!newReplyType.name || !newReplyType.prompt}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Add
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </Layout>
   );
 }

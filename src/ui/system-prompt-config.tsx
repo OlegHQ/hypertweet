@@ -1,6 +1,11 @@
 import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
+import { Card, CardContent, CardHeader } from "./library/card";
+import { Button } from "./library/button";
+import { Textarea } from "./library/textarea";
+import { motion, AnimatePresence } from "framer-motion";
+import { Edit2, Trash2, Save, Sparkles, AlertTriangle } from "lucide-react";
 
 export default function SystemPromptConfig() {
   const {
@@ -136,98 +141,139 @@ export default function SystemPromptConfig() {
     : false;
 
   return (
-    <div className="space-y-4 mb-6">
-      <div className="mb-4">
-        <h2 className="text-xl font-semibold mb-2">System Prompt</h2>
-        <p className="text-gray-600">
-          Personalize your replies and tweets. Keep it concise to minimize
-          costs.
-        </p>
-        {!hasOpenAIKey && (
-          <p className="mt-2 text-amber-600">
-            ⚠️ OpenAI API key is not set.{" "}
-            <a
-              href="#/misc"
-              onClick={(e) => {
-                e.preventDefault();
-                setCurrentRoute("/misc");
-              }}
-              className="text-amber-700 underline hover:text-amber-800"
-            >
-              Set up your API key
-            </a>{" "}
-            to enable prompt generation.
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="space-y-4 mb-6"
+    >
+      <Card className="shadow-xl">
+        <CardHeader>
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+            System Prompt
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            Personalize your replies and tweets. Keep it concise to minimize
+            costs.
           </p>
-        )}
-      </div>
-
-      {error && (
-        <div className="p-2 bg-red-100 text-red-700 rounded">{error}</div>
-      )}
-
-      <div className="space-y-4">
-        {isEditing ? (
-          <>
-            <textarea
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              placeholder="Enter your system prompt here..."
-              className="w-full h-32 p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
-            <div className="flex gap-2">
-              <button
-                onClick={handleSave}
-                disabled={isLoading}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50"
-              >
-                {isLoading ? "Saving..." : "Save Prompt"}
-              </button>
-              {hasOpenAIKey && (
+          {!hasOpenAIKey && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-2 p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg flex items-center gap-2"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span>
+                OpenAI API key is not set.{" "}
                 <button
-                  onClick={handleGenerate}
-                  disabled={isLoading}
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50"
+                  onClick={() => setCurrentRoute("/misc")}
+                  className="underline hover:text-amber-800 dark:hover:text-amber-300"
                 >
-                  Generate Prompt
-                </button>
-              )}
-              <button
-                onClick={() => setIsEditing(false)}
-                className="px-4 py-2 border rounded-md hover:bg-gray-50"
+                  Set up your API key
+                </button>{" "}
+                to enable prompt generation.
+              </span>
+            </motion.div>
+          )}
+        </CardHeader>
+
+        <CardContent>
+          <AnimatePresence>
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4"
               >
-                Cancel
-              </button>
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-between p-4 border rounded-md">
-            <div className="flex-1">
-              {systemPrompt ? (
-                <div className="text-gray-700">{systemPrompt}</div>
-              ) : (
-                <div className="text-gray-500">No system prompt set</div>
-              )}
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setIsEditing(true)}
-                className="px-3 py-1 border rounded-md hover:bg-gray-50"
+                {error}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <div className="space-y-4">
+            {isEditing ? (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-4"
               >
-                Edit
-              </button>
-              {systemPrompt && (
-                <button
-                  onClick={handleDelete}
-                  disabled={isLoading}
-                  className="px-3 py-1 text-red-500 border border-red-200 rounded-md hover:bg-red-50 disabled:opacity-50"
-                >
-                  Delete
-                </button>
-              )}
-            </div>
+                <Textarea
+                  value={systemPrompt}
+                  onChange={(e) => setSystemPrompt(e.target.value)}
+                  placeholder="Enter your system prompt here..."
+                  className="min-h-[8rem]"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleSave}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {isLoading ? "Saving..." : "Save Prompt"}
+                  </Button>
+                  {hasOpenAIKey && (
+                    <Button
+                      onClick={handleGenerate}
+                      disabled={isLoading}
+                      variant="secondary"
+                      className="flex items-center gap-2"
+                    >
+                      <Sparkles className="h-4 w-4" />
+                      Generate Prompt
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </motion.div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+              >
+                <div className="flex-1">
+                  {systemPrompt ? (
+                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                      {systemPrompt}
+                    </div>
+                  ) : (
+                    <div className="text-gray-500 dark:text-gray-400">
+                      No system prompt set
+                    </div>
+                  )}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <Edit2 className="h-4 w-4" />
+                    Edit
+                  </Button>
+                  {systemPrompt && (
+                    <Button
+                      variant="destructive"
+                      onClick={handleDelete}
+                      disabled={isLoading}
+                      className="flex items-center gap-2"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  )}
+                </div>
+              </motion.div>
+            )}
           </div>
-        )}
-      </div>
-    </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
