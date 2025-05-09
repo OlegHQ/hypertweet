@@ -129,10 +129,10 @@ export default function PersonalityConfig() {
   return (
     <div className="space-y-4">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold mb-2">
+        <h2 className="text-xl font-semibold mb-2 text-gray-900 dark:text-gray-100">
           Personality Configuration
         </h2>
-        <p className="text-gray-600">
+        <p className="text-gray-600 dark:text-gray-300">
           This data is used to create a system personality prompt for generating
           content. To successfully load the data, make sure you're logged in to
           the platforms you are using.
