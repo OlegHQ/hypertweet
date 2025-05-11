@@ -241,9 +241,9 @@ export default function SystemPromptConfig() {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+                className="space-y-4"
               >
-                <div className="flex-1">
+                <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
                   {systemPrompt ? (
                     <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
                       {systemPrompt}

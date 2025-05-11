@@ -5,7 +5,7 @@ import { TwitterProfile } from "./twitter-profile";
 import { LinkedInProfile } from "./linkedin-profile";
 import { ConfigTypeKey } from "src/background-app/data";
 
-export default function PersonalityConfig() {
+export default function SocialProfilesConfig() {
   const { selectedProfile, setSelectedProfile } = useGlobalState();
   const { setPersonalityConfig, getPersonalityConfig } = useGlobalState();
   const [error, setError] = React.useState<string | null>(null);

@@ -4,7 +4,6 @@ import ApiConfig from "./api-config";
 import { PageHeader } from "./page-header";
 import { useGlobalState } from "./state";
 import { app } from "./app";
-import FormatInstructionBuilder from "./prompt-builder";
 import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { Database, Copy, ArrowRight } from "lucide-react";
@@ -228,7 +227,6 @@ export default function MiscPage() {
           )}
         </motion.div>
       </motion.div>
-      <FormatInstructionBuilder />
     </Layout>
   );
 }

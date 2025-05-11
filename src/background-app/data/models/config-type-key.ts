@@ -6,4 +6,5 @@ export enum ConfigTypeKey {
   LINKEDIN_PROFILE = "linkedInProfile",
   LAST_USED_PROFILE_ID = "lastUsedProfileId",
   HIDDEN_REPLY_TYPES = "hiddenReplyTypes",
+  FORMAT_INSTRUCTIONS = "formatInstructions",
 }

@@ -7,6 +7,10 @@ import {
 import { buildPersonalitySnippet, generateReply } from "./ai/context";
 import { buildPersonaPayload } from "./ai/system-prompt-gen";
 import { defaultModel, ModelType } from "./ai/model-type";
+import {
+  buildFormatInstructionsPrompt,
+  type InstructionOptions,
+} from "./ai/format-instructions";
 
 async function getModel(dataLayer: DataLayer, profileId: string) {
   return ((await dataLayer.config.get<string>(
@@ -17,6 +21,11 @@ async function getModel(dataLayer: DataLayer, profileId: string) {
 
 export function newAI(dataLayer: DataLayer) {
   return {
+    async buildFormatInstructionsPrompt(
+      opts: InstructionOptions
+    ): Promise<string> {
+      return buildFormatInstructionsPrompt(opts);
+    },
     async generateReply(profileId: string, postText: string, prompt: string) {
       const model = await getModel(dataLayer, profileId);
       const personaSnippet = await dataLayer.config.get<string>(
