@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader } from "./library/card";
 import { Button } from "./library/button";
 import { Input } from "./library/input";
 import { motion } from "framer-motion";
+import { ConfigTypeKey } from "src/background-app/data";
 
 export default function ApiConfig() {
   const { selectedProfile } = useGlobalState();
@@ -33,11 +34,15 @@ export default function ApiConfig() {
     try {
       const openAiKey = await app.dataLayer.config.getCredential(
         selectedProfile.id,
-        "openAiKey"
+        ConfigTypeKey.OPENAI_API_KEY
       );
 
       if (openAiKey) {
-        setProfileKey(selectedProfile.id, "openAiKey", openAiKey);
+        setProfileKey(
+          selectedProfile.id,
+          ConfigTypeKey.OPENAI_API_KEY,
+          openAiKey
+        );
       }
       setAreKeysFetched(true);
     } catch (error) {
@@ -49,7 +54,7 @@ export default function ApiConfig() {
   };
 
   const openAiKey = selectedProfile
-    ? getProfileKey(selectedProfile.id, "openAiKey")?.key || ""
+    ? getProfileKey(selectedProfile.id, ConfigTypeKey.OPENAI_API_KEY)?.key || ""
     : "";
 
   const handleSave = async () => {
@@ -60,10 +65,10 @@ export default function ApiConfig() {
       ) as HTMLInputElement;
       const value = input.value;
 
-      setProfileKey(selectedProfile.id, "openAiKey", value);
+      setProfileKey(selectedProfile.id, ConfigTypeKey.OPENAI_API_KEY, value);
       await app.dataLayer.config.setCredential(
         selectedProfile.id,
-        "openAiKey",
+        ConfigTypeKey.OPENAI_API_KEY,
         value
       );
 
@@ -79,8 +84,11 @@ export default function ApiConfig() {
   const handleDelete = async () => {
     if (!selectedProfile) return;
     try {
-      removeProfileKey(selectedProfile.id, "openAiKey");
-      await app.dataLayer.config.delete(selectedProfile.id, "openAiKey");
+      removeProfileKey(selectedProfile.id, ConfigTypeKey.OPENAI_API_KEY);
+      await app.dataLayer.config.delete(
+        selectedProfile.id,
+        ConfigTypeKey.OPENAI_API_KEY
+      );
 
       setIsEditing(false);
       setSuccess("OpenAI key deleted successfully");
@@ -103,7 +111,9 @@ export default function ApiConfig() {
         className="max-w-4xl mx-auto"
       >
         <Card className="rounded-2xl shadow-xl">
-          <CardHeader className="font-semibold text-xl">API Configuration</CardHeader>
+          <CardHeader className="font-semibold text-xl">
+            API Configuration
+          </CardHeader>
           <CardContent>
             <div className="text-gray-600">Loading API keys...</div>
           </CardContent>
@@ -119,10 +129,14 @@ export default function ApiConfig() {
       className="max-w-4xl mx-auto"
     >
       <Card className="rounded-2xl shadow-xl">
-        <CardHeader className="font-semibold text-xl">API Configuration</CardHeader>
+        <CardHeader className="font-semibold text-xl">
+          API Configuration
+        </CardHeader>
         <CardContent className="space-y-4">
           {error && (
-            <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
+            <div className="p-3 bg-red-100 text-red-700 rounded-lg">
+              {error}
+            </div>
           )}
 
           {success && (
@@ -174,16 +188,19 @@ export default function ApiConfig() {
                     >
                       Edit
                     </Button>
-                    {hasProfileKey(selectedProfile.id, "openAiKey") && (
-                      <Button
-                        variant="destructive"
-                        onClick={handleDelete}
-                      >
+                    {hasProfileKey(
+                      selectedProfile.id,
+                      ConfigTypeKey.OPENAI_API_KEY
+                    ) && (
+                      <Button variant="destructive" onClick={handleDelete}>
                         Delete
                       </Button>
                     )}
                   </div>
-                  {!hasProfileKey(selectedProfile.id, "openAiKey") && (
+                  {!hasProfileKey(
+                    selectedProfile.id,
+                    ConfigTypeKey.OPENAI_API_KEY
+                  ) && (
                     <div className="text-sm text-gray-600 space-y-2">
                       <p>No OpenAI API key has been added yet.</p>
                       <p>
@@ -196,8 +213,8 @@ export default function ApiConfig() {
                         >
                           OpenAI API Keys page
                         </a>
-                        . Once you have your key, click the Edit button above to add
-                        it.
+                        . Once you have your key, click the Edit button above to
+                        add it.
                       </p>
                     </div>
                   )}

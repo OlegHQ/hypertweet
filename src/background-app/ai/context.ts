@@ -1,14 +1,15 @@
 import type { ChatCompletionMessageParam } from "openai/resources/chat";
 import type { PersonaPayload } from "./system-prompt-gen";
 import { tokenManager } from "./token-manager";
-
+import { ModelType } from "./model-type";
 export async function buildPersonalitySnippet(
   key: string,
+  model: ModelType,
   payload: PersonaPayload
 ): Promise<string> {
   const openai = tokenManager.getClient(key);
   const chat = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo",
+    model,
     messages: [
       {
         role: "system",
@@ -27,11 +28,12 @@ export async function buildPersonalitySnippet(
 
 const TWEET_CONTEXT =
   "You are composing a reply tweet. Output only the reply text, no greeting, no hashtags unless present in the post.";
-const FORMAT_INSTRUCTIONS =
+export const FORMAT_INSTRUCTIONS =
   "Format: lowercase (except names), break lines freely, use commas & periods naturally, no newlines";
 
 export async function generateReply(
   key: string,
+  model: ModelType,
   personaSnippet: string | null,
   prompt: string,
   postText: string
@@ -53,7 +55,7 @@ export async function generateReply(
 
   const openai = tokenManager.getClient(key);
   const res = await openai.chat.completions.create({
-    model: "gpt-4.1-mini",
+    model,
     messages,
     max_tokens: 60,
     temperature: 0.7,

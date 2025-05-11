@@ -118,9 +118,16 @@ export default function ReplyTypesPage() {
                     }
                   >
                     <CardContent className="p-4">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                        {type.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                          {type.name}
+                        </h3>
+                        {type.isHidden && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-600 dark:text-gray-400 mt-1">
                         {type.prompt}
                       </p>
@@ -159,9 +166,16 @@ export default function ReplyTypesPage() {
                     }
                   >
                     <CardContent className="p-4">
-                      <h3 className="font-medium text-gray-900 dark:text-gray-100">
-                        {type.name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium text-gray-900 dark:text-gray-100">
+                          {type.name}
+                        </h3>
+                        {type.isHidden && (
+                          <span className="px-2 py-0.5 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-full">
+                            Hidden
+                          </span>
+                        )}
+                      </div>
                       <p className="text-gray-600 dark:text-gray-400 mt-1">
                         {type.prompt}
                       </p>

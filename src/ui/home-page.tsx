@@ -4,6 +4,7 @@ import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { Card, CardContent, CardHeader } from "./library/card";
 import { motion } from "framer-motion";
+import { ConfigTypeKey } from "src/background-app/data";
 
 export default function HomePage() {
   const {
@@ -18,7 +19,7 @@ export default function HomePage() {
       try {
         const lastId = await app.dataLayer.config.get<string>(
           null,
-          "lastUsedProfileId"
+          ConfigTypeKey.LAST_USED_PROFILE_ID
         );
         if (lastId) {
           setLastUsedProfileId(lastId);
@@ -36,7 +37,11 @@ export default function HomePage() {
 
   useEffect(() => {
     if (selectedProfile?.id) {
-      app.dataLayer.config.set(null, "lastUsedProfileId", selectedProfile.id);
+      app.dataLayer.config.set(
+        null,
+        ConfigTypeKey.LAST_USED_PROFILE_ID,
+        selectedProfile.id
+      );
     }
   }, [selectedProfile]);
 
@@ -86,8 +91,8 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 dark:text-gray-300">
-              Access various tools and utilities including API configuration, data
-              backup, and thread copying functionality.
+              Access various tools and utilities including API configuration,
+              data backup, and thread copying functionality.
             </p>
           </CardContent>
         </Card>

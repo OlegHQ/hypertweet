@@ -3,6 +3,7 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 import { TwitterProfile } from "./twitter-profile";
 import { LinkedInProfile } from "./linkedin-profile";
+import { ConfigTypeKey } from "src/background-app/data";
 
 export default function PersonalityConfig() {
   const { selectedProfile, setSelectedProfile } = useGlobalState();
@@ -20,7 +21,7 @@ export default function PersonalityConfig() {
       setPersonalityConfig(selectedProfile.id, "twitter", data);
       await app.dataLayer.config.set(
         selectedProfile.id,
-        "twitterProfile",
+        ConfigTypeKey.TWITTER_PROFILE,
         data
       );
       setError(null);
@@ -43,7 +44,7 @@ export default function PersonalityConfig() {
       setPersonalityConfig(selectedProfile.id, "linkedIn", data);
       await app.dataLayer.config.set(
         selectedProfile.id,
-        "linkedInProfile",
+        ConfigTypeKey.LINKEDIN_PROFILE,
         data
       );
       setError(null);
@@ -89,11 +90,11 @@ export default function PersonalityConfig() {
       }
       const twitterData = await app.dataLayer.config.get<any>(
         selectedProfile.id,
-        "twitterProfile"
+        ConfigTypeKey.TWITTER_PROFILE
       );
       const linkedInData = await app.dataLayer.config.get<any>(
         selectedProfile.id,
-        "linkedInProfile"
+        ConfigTypeKey.LINKEDIN_PROFILE
       );
       setPersonalityConfig(selectedProfile.id, "twitter", twitterData);
       setPersonalityConfig(selectedProfile.id, "linkedIn", linkedInData);

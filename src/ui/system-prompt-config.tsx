@@ -6,6 +6,7 @@ import { Button } from "./library/button";
 import { Textarea } from "./library/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit2, Trash2, Save, Sparkles, AlertTriangle } from "lucide-react";
+import { ConfigTypeKey } from "src/background-app/data";
 
 export default function SystemPromptConfig() {
   const {
@@ -33,11 +34,15 @@ export default function SystemPromptConfig() {
     try {
       const openAiKey = await app.dataLayer.config.getCredential(
         selectedProfile.id,
-        "openAiKey"
+        ConfigTypeKey.OPENAI_API_KEY
       );
 
       if (openAiKey) {
-        setProfileKey(selectedProfile.id, "openAiKey", openAiKey);
+        setProfileKey(
+          selectedProfile.id,
+          ConfigTypeKey.OPENAI_API_KEY,
+          openAiKey
+        );
       }
       setAreKeysFetched(true);
     } catch (error) {
@@ -54,7 +59,7 @@ export default function SystemPromptConfig() {
         try {
           const prompt = await app.dataLayer.config.get<string>(
             selectedProfile.id,
-            "systemPrompt"
+            ConfigTypeKey.SYSTEM_PROMPT
           );
           if (prompt) {
             setSystemPrompt(prompt);
@@ -74,7 +79,7 @@ export default function SystemPromptConfig() {
     try {
       await app.dataLayer.config.set(
         selectedProfile.id,
-        "systemPrompt",
+        ConfigTypeKey.SYSTEM_PROMPT,
         systemPrompt
       );
       setIsEditing(false);
@@ -91,7 +96,11 @@ export default function SystemPromptConfig() {
     setIsLoading(true);
     setError(null);
     try {
-      await app.dataLayer.config.set(selectedProfile.id, "systemPrompt", null);
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.SYSTEM_PROMPT,
+        null
+      );
       setSystemPrompt("");
       setIsEditing(false);
     } catch (error) {
@@ -109,11 +118,11 @@ export default function SystemPromptConfig() {
     try {
       const twitterConfig = await app.dataLayer.config.get<any>(
         selectedProfile.id,
-        "twitterProfile"
+        ConfigTypeKey.TWITTER_PROFILE
       );
       const linkedInConfig = await app.dataLayer.config.get<any>(
         selectedProfile.id,
-        "linkedInProfile"
+        ConfigTypeKey.LINKEDIN_PROFILE
       );
 
       if (!twitterConfig || !linkedInConfig) {
@@ -137,7 +146,7 @@ export default function SystemPromptConfig() {
   if (!selectedProfile) return null;
 
   const hasOpenAIKey = selectedProfile
-    ? hasProfileKey(selectedProfile.id, "openAiKey")
+    ? hasProfileKey(selectedProfile.id, ConfigTypeKey.OPENAI_API_KEY)
     : false;
 
   return (
@@ -223,10 +232,7 @@ export default function SystemPromptConfig() {
                       Generate Prompt
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(false)}
-                  >
+                  <Button variant="outline" onClick={() => setIsEditing(false)}>
                     Cancel
                   </Button>
                 </div>

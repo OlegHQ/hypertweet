@@ -1,5 +1,5 @@
 import { defaultReplyTypes } from "./ai/default-reply-types";
-import { createDataLayer, type XProfile } from "./data";
+import { ConfigTypeKey, createDataLayer, type XProfile } from "./data";
 import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
 import { getContentApp, ScrapingContext } from "./scrape-context";
 import { newAI } from "./ai-facade";
@@ -10,6 +10,7 @@ import {
   type ReplyType,
 } from "./data/database";
 import { browserApi } from "../utils/browser-api";
+import { FORMAT_INSTRUCTIONS } from "./ai/context";
 
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
@@ -21,7 +22,7 @@ export async function setupBackgroundApp() {
       async getCurrentProfileId() {
         const lastId = await dataLayer.config.get<string>(
           null,
-          "lastUsedProfileId"
+          ConfigTypeKey.LAST_USED_PROFILE_ID
         );
         return lastId;
       },
@@ -41,11 +42,11 @@ export async function setupBackgroundApp() {
         const profile = await dataLayer.profile.get(profileId);
         const prompt = await dataLayer.config.get<string>(
           profileId,
-          "systemPrompt"
+          ConfigTypeKey.SYSTEM_PROMPT
         );
         const twitterProfile = await dataLayer.config.get<XProfile>(
           profileId,
-          "twitterProfile"
+          ConfigTypeKey.TWITTER_PROFILE
         );
         const result: Record<string, any> = {};
         const author: Record<string, any> = {};
@@ -62,6 +63,7 @@ export async function setupBackgroundApp() {
 
         result.author = author;
         result.twitterThread = twitterThread;
+        result.responseFormat = FORMAT_INSTRUCTIONS;
         result.task =
           "you have to reply to the .twitterThread accounting to the author's persona, give 5 options";
 
@@ -84,7 +86,7 @@ export async function setupBackgroundApp() {
         const hiddenSystemReplies =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenReplyTypes"
+            ConfigTypeKey.HIDDEN_REPLY_TYPES
           )) ?? [];
 
         return [...allItems, ...defaultReplyTypes(profileId)].map((x) => ({
@@ -106,7 +108,7 @@ export async function setupBackgroundApp() {
         const hiddenReplyTypes =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenReplyTypes"
+            ConfigTypeKey.HIDDEN_REPLY_TYPES
           )) ?? [];
         return hiddenReplyTypes?.includes(item.id)
           ? {
@@ -119,7 +121,7 @@ export async function setupBackgroundApp() {
         let replyTypes =
           (await dataLayer.config.get<string[]>(
             profileId,
-            "hiddenReplyTypes"
+            ConfigTypeKey.HIDDEN_REPLY_TYPES
           )) ?? [];
 
         if (option) {
@@ -130,7 +132,11 @@ export async function setupBackgroundApp() {
 
         replyTypes = Array.from(new Set(replyTypes));
 
-        await dataLayer.config.set(profileId, "hiddenReplyTypes", replyTypes);
+        await dataLayer.config.set(
+          profileId,
+          ConfigTypeKey.HIDDEN_REPLY_TYPES,
+          replyTypes
+        );
       },
     },
     backup: {

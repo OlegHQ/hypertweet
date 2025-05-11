@@ -22,3 +22,4 @@ export * from "./models/profile";
 export * from "./models/settings";
 export * from "./models/social-profile";
 export * from "./models/reply-type";
+export * from "./models/config-type-key";

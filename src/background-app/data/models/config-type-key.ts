@@ -1,0 +1,9 @@
+export enum ConfigTypeKey {
+  COMPLETION_MODEL = "completionModel",
+  SYSTEM_PROMPT = "systemPrompt",
+  OPENAI_API_KEY = "openAiKey",
+  TWITTER_PROFILE = "twitterProfile",
+  LINKEDIN_PROFILE = "linkedInProfile",
+  LAST_USED_PROFILE_ID = "lastUsedProfileId",
+  HIDDEN_REPLY_TYPES = "hiddenReplyTypes",
+}
