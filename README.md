@@ -1,6 +1,6 @@
 # hypertweet
 
-![Hypertweet logo](https://nexo.sh/hypertweet/ogimage.png)
+[![Hypertweet logo](https://nexo.sh/hypertweet/ogimage.png)](https://nexo.sh/hypertweet/)
 
 > ⚠️ **Alpha Version Notice**  
 > hypertweet is in early development. Some features are still in progress or subject to change. Use at your own risk—and if something breaks, let us know so we can pretend it was intentional.
