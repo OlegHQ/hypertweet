@@ -60,32 +60,38 @@ export function Button({
       initial={false}
       animate={{
         scale: disabled ? 0.98 : 1,
-        backgroundColor: disabled 
-          ? "rgba(29, 155, 240, 0.05)"
-          : "transparent",
+        backgroundColor: disabled ? "rgba(29, 155, 240, 0.05)" : "transparent",
       }}
-      whileHover={!disabled ? {
-        scale: 1.02,
-        backgroundColor: "rgba(29, 155, 240, 0.1)",
-        transition: {
-          type: "spring",
-          stiffness: 400,
-          damping: 25
-        }
-      } : {}}
-      whileTap={!disabled ? {
-        scale: 0.96,
-        backgroundColor: "rgba(29, 155, 240, 0.2)",
-        transition: {
-          type: "spring",
-          stiffness: 400,
-          damping: 20
-        }
-      } : {}}
+      whileHover={
+        !disabled
+          ? {
+              scale: 1.02,
+              backgroundColor: "rgba(29, 155, 240, 0.1)",
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 25,
+              },
+            }
+          : {}
+      }
+      whileTap={
+        !disabled
+          ? {
+              scale: 0.96,
+              backgroundColor: "rgba(29, 155, 240, 0.2)",
+              transition: {
+                type: "spring",
+                stiffness: 400,
+                damping: 20,
+              },
+            }
+          : {}
+      }
       transition={{
         type: "spring",
         stiffness: 400,
-        damping: 30
+        damping: 30,
       }}
     >
       <AnimatePresence mode="wait">
@@ -98,7 +104,7 @@ export function Button({
             type: "spring",
             stiffness: 500,
             damping: 30,
-            mass: 0.5
+            mass: 0.5,
           }}
         >
           {loading ? loadingText : children}

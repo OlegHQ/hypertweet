@@ -26,7 +26,7 @@ export default function Panel() {
   const [loading, setLoading] = useState(false);
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
@@ -53,7 +53,7 @@ export default function Panel() {
             transition={{
               duration: 0.2,
               delay: index * 0.05,
-              ease: "easeOut"
+              ease: "easeOut",
             }}
           >
             <ReplyTypeButton

@@ -1,7 +1,8 @@
 import * as React from "react";
 import { cn } from "./utils";
 
-export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> {
+export interface LabelProps
+  extends React.LabelHTMLAttributes<HTMLLabelElement> {
   required?: boolean;
 }
 
@@ -28,4 +29,4 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
 
 Label.displayName = "Label";
 
-export { Label }; 
+export { Label };

@@ -136,7 +136,9 @@ const FormatInstructionBuilder: React.FC = () => {
             <span className="text-sm font-medium">punctuation density</span>
             <Select
               value={options.punctuation}
-              onValueChange={(v: "minimal" | "natural" | "heavy") => update("punctuation", v)}
+              onValueChange={(v: "minimal" | "natural" | "heavy") =>
+                update("punctuation", v)
+              }
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue placeholder="select" />

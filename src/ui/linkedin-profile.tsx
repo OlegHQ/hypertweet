@@ -53,19 +53,25 @@ export function LinkedInProfile({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Name
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.name}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.name}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Headline
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.headline}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.headline}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Location
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.location}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.location}
+            </div>
           </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">

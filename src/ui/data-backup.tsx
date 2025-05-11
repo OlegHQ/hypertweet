@@ -4,7 +4,13 @@ import { PageHeader } from "./page-header";
 import { Card, CardContent } from "./library/card";
 import { Button } from "./library/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Download, Upload, AlertCircle, CheckCircle2, Database } from "lucide-react";
+import {
+  Download,
+  Upload,
+  AlertCircle,
+  CheckCircle2,
+  Database,
+} from "lucide-react";
 import { cn } from "./library/utils";
 
 export default function DataBackup() {
@@ -59,7 +65,7 @@ export default function DataBackup() {
       <div className="max-w-2xl mx-auto">
         <PageHeader title="Data Backup" backRoute="/" />
 
-        <motion.div 
+        <motion.div
           className="space-y-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -80,8 +86,9 @@ export default function DataBackup() {
                       Export Data
                     </h2>
                     <p className="mt-2 text-gray-600 dark:text-gray-300">
-                      Create a backup of your data including profiles, settings, and
-                      reply types. This will download a JSON file containing all your data.
+                      Create a backup of your data including profiles, settings,
+                      and reply types. This will download a JSON file containing
+                      all your data.
                     </p>
                     <div className="mt-4">
                       <Button
@@ -89,7 +96,12 @@ export default function DataBackup() {
                         disabled={isExporting}
                         className="flex items-center gap-2"
                       >
-                        <Download className={cn("h-4 w-4", isExporting && "animate-bounce")} />
+                        <Download
+                          className={cn(
+                            "h-4 w-4",
+                            isExporting && "animate-bounce"
+                          )}
+                        />
                         {isExporting ? "Exporting..." : "Download Backup"}
                       </Button>
                     </div>
@@ -114,8 +126,9 @@ export default function DataBackup() {
                       Import Data
                     </h2>
                     <p className="mt-2 text-gray-600 dark:text-gray-300">
-                      Restore your data from a previous backup file. This will replace
-                      all current data. Make sure to backup your current data first.
+                      Restore your data from a previous backup file. This will
+                      replace all current data. Make sure to backup your current
+                      data first.
                     </p>
                     <div className="mt-4">
                       <label className="block">
@@ -127,12 +140,19 @@ export default function DataBackup() {
                           id="backup-file"
                         />
                         <Button
-                          onClick={() => document.getElementById("backup-file")?.click()}
+                          onClick={() =>
+                            document.getElementById("backup-file")?.click()
+                          }
                           disabled={isImporting}
                           variant="outline"
                           className="flex items-center gap-2"
                         >
-                          <Upload className={cn("h-4 w-4", isImporting && "animate-bounce")} />
+                          <Upload
+                            className={cn(
+                              "h-4 w-4",
+                              isImporting && "animate-bounce"
+                            )}
+                          />
                           {isImporting ? "Importing..." : "Choose Backup File"}
                         </Button>
                       </label>
@@ -167,7 +187,9 @@ export default function DataBackup() {
               >
                 <div className="flex items-start gap-3">
                   <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
-                  <p className="text-green-700 dark:text-green-300">{success}</p>
+                  <p className="text-green-700 dark:text-green-300">
+                    {success}
+                  </p>
                 </div>
               </motion.div>
             )}

@@ -63,11 +63,7 @@ export function ProfileSection({
   );
 
   return (
-    <Accordion
-      title={title}
-      actions={actions}
-      className="mb-4"
-    >
+    <Accordion title={title} actions={actions} className="mb-4">
       <div className="space-y-4">
         {children}
         <div className="pt-4 border-t dark:border-gray-700">

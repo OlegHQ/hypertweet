@@ -34,10 +34,7 @@ export function Accordion({
       )}
     >
       <div
-        className={cn(
-          "flex justify-between items-center p-4",
-          headerClassName
-        )}
+        className={cn("flex justify-between items-center p-4", headerClassName)}
       >
         <div className="flex items-center gap-2">
           <button
@@ -73,4 +70,4 @@ export function Accordion({
       </AnimatePresence>
     </motion.div>
   );
-} 
+}

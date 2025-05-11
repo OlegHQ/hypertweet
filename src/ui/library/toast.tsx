@@ -12,13 +12,15 @@ interface ToastProps {
 
 const variantStyles = {
   success: {
-    container: "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
+    container:
+      "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800",
     text: "text-green-700 dark:text-green-300",
     icon: "text-green-600 dark:text-green-400",
     Icon: CheckCircle2,
   },
   error: {
-    container: "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
+    container:
+      "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800",
     text: "text-red-700 dark:text-red-300",
     icon: "text-red-600 dark:text-red-400",
     Icon: XCircle,
@@ -42,4 +44,4 @@ export function Toast({ message, variant = "success", onClose }: ToastProps) {
       </motion.div>
     </AnimatePresence>
   );
-} 
+}

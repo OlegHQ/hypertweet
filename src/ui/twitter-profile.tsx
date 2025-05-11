@@ -3,7 +3,13 @@ import type { Tweet } from "../background-app/data/models/social-profile";
 import { ProfileSection } from "./profile-section";
 import { Button } from "./library/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, Repeat2, Heart, ExternalLink, Trash2 } from "lucide-react";
+import {
+  MessageSquare,
+  Repeat2,
+  Heart,
+  ExternalLink,
+  Trash2,
+} from "lucide-react";
 import { cn } from "./library/utils";
 
 interface TwitterProfileProps {
@@ -46,25 +52,33 @@ export function TwitterProfile({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Name
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.name}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.name}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Username
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">@{data.username}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              @{data.username}
+            </div>
           </div>
           <div className="col-span-2">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Bio
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.bio}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.bio}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Location
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.location}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.location}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -82,7 +96,9 @@ export function TwitterProfile({
                   <ExternalLink className="h-3 w-3" />
                 </a>
               ) : (
-                <span className="text-gray-500 dark:text-gray-400">Not specified</span>
+                <span className="text-gray-500 dark:text-gray-400">
+                  Not specified
+                </span>
               )}
             </div>
           </div>
@@ -90,19 +106,25 @@ export function TwitterProfile({
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Join Date
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.joinDate}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.joinDate}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Following
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.following?.toLocaleString()}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.following?.toLocaleString()}
+            </div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
               Followers
             </label>
-            <div className="mt-1 text-gray-900 dark:text-gray-100">{data.followers?.toLocaleString()}</div>
+            <div className="mt-1 text-gray-900 dark:text-gray-100">
+              {data.followers?.toLocaleString()}
+            </div>
           </div>
           {(data?.recentTweets?.length ?? 0) > 0 && (
             <div className="col-span-2">

@@ -9,12 +9,112 @@ import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { Database, Copy, ArrowRight } from "lucide-react";
 import { Toast } from "./library/toast";
+import { ConfigTypeKey } from "../background-app/data";
+import { ModelType } from "../background-app/ai/model-type";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./library/select";
+
+function ModelSelector() {
+  const { selectedProfile } = useGlobalState();
+  const [selectedModel, setSelectedModel] = React.useState<ModelType>(
+    ModelType.GPT_3_5_TURBO
+  );
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  React.useEffect(() => {
+    if (selectedProfile) {
+      loadModel();
+    }
+  }, [selectedProfile]);
+
+  const loadModel = async () => {
+    if (!selectedProfile) return;
+    try {
+      const model = await app.dataLayer.config.get<string>(
+        selectedProfile.id,
+        ConfigTypeKey.COMPLETION_MODEL
+      );
+      if (model) {
+        setSelectedModel(model as ModelType);
+      }
+    } catch (error) {
+      console.error("Error loading model:", error);
+    }
+  };
+
+  const handleModelChange = async (value: string) => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.COMPLETION_MODEL,
+        value
+      );
+      setSelectedModel(value as ModelType);
+    } catch (error) {
+      console.error("Error saving model:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!selectedProfile) {
+    return null;
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <CardContent className="flex items-start gap-4 p-6">
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                LLM Model
+              </h2>
+            </div>
+            <p className="mt-2 text-gray-600 dark:text-gray-300 mb-4">
+              Select the language model to use for generating replies.
+            </p>
+            <Select
+              value={selectedModel}
+              onValueChange={handleModelChange}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a model" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ModelType.GPT_3_5_TURBO}>
+                  GPT-3.5 Turbo
+                </SelectItem>
+                <SelectItem value={ModelType.GPT_4O_MINI}>
+                  GPT-4o Mini
+                </SelectItem>
+                <SelectItem value={ModelType.GPT_4_1_MINI}>
+                  GPT-4.1 Mini
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
 
 export default function MiscPage() {
   const { setCurrentRoute, selectedProfile } = useGlobalState();
   const [showToast, setShowToast] = React.useState(false);
   const [toastMessage, setToastMessage] = React.useState("");
-  const [toastVariant, setToastVariant] = React.useState<"success" | "error">("success");
+  const [toastVariant, setToastVariant] = React.useState<"success" | "error">(
+    "success"
+  );
 
   const handleCopyTweetJson = async () => {
     try {
@@ -22,7 +122,9 @@ export default function MiscPage() {
         selectedProfile?.id ?? ""
       );
       if (!data) {
-        setToastMessage("No thread data found. Make sure you're on a thread page.");
+        setToastMessage(
+          "No thread data found. Make sure you're on a thread page."
+        );
         setToastVariant("error");
         setShowToast(true);
         return;
@@ -57,6 +159,7 @@ export default function MiscPage() {
         transition={{ staggerChildren: 0.1 }}
       >
         <ApiConfig />
+        <ModelSelector />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
