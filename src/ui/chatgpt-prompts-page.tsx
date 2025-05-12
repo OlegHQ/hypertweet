@@ -6,8 +6,11 @@ import { Button } from "./library/button";
 import { Input } from "./library/input";
 import { Textarea } from "./library/textarea";
 import { motion } from "framer-motion";
-import { ClipboardCopy, MessageSquare } from "lucide-react";
+import { ClipboardCopy, MessageSquare, Copy, ArrowRight } from "lucide-react";
 import { Toast } from "./library/toast";
+import { useGlobalState } from "./state";
+import { app } from "./app";
+import { CopyThreadJsonCard } from "./components/copy-thread-json-card";
 
 interface PromptTemplate {
   task: string;
@@ -27,6 +30,10 @@ export default function ChatGPTPromptsPage() {
   const [template, setTemplate] = useState<PromptTemplate>(defaultTemplate);
   const [showCopied, setShowCopied] = useState(false);
   const [generatedPrompt, setGeneratedPrompt] = useState("");
+  const [toastMessage, setToastMessage] = useState("");
+  const [toastVariant, setToastVariant] = useState<"success" | "error">(
+    "success"
+  );
 
   const updateTemplate = <K extends keyof PromptTemplate>(
     key: K,
@@ -75,6 +82,21 @@ export default function ChatGPTPromptsPage() {
     setTimeout(() => setShowCopied(false), 2000);
   };
 
+  const handleCopy = (message: string, variant: "success" | "error") => {
+    setToastMessage(message);
+    setToastVariant(variant);
+    setShowCopied(true);
+  };
+
+  React.useEffect(() => {
+    if (showCopied) {
+      const timer = setTimeout(() => {
+        setShowCopied(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [showCopied]);
+
   return (
     <Layout>
       <PageHeader title="ChatGPT Task Prompts" backRoute="/" />
@@ -83,6 +105,8 @@ export default function ChatGPTPromptsPage() {
         animate={{ opacity: 1, y: 0 }}
         className="p-4 max-w-3xl mx-auto space-y-6"
       >
+        <CopyThreadJsonCard onCopy={handleCopy} />
+
         <Card className="rounded-2xl shadow-xl">
           <CardHeader>
             <div className="flex items-center gap-2">
@@ -130,7 +154,9 @@ export default function ChatGPTPromptsPage() {
                     <div key={index} className="flex gap-2">
                       <Input
                         value={req}
-                        onChange={(e) => updateRequirement(index, e.target.value)}
+                        onChange={(e) =>
+                          updateRequirement(index, e.target.value)
+                        }
                         placeholder={`Requirement ${index + 1}...`}
                       />
                       <Button
@@ -159,7 +185,9 @@ export default function ChatGPTPromptsPage() {
                 </label>
                 <Input
                   value={template.outputFormat}
-                  onChange={(e) => updateTemplate("outputFormat", e.target.value)}
+                  onChange={(e) =>
+                    updateTemplate("outputFormat", e.target.value)
+                  }
                   placeholder="json, markdown, etc."
                   className="mt-1"
                 />
@@ -199,7 +227,15 @@ export default function ChatGPTPromptsPage() {
             </CardContent>
           </Card>
         )}
+
+        {showCopied && (
+          <Toast
+            message={toastMessage}
+            variant={toastVariant}
+            onClose={() => setShowCopied(false)}
+          />
+        )}
       </motion.div>
     </Layout>
   );
-} 
+}
