@@ -46,6 +46,7 @@ export default function PostDesignStudio() {
   const [toastVariant, setToastVariant] = useState<"success" | "error">(
     "success"
   );
+  const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
 
   const handleAddExample = async () => {
     // if (!selectedProfile) return;
@@ -145,7 +146,12 @@ export default function PostDesignStudio() {
           </Select>
         </div>
 
-        <ProfileListsManager />
+        <ProfileListsManager
+          selectedUsernames={selectedUsernames}
+          onItemAdded={(x) =>
+            setSelectedUsernames((y) => Array.from(new Set([...y, x])))
+          }
+        />
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">

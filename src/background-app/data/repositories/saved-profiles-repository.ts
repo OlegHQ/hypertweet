@@ -16,6 +16,17 @@ export class SavedProfilesRepository {
     );
   }
 
+  async getByUsername(username: string): Promise<XProfile | null> {
+    const profile = await this.db.get<XProfile>(
+      STORES.SAVED_PROFILES,
+      username
+    );
+    if (!profile) {
+      return null;
+    }
+    return profile;
+  }
+
   async saveProfile(profile: XProfile): Promise<void> {
     await this.db.put(STORES.SAVED_PROFILES, profile);
   }

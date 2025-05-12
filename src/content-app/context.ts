@@ -1,7 +1,7 @@
 import type { Tweet, XProfile, LinkedInProfile } from "../background-app/data";
 
 const getRecentTweets = async (
-  maxTweets = 5,
+  maxTweets: number | undefined,
   maxRetries = 3,
   delay = 1000,
   scroll = false
@@ -21,9 +21,13 @@ const getRecentTweets = async (
       await new Promise((resolve) => setTimeout(resolve, 1000));
     }
 
-    const tweetElements = Array.from(
+    let tweetElements = Array.from(
       document.querySelectorAll('[data-testid="tweet"]')
-    ).slice(0, maxTweets); // Get only first 5 tweets
+    );
+
+    if (maxTweets) {
+      tweetElements = tweetElements.slice(0, maxTweets);
+    }
     console.log("tweetElements", tweetElements, tweetElements.length);
     return tweetElements
       .map((tweet) => {
@@ -48,6 +52,23 @@ const getRecentTweets = async (
           const text = element?.textContent?.trim() || "0";
           return getNumberFromText(text);
         };
+        const getImpressions = () => {
+          const num = Number(
+            tweet
+              .querySelector('a[href$="/analytics"]')
+              ?.getAttribute("aria-label")
+              ?.split(" ")
+              .map((x) => {
+                const y = Number(x);
+                if (isNaN(y)) {
+                  return 0;
+                }
+                return y ?? 0;
+              })
+              .reduce((a, b) => (a > b ? a : b), 0)
+          );
+          return num;
+        };
 
         return {
           text,
@@ -56,6 +77,8 @@ const getRecentTweets = async (
           likes: getEngagementCount('[data-testid="like"]'),
           retweets: getEngagementCount('[data-testid="retweet"]'),
           replies: getEngagementCount('[data-testid="reply"]'),
+          bookmarks: getEngagementCount('[data-testid="bookmark"]'),
+          impressions: getImpressions(),
         };
       })
       .filter((x) => x) as Tweet[];
@@ -190,7 +213,7 @@ export function makeContentApp() {
         : undefined;
 
       return getRecentTweets(
-        numberOfTweets ?? 5,
+        numberOfTweets,
         1,
         1000,
         numberOfTweets ? true : false

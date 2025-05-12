@@ -62,7 +62,7 @@ export class ScrapingContext {
   async scrapeTwitterProfile(twitterUrl: string): Promise<XProfile> {
     return doOnTab(twitterUrl, async (tabId) => {
       const contentApp = getContentApp(tabId);
-      const result = await contentApp.scrapeProfile();
+      const result = await contentApp.scrapeProfile(10);
       if (!result) {
         throw new Error("Failed to scrape profile data");
       }

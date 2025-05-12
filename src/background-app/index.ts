@@ -24,7 +24,7 @@ export async function setupBackgroundApp() {
   return {
     dataLayer,
     profiles: {
-      async saveOne(numberOfTweets?: number) {
+      async saveOne() {
         const tabs = await browserApi.tabs.query({
           active: true,
           currentWindow: true,
@@ -33,9 +33,30 @@ export async function setupBackgroundApp() {
           return null;
         }
         const contentApp = getContentApp(tabs[0].id!);
-        const profile = await contentApp.scrapeProfile(numberOfTweets);
+        const profile = await contentApp.scrapeProfile();
         if (profile.username.length === 0) {
           return null;
+        }
+
+        const existingProfile = await dataLayer.savedProfiles.getByUsername(
+          profile.username
+        );
+        if (existingProfile) {
+          const a = Object.fromEntries(
+            existingProfile.recentTweets?.map((x) => [x.text, x]) ?? []
+          );
+
+          const b = Object.fromEntries(
+            profile.recentTweets?.map((x) => [x.text, x]) ?? []
+          );
+
+          for (const key in a) {
+            if (a[key]) {
+              b[key] = a[key];
+            }
+          }
+
+          profile.recentTweets = Object.values(b);
         }
         await dataLayer.savedProfiles.add(profile);
         return profile;
@@ -172,6 +193,7 @@ export async function setupBackgroundApp() {
         const profiles = await db.getAll<Profile>(STORES.PROFILES);
         const settings = await db.getAll<Settings>(STORES.SETTINGS);
         const replyTypes = await db.getAll<ReplyType>(STORES.REPLY_TYPES);
+        const savedProfiles = await db.getAll<XProfile>(STORES.SAVED_PROFILES);
 
         const backupData = {
           version: 1,
@@ -180,6 +202,7 @@ export async function setupBackgroundApp() {
             profiles,
             settings,
             replyTypes,
+            savedProfiles,
           },
         };
 
@@ -211,10 +234,12 @@ export async function setupBackgroundApp() {
           db.clearStore(STORES.PROFILES),
           db.clearStore(STORES.SETTINGS),
           db.clearStore(STORES.REPLY_TYPES),
+          db.clearStore(STORES.SAVED_PROFILES),
         ]);
 
         // Import new data
-        const { profiles, settings, replyTypes } = backupData.data;
+        const { profiles, settings, replyTypes, savedProfiles } =
+          backupData.data;
 
         await Promise.all([
           ...profiles.map((profile: Profile) =>
@@ -225,6 +250,9 @@ export async function setupBackgroundApp() {
           ),
           ...replyTypes.map((replyType: ReplyType) =>
             db.put(STORES.REPLY_TYPES, replyType)
+          ),
+          ...savedProfiles.map((savedProfile: XProfile) =>
+            db.put(STORES.SAVED_PROFILES, savedProfile)
           ),
         ]);
       },
