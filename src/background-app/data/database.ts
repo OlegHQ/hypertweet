@@ -26,12 +26,13 @@ interface Settings {
 }
 
 const DB_NAME = "hypertweet";
-const DB_VERSION = 3;
+const DB_VERSION = 4;
 
 export const STORES = {
   PROFILES: "profiles",
   SETTINGS: "settings",
   REPLY_TYPES: "replyTypes",
+  SAVED_PROFILES: "savedProfiles",
 } as const;
 
 export class Database {
@@ -57,6 +58,14 @@ export class Database {
           });
           profilesStore.createIndex("linkedInUrl", "linkedInUrl", {
             unique: true,
+          });
+        }
+
+        console.log("db.objectStoreNames", db.objectStoreNames);
+        // Create profiles store
+        if (!db.objectStoreNames.contains(STORES.SAVED_PROFILES)) {
+          db.createObjectStore(STORES.SAVED_PROFILES, {
+            keyPath: "username",
           });
         }
 

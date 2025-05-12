@@ -1,48 +1,68 @@
 import type { Tweet, XProfile, LinkedInProfile } from "../background-app/data";
 
 const getRecentTweets = async (
+  maxTweets = 5,
   maxRetries = 3,
-  delay = 1000
+  delay = 1000,
+  scroll = false
 ): Promise<Tweet[]> => {
   const getNumberFromText = (text: string) => {
     const num = text.replace(/[^0-9]/g, "");
     return num ? parseInt(num) : 0;
   };
 
-  const getTweets = (): Tweet[] => {
+  const getTweets = async (): Promise<Tweet[]> => {
+    if (scroll) {
+      /// need to scroll down 10* screen heights viewports
+      const screenHeight = window.innerHeight;
+      for (let i = 0; i < 15; i++) {
+        window.scrollTo(0, screenHeight * i);
+      }
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+    }
+
     const tweetElements = Array.from(
       document.querySelectorAll('[data-testid="tweet"]')
-    ).slice(0, 5); // Get only first 5 tweets
+    ).slice(0, maxTweets); // Get only first 5 tweets
+    console.log("tweetElements", tweetElements, tweetElements.length);
+    return tweetElements
+      .map((tweet) => {
+        const text =
+          tweet
+            .querySelector('[data-testid="tweetText"]')
+            ?.textContent?.trim() || "";
+        const time =
+          tweet.querySelector("time")?.getAttribute("datetime") || "";
+        const url =
+          (tweet.querySelector('a[href*="/status/"]') as HTMLAnchorElement)
+            ?.href || "";
 
-    return tweetElements.map((tweet) => {
-      const text =
-        tweet.querySelector('[data-testid="tweetText"]')?.textContent?.trim() ||
-        "";
-      const time = tweet.querySelector("time")?.getAttribute("datetime") || "";
-      const url =
-        (tweet.querySelector('a[href*="/status/"]') as HTMLAnchorElement)
-          ?.href || "";
+        const photoInside = tweet.querySelector('[data-testid="tweetPhoto"]');
+        if (photoInside !== null) {
+          console.log("photoInside", photoInside);
+          return null;
+        }
+        // Get engagement metrics
+        const getEngagementCount = (selector: string) => {
+          const element = tweet.querySelector(selector);
+          const text = element?.textContent?.trim() || "0";
+          return getNumberFromText(text);
+        };
 
-      // Get engagement metrics
-      const getEngagementCount = (selector: string) => {
-        const element = tweet.querySelector(selector);
-        const text = element?.textContent?.trim() || "0";
-        return getNumberFromText(text);
-      };
-
-      return {
-        text,
-        time,
-        url,
-        likes: getEngagementCount('[data-testid="like"]'),
-        retweets: getEngagementCount('[data-testid="retweet"]'),
-        replies: getEngagementCount('[data-testid="reply"]'),
-      };
-    });
+        return {
+          text,
+          time,
+          url,
+          likes: getEngagementCount('[data-testid="like"]'),
+          retweets: getEngagementCount('[data-testid="retweet"]'),
+          replies: getEngagementCount('[data-testid="reply"]'),
+        };
+      })
+      .filter((x) => x) as Tweet[];
   };
 
   // Initial attempt
-  let tweets = getTweets();
+  let tweets = await getTweets();
   if (tweets.length > 0) {
     return tweets;
   }
@@ -50,7 +70,7 @@ const getRecentTweets = async (
   // Retry with delay if no tweets found
   for (let i = 0; i < maxRetries; i++) {
     await new Promise((resolve) => setTimeout(resolve, delay));
-    tweets = getTweets();
+    tweets = await getTweets();
     if (tweets.length > 0) {
       return tweets;
     }
@@ -132,7 +152,7 @@ export function makeContentApp() {
 
       return jsonThread;
     },
-    async scrapeProfile() {
+    async scrapeProfile(numberOfTweets?: number) {
       const nameAndUsername =
         document
           .querySelector('[data-testid="UserName"]')
@@ -169,7 +189,12 @@ export function makeContentApp() {
         ? parseInt(followersElement.textContent?.replace(/,/g, "") || "0")
         : undefined;
 
-      return getRecentTweets().then((recentTweets) => {
+      return getRecentTweets(
+        numberOfTweets ?? 5,
+        1,
+        1000,
+        numberOfTweets ? true : false
+      ).then((recentTweets) => {
         const profile: XProfile = {
           name: name ?? "",
           username: username ?? "",

@@ -20,9 +20,28 @@ import {
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
   const replyTypeRepository = new ReplyTypeRepository(db);
+  const scraping = new ScrapingContext();
   return {
     dataLayer,
-    scraping: new ScrapingContext(),
+    profiles: {
+      async saveOne(numberOfTweets?: number) {
+        const tabs = await browserApi.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (!tabs[0]) {
+          return null;
+        }
+        const contentApp = getContentApp(tabs[0].id!);
+        const profile = await contentApp.scrapeProfile(numberOfTweets);
+        if (profile.username.length === 0) {
+          return null;
+        }
+        await dataLayer.savedProfiles.add(profile);
+        return profile;
+      },
+    },
+    scraping,
     system: {
       async getCurrentProfileId() {
         const lastId = await dataLayer.config.get<string>(
