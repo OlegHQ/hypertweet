@@ -8,7 +8,8 @@ export type Route =
   | "/reply-types/edit/:id"
   | "/misc"
   | "/data-backup"
-  | "/chatgpt-prompts";
+  | "/chatgpt-prompts"
+  | "/posts-studio";
 
 interface ApiKey {
   id: string;

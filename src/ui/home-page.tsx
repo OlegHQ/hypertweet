@@ -55,12 +55,30 @@ export default function HomePage() {
       >
         <Card
           className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
+          onClick={() => setCurrentRoute("/posts-studio")}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-medium">Posts Studio</h2>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 dark:text-gray-300">
+              Generate posts for your X profile.
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
           onClick={() => setCurrentRoute("/chatgpt-prompts")}
         >
           <CardHeader>
             <div className="flex items-center gap-2">
               <MessageSquare className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <h2 className="text-lg font-medium">ChatGPT Task Prompts</h2>
+              <h2 className="text-lg font-medium">
+                ChatGPT Reply Task Prompts
+              </h2>
             </div>
           </CardHeader>
           <CardContent>
