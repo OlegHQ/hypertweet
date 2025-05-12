@@ -9,6 +9,7 @@ import { buildPersonaPayload } from "./ai/system-prompt-gen";
 import { defaultModel, ModelType } from "./ai/model-type";
 import {
   buildFormatInstructionsPrompt,
+  defaultOptions as defaultFormatInstructionsOptions,
   type InstructionOptions,
 } from "./ai/format-instructions";
 
@@ -21,6 +22,15 @@ async function getModel(dataLayer: DataLayer, profileId: string) {
 
 export function newAI(dataLayer: DataLayer) {
   return {
+    async getFormatInstructionOptions(profileId: string) {
+      const formatInstructions =
+        (await dataLayer.config.get<InstructionOptions>(
+          profileId,
+          ConfigTypeKey.FORMAT_INSTRUCTIONS
+        )) ?? defaultFormatInstructionsOptions;
+
+      return formatInstructions;
+    },
     async buildFormatInstructionsPrompt(
       opts: InstructionOptions
     ): Promise<string> {
@@ -39,11 +49,18 @@ export function newAI(dataLayer: DataLayer) {
       if (!openAiKey) {
         throw new Error("Missing required config");
       }
+      const formatInstructions =
+        (await dataLayer.config.get<InstructionOptions>(
+          profileId,
+          ConfigTypeKey.FORMAT_INSTRUCTIONS
+        )) ?? defaultFormatInstructionsOptions;
+
       return await generateReply(
         openAiKey,
         model,
         personaSnippet,
         prompt,
+        buildFormatInstructionsPrompt(formatInstructions),
         postText
       );
     },

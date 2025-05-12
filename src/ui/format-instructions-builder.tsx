@@ -11,38 +11,62 @@ import {
 } from "./library/select";
 import { Input } from "./library/input";
 import { motion } from "framer-motion";
-import { type InstructionOptions } from "src/background-app/ai/format-instructions";
-import { app } from "./app";
-import { ClipboardCopy, Plus, X } from "lucide-react";
 
-const defaultOptions: InstructionOptions = {
-  lowercase: true,
-  breakLines: true,
-  keepNewlines: false,
-  punctuation: "natural",
-  allowEmoji: false,
-  allowExclamation: false,
-  extras: [],
-};
+import { app } from "./app";
+import { Plus, X } from "lucide-react";
+import { ConfigTypeKey } from "src/background-app/data";
+import { useGlobalState } from "./state";
+import type { InstructionOptions } from "src/background-app/ai/format-instructions";
 
 const FormatInstructionBuilder: React.FC = () => {
-  const [options, setOptions] = useState<InstructionOptions>(defaultOptions);
+  const [options, setOptions] = useState<InstructionOptions | null>(null);
   const [extraDraft, setExtraDraft] = useState("");
+  const { selectedProfile } = useGlobalState();
   const [instruction, setInstruction] = useState("");
-  const [showCopied, setShowCopied] = useState(false);
+
+  // Load saved options when component mounts or profile changes
+  useEffect(() => {
+    if (!selectedProfile?.id) {
+      return;
+    }
+    const loadSavedOptions = async () => {
+      try {
+        const savedInstruction = await app.ai.getFormatInstructionOptions(
+          selectedProfile.id
+        );
+        setOptions(savedInstruction);
+      } catch (error) {
+        console.error("Error loading format instructions:", error);
+      }
+    };
+    loadSavedOptions();
+  }, [selectedProfile?.id]);
 
   useEffect(() => {
-    app.ai.buildFormatInstructionsPrompt(options).then((instruction) => {
+    if (!selectedProfile?.id || !options) {
+      return;
+    }
+    app.ai.buildFormatInstructionsPrompt(options).then(async (instruction) => {
       setInstruction(instruction);
+      await app.dataLayer.config.set(
+        selectedProfile?.id,
+        ConfigTypeKey.FORMAT_INSTRUCTIONS,
+        options
+      );
     });
-  }, [options]);
+  }, [options, selectedProfile?.id]);
 
   const update = useCallback(
     <T extends keyof InstructionOptions>(
       key: T,
       value: InstructionOptions[T]
     ) => {
-      setOptions((prev) => ({ ...prev, [key]: value }));
+      setOptions((prev) => {
+        if (!prev) {
+          return null;
+        }
+        return { ...prev, [key]: value };
+      });
     },
     []
   );
@@ -50,23 +74,17 @@ const FormatInstructionBuilder: React.FC = () => {
   const addExtra = () => {
     const v = extraDraft.trim();
     if (!v) return;
-    update("extras", [...options.extras, v]);
+    update("extras", [...(options?.extras ?? []), v]);
     setExtraDraft("");
   };
 
   const removeExtra = (index: number) => {
-    update(
-      "extras",
-      options.extras.filter((_, i) => i !== index)
-    );
+    update("extras", options?.extras?.filter((_, i) => i !== index) ?? []);
   };
 
-  const copyToClipboard = async () => {
-    await navigator.clipboard.writeText(instruction);
-    setShowCopied(true);
-    setTimeout(() => setShowCopied(false), 2000);
-  };
-
+  if (!options) {
+    return null;
+  }
   return (
     <motion.div
       initial={{ opacity: 0, y: 24 }}
@@ -84,15 +102,6 @@ const FormatInstructionBuilder: React.FC = () => {
                 Customize how your replies are formatted
               </p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              className="flex items-center gap-2"
-            >
-              <ClipboardCopy className="h-4 w-4" />
-              {showCopied ? "Copied!" : "Copy"}
-            </Button>
           </div>
         </CardHeader>
         <CardContent>

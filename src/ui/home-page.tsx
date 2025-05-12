@@ -55,6 +55,24 @@ export default function HomePage() {
       >
         <Card
           className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
+          onClick={() => setCurrentRoute("/chatgpt-prompts")}
+        >
+          <CardHeader>
+            <div className="flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-medium">ChatGPT Task Prompts</h2>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-gray-600 dark:text-gray-300">
+              Generate structured JSON prompts for ChatGPT to create engaging
+              content. Optimize your prompts for better results and more
+              efficient content generation.
+            </p>
+          </CardContent>
+        </Card>
+        <Card
+          className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
           onClick={() => setCurrentRoute("/reply-types")}
         >
           <CardHeader>
@@ -80,24 +98,6 @@ export default function HomePage() {
               Configure your personality and writing style by connecting your X
               (Twitter) and LinkedIn profiles. This helps the AI understand your
               tone, expertise, and communication style.
-            </p>
-          </CardContent>
-        </Card>
-
-        <Card
-          className="cursor-pointer transition-all hover:border-primary dark:hover:border-primary-600"
-          onClick={() => setCurrentRoute("/chatgpt-prompts")}
-        >
-          <CardHeader>
-            <div className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-primary-600 dark:text-primary-400" />
-              <h2 className="text-lg font-medium">ChatGPT Task Prompts</h2>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <p className="text-gray-600 dark:text-gray-300">
-              Generate structured JSON prompts for ChatGPT to create engaging content.
-              Optimize your prompts for better results and more efficient content generation.
             </p>
           </CardContent>
         </Card>

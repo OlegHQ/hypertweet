@@ -107,12 +107,26 @@ export function makeContentApp() {
         const [first, ...replies] = Array.from(
           document.querySelectorAll("[data-testid=tweet]")
         ) as HTMLElement[];
+        const responseContainer = document.querySelector(
+          ".public-DraftStyleDefault-block"
+        )?.parentElement?.children;
+
+        const replyLines: string[] = [];
+        if (responseContainer) {
+          for (let i = 0; i < responseContainer.length; i++) {
+            const reply = responseContainer.item(i);
+            if (reply?.textContent?.trim() === "") {
+              continue;
+            }
+            replyLines.push(reply?.textContent?.trim() ?? "");
+          }
+        }
         return {
           status: getTweet(first!),
           replies: replies.map(getTweet),
-          currentResponse: document
-            .querySelector(".public-DraftStyleDefault-block")
-            ?.textContent?.trim(),
+          currentResponse: replyLines.length
+            ? replyLines.join("\n")
+            : undefined,
         };
       })();
 

@@ -14,6 +14,16 @@ export interface InstructionOptions {
   extras: string[]; // any custom rules you type in
 }
 
+export const defaultOptions: InstructionOptions = {
+  lowercase: true,
+  breakLines: true,
+  keepNewlines: false,
+  punctuation: "natural",
+  allowEmoji: false,
+  allowExclamation: false,
+  extras: [],
+};
+
 export function buildFormatInstructionsPrompt(
   opts: InstructionOptions
 ): string {
@@ -23,7 +33,7 @@ export function buildFormatInstructionsPrompt(
   if (opts.lowercase) {
     parts.push("lowercase (except names)");
   } else {
-    parts.push("preserve casing");
+    parts.push("proper capitalization");
   }
 
   // line handling

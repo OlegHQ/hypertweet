@@ -10,7 +10,12 @@ import {
   type ReplyType,
 } from "./data/database";
 import { browserApi } from "../utils/browser-api";
-import { FORMAT_INSTRUCTIONS } from "./ai/context";
+import type { ThreadTask } from "./ai/thread-tasks";
+import {
+  buildFormatInstructionsPrompt,
+  defaultOptions,
+  type InstructionOptions,
+} from "./ai/format-instructions";
 
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
@@ -28,7 +33,7 @@ export async function setupBackgroundApp() {
       },
     },
     content: {
-      async getCurrentTweetThreadJSON(profileId: string) {
+      async getTaskThreadJSON(profileId: string, task: ThreadTask) {
         const tabs = await browserApi.tabs.query({
           active: true,
           currentWindow: true,
@@ -44,6 +49,12 @@ export async function setupBackgroundApp() {
           profileId,
           ConfigTypeKey.SYSTEM_PROMPT
         );
+        const formatInstructions =
+          (await dataLayer.config.get<InstructionOptions>(
+            profileId,
+            ConfigTypeKey.FORMAT_INSTRUCTIONS
+          )) ?? defaultOptions;
+
         const twitterProfile = await dataLayer.config.get<XProfile>(
           profileId,
           ConfigTypeKey.TWITTER_PROFILE
@@ -53,7 +64,6 @@ export async function setupBackgroundApp() {
         author.name = twitterProfile?.name ?? profile?.name ?? "user";
         if (twitterProfile) {
           author.username = twitterProfile.username;
-          author.bio = twitterProfile.bio;
           author.website = twitterProfile.website;
         }
 
@@ -63,13 +73,11 @@ export async function setupBackgroundApp() {
 
         result.author = author;
         result.twitterThread = twitterThread;
-        result.responseFormat = FORMAT_INSTRUCTIONS;
-        result.task =
-          "you have to reply to the .twitterThread accounting to the author's persona, give 5 options";
+        result.responseFormat =
+          buildFormatInstructionsPrompt(formatInstructions);
+        result.task = task;
 
         if (twitterThread.currentResponse) {
-          result.task =
-            "if the .currentResponse good enough, clean it up or use it as base for coming up with 5 options for replies to this .twitterThread";
           result.currentResponse = twitterThread.currentResponse;
         }
         delete twitterThread.currentResponse;

@@ -28,14 +28,14 @@ export async function buildPersonalitySnippet(
 
 const TWEET_CONTEXT =
   "You are composing a reply tweet. Output only the reply text, no greeting, no hashtags unless present in the post.";
-export const FORMAT_INSTRUCTIONS =
-  "Format: lowercase (except names), break lines freely, use commas & periods naturally, no newlines";
+
 
 export async function generateReply(
   key: string,
   model: ModelType,
   personaSnippet: string | null,
   prompt: string,
+  formatInstructions: string,
   postText: string
 ): Promise<string> {
   const messages: ChatCompletionMessageParam[] = [];
@@ -46,7 +46,7 @@ export async function generateReply(
   messages.push({ role: "system", content: prompt });
   messages.push({
     role: "system",
-    content: FORMAT_INSTRUCTIONS,
+    content: formatInstructions,
   });
   messages.push({
     role: "user",
