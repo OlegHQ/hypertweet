@@ -75,6 +75,7 @@ export default function ReplyTypeButton({
       loading={state.loading}
       loadingText="Generating..."
     >
+      {replyType.icon ? <span className="mr-1">{replyType.icon}</span> : null}
       {replyType.name}
     </Button>
   );

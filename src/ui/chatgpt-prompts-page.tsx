@@ -1,24 +1,12 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import { PageHeader } from "./page-header";
-import { Card, CardContent, CardHeader } from "./library/card";
-import { Button } from "./library/button";
-import { Input } from "./library/input";
-import { Textarea } from "./library/textarea";
 import { motion } from "framer-motion";
-import { ClipboardCopy, MessageSquare, Copy, ArrowRight } from "lucide-react";
 import { Toast } from "./library/toast";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import { ActionButtonsGrid } from "./library/action-buttons-grid";
 import type { ThreadTask } from "src/background-app/ai/thread-tasks";
-
-interface PromptTemplate {
-  task: string;
-  context: string;
-  requirements: string[];
-  outputFormat: string;
-}
 
 interface Tweet {
   text: string;
@@ -55,7 +43,9 @@ export default function ChatGPTPromptsPage() {
       }
 
       await navigator.clipboard.writeText(JSON.stringify(data));
-      setToastMessage(`JSON task is copied to clipboard!`);
+      setToastMessage(
+        `JSON task is copied to clipboard! Paste it into ChatGPT or Grok to generate a reply.`
+      );
       setToastVariant("success");
       setShowCopied(true);
     } catch (error) {

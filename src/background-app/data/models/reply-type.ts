@@ -7,4 +7,5 @@ export interface ReplyType {
   updatedAt: Date;
   isSystem: boolean;
   isHidden?: boolean;
+  icon?: string;
 }

@@ -222,6 +222,29 @@ export default function ApiConfig() {
               )}
             </div>
           </div>
+          <div className="text-sm text-gray-600 mb-4">
+            <p className="mb-2">
+              An OpenAI API key is required to generate AI-powered content. This
+              key allows the extension to communicate with OpenAI's services.
+            </p>
+            <p>To get an API key:</p>
+            <ol className="list-decimal list-inside space-y-1 mt-2">
+              <li>
+                Visit the{" "}
+                <a
+                  href="https://platform.openai.com/api-keys"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-500 hover:underline"
+                >
+                  OpenAI API Keys page
+                </a>
+              </li>
+              <li>Sign in or create an OpenAI account</li>
+              <li>Click "Create new secret key"</li>
+              <li>Copy your new API key and paste it above</li>
+            </ol>
+          </div>
         </CardContent>
       </Card>
     </motion.div>

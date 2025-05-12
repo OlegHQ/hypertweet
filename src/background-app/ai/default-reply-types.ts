@@ -4,7 +4,8 @@ export function defaultReplyTypes(profileId: string): ReplyType[] {
   return [
     {
       id: "nice",
-      name: "😊 Nice",
+      name: "Nice",
+      icon: "😊",
       prompt: "Upbeat & kind, 1–2 sentences.",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -13,7 +14,8 @@ export function defaultReplyTypes(profileId: string): ReplyType[] {
     },
     {
       id: "thanks",
-      name: "🙏 Thanks",
+      name: "Thanks",
+      icon: "🙏",
       prompt: "Brief thank‑you, 1 sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -22,7 +24,8 @@ export function defaultReplyTypes(profileId: string): ReplyType[] {
     },
     {
       id: "asking",
-      name: "❓ Asking",
+      name: "Asking",
+      icon: "❓",
       prompt: "Friendly question, 1 sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -31,7 +34,8 @@ export function defaultReplyTypes(profileId: string): ReplyType[] {
     },
     {
       id: "insightful",
-      name: "💡 Insightful",
+      name: "Insightful",
+      icon: "💡",
       prompt: "Thoughtful insight, ≤2 sentences.",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -40,7 +44,8 @@ export function defaultReplyTypes(profileId: string): ReplyType[] {
     },
     {
       id: "sarcastic",
-      name: "😏 Sarcastic",
+      name: "Sarcastic",
+      icon: "😏",
       prompt: "Light sarcasm, 1 witty sentence.",
       createdAt: new Date(),
       updatedAt: new Date(),

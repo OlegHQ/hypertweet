@@ -75,6 +75,7 @@ export async function setupBackgroundApp() {
         result.twitterThread = twitterThread;
         result.responseFormat =
           buildFormatInstructionsPrompt(formatInstructions);
+        result.responseSize = "tweet";
         result.task = task;
 
         if (twitterThread.currentResponse) {

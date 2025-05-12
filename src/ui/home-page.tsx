@@ -5,7 +5,7 @@ import { useGlobalState } from "./state";
 import { Card, CardContent, CardHeader } from "./library/card";
 import { motion } from "framer-motion";
 import { ConfigTypeKey } from "src/background-app/data";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, Reply, UserCircle, Settings } from "lucide-react";
 
 export default function HomePage() {
   const {
@@ -76,7 +76,10 @@ export default function HomePage() {
           onClick={() => setCurrentRoute("/reply-types")}
         >
           <CardHeader>
-            <h2 className="text-lg font-medium">Reply Types</h2>
+            <div className="flex items-center gap-2">
+              <Reply className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-medium">Reply Types</h2>
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 dark:text-gray-300">
@@ -91,7 +94,10 @@ export default function HomePage() {
           onClick={() => setCurrentRoute("/knowledge-base")}
         >
           <CardHeader>
-            <h2 className="text-lg font-medium">Personality Configuration</h2>
+            <div className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-medium">Personality Configuration</h2>
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 dark:text-gray-300">
@@ -107,7 +113,10 @@ export default function HomePage() {
           onClick={() => setCurrentRoute("/misc")}
         >
           <CardHeader>
-            <h2 className="text-lg font-medium">Miscellaneous</h2>
+            <div className="flex items-center gap-2">
+              <Settings className="h-5 w-5 text-primary-600 dark:text-primary-400" />
+              <h2 className="text-lg font-medium">Miscellaneous</h2>
+            </div>
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 dark:text-gray-300">

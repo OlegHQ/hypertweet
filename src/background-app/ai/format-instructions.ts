@@ -65,5 +65,5 @@ export function buildFormatInstructionsPrompt(
   // extra user‑supplied rules
   if (opts.extras.length) parts.push(...opts.extras);
 
-  return `Format: ${parts.join(", ")}`;
+  return parts.join(", ");
 }
