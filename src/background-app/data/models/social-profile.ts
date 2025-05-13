@@ -5,9 +5,12 @@ export interface Tweet {
   likes: number;
   retweets: number;
   replies: number;
+  bookmarks: number;
+  impressions: number;
 }
 
 export interface XProfile {
+  id?: string;
   name: string;
   username: string;
   bio?: string;

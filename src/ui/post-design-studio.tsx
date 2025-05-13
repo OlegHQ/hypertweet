@@ -12,8 +12,9 @@ import {
 } from "./library/select";
 import { Toast } from "./library/toast";
 import { useGlobalState } from "./state";
-import { Plus, Copy } from "lucide-react";
+import { Plus, Copy, X } from "lucide-react";
 import ProfileListsManager from "./profile-lists-manager";
+import { app } from "./app";
 
 type TweetType = "authority" | "growth" | "personality";
 
@@ -48,70 +49,38 @@ export default function PostDesignStudio() {
   );
   const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
 
-  const handleAddExample = async () => {
-    // if (!selectedProfile) return;
-    // try {
-    //   const tabs = await app.browserApi.tabs.query({ active: true, currentWindow: true });
-    //   if (!tabs[0]) {
-    //     setToastMessage("No active tab found");
-    //     setToastVariant("error");
-    //     setShowCopied(true);
-    //     return;
-    //   }
-    //   const contentApp = app.getContentApp(tabs[0].id!);
-    //   const tweet = await contentApp.copyTweets();
-    //   if (!tweet?.tweets?.[0]) {
-    //     setToastMessage("No tweet found in the current page");
-    //     setToastVariant("error");
-    //     setShowCopied(true);
-    //     return;
-    //   }
-    //   const newExample: ProfileExample = {
-    //     id: Date.now().toString(),
-    //     name: selectedProfile.name,
-    //     username: selectedProfile.twitterUsername || "",
-    //     tweetType: selectedType,
-    //     content: tweet.tweets[0].text,
-    //   };
-    //   setLists(lists.map(list =>
-    //     list.id === currentListId
-    //       ? { ...list, examples: [...list.examples, newExample] }
-    //       : list
-    //   ));
-    //   setToastMessage("Example added successfully");
-    //   setToastVariant("success");
-    //   setShowCopied(true);
-    // } catch (error) {
-    //   console.error("Error adding example:", error);
-    //   setToastMessage("Failed to add example");
-    //   setToastVariant("error");
-    //   setShowCopied(true);
-    // }
+  const handleGeneratePrompt = async () => {
+    if (selectedProfile?.id) {
+      try {
+        const json = await app.content.getPromptGenerateJSON(
+          selectedProfile?.id,
+          selectedUsernames
+        );
+        
+        // Copy to clipboard
+        await navigator.clipboard.writeText(JSON.stringify(json, null, 2));
+        
+        // Show success toast
+        setToastMessage("Prompt JSON copied to clipboard!");
+        setToastVariant("success");
+        setShowCopied(true);
+      } catch (error) {
+        // Show error toast
+        setToastMessage("Failed to generate prompt");
+        setToastVariant("error");
+        setShowCopied(true);
+      }
+    }
   };
 
-  const handleGeneratePrompt = () => {
-    // if (!selectedProfile) return;
-    // const prompt = {
-    //   type: selectedType,
-    //   examples: currentList.examples.map(example => ({
-    //     type: example.tweetType,
-    //     content: example.content,
-    //     author: {
-    //       name: example.name,
-    //       username: example.username
-    //     }
-    //   })),
-    //   profile: {
-    //     name: selectedProfile.name,
-    //     username: selectedProfile.twitterUsername,
-    //     personality: selectedProfile.personalityType
-    //   }
-    // };
-    // navigator.clipboard.writeText(JSON.stringify(prompt, null, 2));
-    // setToastMessage("Prompt copied to clipboard! Paste it into ChatGPT to generate tweets.");
-    // setToastVariant("success");
-    // setShowCopied(true);
+  const handleRemoveUsername = (username: string) => {
+    setSelectedUsernames((prev) => prev.filter((u) => u !== username));
   };
+
+  const selectedTypeInfo = TWEET_TYPES.find(
+    (type) => type.value === selectedType
+  );
+
   return (
     <Layout>
       <PageHeader title="Post Design Studio" backRoute="/" />
@@ -136,51 +105,56 @@ export default function PostDesignStudio() {
                 <SelectItem key={type.value} value={type.value}>
                   <div>
                     <div className="font-medium">{type.label}</div>
-                    <div className="text-sm text-gray-500">
-                      {type.description}
-                    </div>
                   </div>
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-
-        <ProfileListsManager
-          selectedUsernames={selectedUsernames}
-          onItemAdded={(x) =>
-            setSelectedUsernames((y) => Array.from(new Set([...y, x])))
-          }
-        />
-
-        <div className="space-y-2">
-          <div className="flex justify-between items-center">
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              Add examples from profiles you want to remix
+          {selectedTypeInfo && (
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
+              {selectedTypeInfo.description}
             </p>
-            <Button
-              onClick={handleAddExample}
-              size="sm"
-              className="bg-primary-600 hover:bg-primary-700"
-              disabled={!selectedProfile}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Current Profile
-            </Button>
-          </div>
+          )}
         </div>
+
+        {selectedUsernames.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedUsernames.map((username) => (
+              <div
+                key={username}
+                className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-3 py-1 rounded-full text-sm"
+              >
+                <span>{username}</span>
+                <button
+                  onClick={() => handleRemoveUsername(username)}
+                  className="hover:text-red-500"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
 
         <div className="flex justify-center pt-2">
           <Button
             onClick={handleGeneratePrompt}
-            className="bg-primary-600 hover:bg-primary-700"
-            // disabled={currentList?.examples.length === 0}
+            size="lg"
+            className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            disabled={selectedUsernames.length === 0}
           >
-            <Copy className="h-4 w-4 mr-2" />
+            <Copy className="h-5 w-5 mr-2" />
             Generate Prompt for ChatGPT
           </Button>
         </div>
-
+        <div className="mt-8">
+          <ProfileListsManager
+            selectedUsernames={selectedUsernames}
+            onItemAdded={(x) =>
+              setSelectedUsernames((y) => Array.from(new Set([...y, x])))
+            }
+          />
+        </div>
         {showCopied && (
           <Toast
             message={toastMessage}

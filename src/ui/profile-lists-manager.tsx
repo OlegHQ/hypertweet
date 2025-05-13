@@ -15,6 +15,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "./library/alert-dialog";
+import { useGlobalState } from "./state";
 
 interface ProfileListsManagerProps {
   selectedUsernames: string[];
@@ -25,6 +26,7 @@ export default function ProfileListsManager({
   selectedUsernames,
   onItemAdded,
 }: ProfileListsManagerProps) {
+  const { selectedProfile } = useGlobalState();
   const [savedProfiles, setSavedProfiles] = React.useState<XProfile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
@@ -59,7 +61,10 @@ export default function ProfileListsManager({
   };
 
   const handleSaveProfile = async () => {
-    const profile = await app.profiles.saveOne();
+    if (!selectedProfile?.id) {
+      return;
+    }
+    const profile = await app.profiles.saveOne(selectedProfile.id);
     if (!profile) {
       return;
     }
@@ -72,8 +77,11 @@ export default function ProfileListsManager({
   };
 
   const handleDeleteProfile = async (username: string) => {
+    if (!selectedProfile?.id) {
+      return;
+    }
     try {
-      await app.dataLayer.savedProfiles.delete(username);
+      await app.dataLayer.savedProfiles.delete(selectedProfile.id, username);
       await loadSavedProfiles();
     } catch (error) {
       console.error("Failed to delete profile:", error);

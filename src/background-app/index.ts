@@ -16,15 +16,57 @@ import {
   defaultOptions,
   type InstructionOptions,
 } from "./ai/format-instructions";
+import type { PersonalityType } from "./ai/personality-type";
 
 export async function setupBackgroundApp() {
   const [dataLayer, db] = await createDataLayer();
   const replyTypeRepository = new ReplyTypeRepository(db);
   const scraping = new ScrapingContext();
+  async function getBaseJSONPrompt(profileId: string) {
+    const profile = await dataLayer.profile.get(profileId);
+    const prompt = await dataLayer.config.get<string>(
+      profileId,
+      ConfigTypeKey.SYSTEM_PROMPT
+    );
+    const formatInstructions =
+      (await dataLayer.config.get<InstructionOptions>(
+        profileId,
+        ConfigTypeKey.FORMAT_INSTRUCTIONS
+      )) ?? defaultOptions;
+
+    const twitterProfile = await dataLayer.config.get<XProfile>(
+      profileId,
+      ConfigTypeKey.TWITTER_PROFILE
+    );
+
+    const personalityType = await dataLayer.config.get<PersonalityType>(
+      profileId,
+      ConfigTypeKey.PERSONALITY_TYPE
+    );
+    const result: Record<string, any> = {};
+    const author: Record<string, any> = {};
+    author.name = twitterProfile?.name ?? profile?.name ?? "user";
+    if (personalityType) {
+      author.personalityType = personalityType;
+    }
+    if (twitterProfile) {
+      author.username = twitterProfile.username;
+      author.website = twitterProfile.website;
+    }
+
+    if (prompt) {
+      author.persona = prompt;
+    }
+
+    result.author = author;
+    result.responseSize = "tweet";
+    result.responseFormat = buildFormatInstructionsPrompt(formatInstructions);
+    return result;
+  }
   return {
     dataLayer,
     profiles: {
-      async saveOne() {
+      async saveOne(profileId: string) {
         const tabs = await browserApi.tabs.query({
           active: true,
           currentWindow: true,
@@ -39,6 +81,7 @@ export async function setupBackgroundApp() {
         }
 
         const existingProfile = await dataLayer.savedProfiles.getByUsername(
+          profileId,
           profile.username
         );
         if (existingProfile) {
@@ -58,7 +101,7 @@ export async function setupBackgroundApp() {
 
           profile.recentTweets = Object.values(b);
         }
-        await dataLayer.savedProfiles.add(profile);
+        await dataLayer.savedProfiles.add(profileId, profile);
         return profile;
       },
     },
@@ -83,39 +126,8 @@ export async function setupBackgroundApp() {
         }
         const contentApp = getContentApp(tabs[0].id!);
         const twitterThread = await contentApp.copyTweets();
-
-        const profile = await dataLayer.profile.get(profileId);
-        const prompt = await dataLayer.config.get<string>(
-          profileId,
-          ConfigTypeKey.SYSTEM_PROMPT
-        );
-        const formatInstructions =
-          (await dataLayer.config.get<InstructionOptions>(
-            profileId,
-            ConfigTypeKey.FORMAT_INSTRUCTIONS
-          )) ?? defaultOptions;
-
-        const twitterProfile = await dataLayer.config.get<XProfile>(
-          profileId,
-          ConfigTypeKey.TWITTER_PROFILE
-        );
-        const result: Record<string, any> = {};
-        const author: Record<string, any> = {};
-        author.name = twitterProfile?.name ?? profile?.name ?? "user";
-        if (twitterProfile) {
-          author.username = twitterProfile.username;
-          author.website = twitterProfile.website;
-        }
-
-        if (prompt) {
-          author.persona = prompt;
-        }
-
-        result.author = author;
+        const result = await getBaseJSONPrompt(profileId);
         result.twitterThread = twitterThread;
-        result.responseFormat =
-          buildFormatInstructionsPrompt(formatInstructions);
-        result.responseSize = "tweet";
         result.task = task;
 
         if (twitterThread.currentResponse) {
@@ -123,6 +135,23 @@ export async function setupBackgroundApp() {
         }
         delete twitterThread.currentResponse;
 
+        return result;
+      },
+      async getPromptGenerateJSON(profileId: string, usernames: string[]) {
+        const profiles = await dataLayer.savedProfiles.getByUsernames(
+          profileId,
+          usernames
+        );
+        const result = await getBaseJSONPrompt(profileId);
+        result.tweetsForReference = profiles
+          .map((x) =>
+            x.recentTweets
+              ?.sort((a, b) => b.impressions - a.impressions)
+              .slice(0, 5)
+          )
+          .flat();
+        result.task =
+          "generate 3 variants of posts based on the bio and profile, use .tweetsForReference as examples for making engaging posts, use the personality type of the author to make the posts more engaging, follow aesthetic writing style of the author";
         return result;
       },
     },
@@ -242,16 +271,16 @@ export async function setupBackgroundApp() {
           backupData.data;
 
         await Promise.all([
-          ...profiles.map((profile: Profile) =>
+          ...(profiles ?? []).map((profile: Profile) =>
             db.put(STORES.PROFILES, profile)
           ),
-          ...settings.map((setting: Settings) =>
+          ...(settings ?? []).map((setting: Settings) =>
             db.put(STORES.SETTINGS, setting)
           ),
-          ...replyTypes.map((replyType: ReplyType) =>
+          ...(replyTypes ?? []).map((replyType: ReplyType) =>
             db.put(STORES.REPLY_TYPES, replyType)
           ),
-          ...savedProfiles.map((savedProfile: XProfile) =>
+          ...(savedProfiles ?? []).map((savedProfile: XProfile) =>
             db.put(STORES.SAVED_PROFILES, savedProfile)
           ),
         ]);

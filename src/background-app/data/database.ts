@@ -61,11 +61,10 @@ export class Database {
           });
         }
 
-        console.log("db.objectStoreNames", db.objectStoreNames);
         // Create profiles store
         if (!db.objectStoreNames.contains(STORES.SAVED_PROFILES)) {
           db.createObjectStore(STORES.SAVED_PROFILES, {
-            keyPath: "username",
+            keyPath: "id",
           });
         }
 

@@ -8,18 +8,22 @@ export class SavedProfilesRepository {
     return this.db.getAll<XProfile>(STORES.SAVED_PROFILES);
   }
 
-  async getByUsernames(usernames: string[]): Promise<XProfile[]> {
-    return this.db.getAllByIndex<XProfile>(
-      STORES.SAVED_PROFILES,
-      "username",
-      usernames.join(",")
+  async getByUsernames(
+    profileId: string,
+    usernames: string[]
+  ): Promise<XProfile[]> {
+    return (await this.db.getAll<XProfile>(STORES.SAVED_PROFILES)).filter(
+      (x) => usernames.includes(x.username) && x.id?.includes(profileId)
     );
   }
 
-  async getByUsername(username: string): Promise<XProfile | null> {
+  async getByUsername(
+    profileId: string,
+    username: string
+  ): Promise<XProfile | null> {
     const profile = await this.db.get<XProfile>(
       STORES.SAVED_PROFILES,
-      username
+      `${profileId}:${username}`
     );
     if (!profile) {
       return null;
@@ -27,19 +31,25 @@ export class SavedProfilesRepository {
     return profile;
   }
 
-  async saveProfile(profile: XProfile): Promise<void> {
-    await this.db.put(STORES.SAVED_PROFILES, profile);
+  async saveProfile(profileId: string, profile: XProfile): Promise<void> {
+    await this.db.put(STORES.SAVED_PROFILES, {
+      ...profile,
+      id: `${profileId}:${profile.username}`,
+    });
   }
 
-  async deleteProfile(username: string): Promise<void> {
-    await this.db.delete(STORES.SAVED_PROFILES, username);
+  async deleteProfile(profileId: string, username: string): Promise<void> {
+    await this.db.delete(STORES.SAVED_PROFILES, `${profileId}:${username}`);
   }
 
-  async add(profile: XProfile): Promise<void> {
-    await this.db.put(STORES.SAVED_PROFILES, profile);
+  async add(profileId: string, profile: XProfile): Promise<void> {
+    await this.db.put(STORES.SAVED_PROFILES, {
+      ...profile,
+      id: `${profileId}:${profile.username}`,
+    });
   }
 
-  async delete(username: string): Promise<void> {
-    await this.db.delete(STORES.SAVED_PROFILES, username);
+  async delete(profileId: string, username: string): Promise<void> {
+    await this.db.delete(STORES.SAVED_PROFILES, `${profileId}:${username}`);
   }
 }
