@@ -151,7 +151,7 @@ export function makeContentApp() {
           document.querySelectorAll("[data-testid=tweet]")
         ) as HTMLElement[];
         const responseContainer = document.querySelector(
-          ".public-DraftStyleDefault-block"
+          `[data-testid="tweetTextarea_0"]`
         )?.parentElement?.children;
 
         const replyLines: string[] = [];

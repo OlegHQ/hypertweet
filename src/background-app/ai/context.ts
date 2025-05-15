@@ -29,6 +29,12 @@ export async function buildPersonalitySnippet(
 const TWEET_CONTEXT =
   "You are composing a reply tweet. Output only the reply text, no greeting, no hashtags unless present in the post.";
 
+const LINKEDIN_CONTEXT =
+  "You are composing a reply to a LinkedIn post. Output only the reply text, no greeting, no hashtags unless present in the post.";
+
+function getContext(siteType: "twitter" | "linkedin") {
+  return siteType === "twitter" ? TWEET_CONTEXT : LINKEDIN_CONTEXT;
+}
 
 export async function generateReply(
   key: string,
@@ -36,13 +42,14 @@ export async function generateReply(
   personaSnippet: string | null,
   prompt: string,
   formatInstructions: string,
-  postText: string
+  postText: string,
+  siteType: "twitter" | "linkedin"
 ): Promise<string> {
   const messages: ChatCompletionMessageParam[] = [];
   if (personaSnippet) {
     messages.push({ role: "system", content: personaSnippet });
   }
-  messages.push({ role: "system", content: TWEET_CONTEXT });
+  messages.push({ role: "system", content: getContext(siteType) });
   messages.push({ role: "system", content: prompt });
   messages.push({
     role: "system",

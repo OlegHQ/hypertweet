@@ -1,9 +1,10 @@
 import { useCallback, useState } from "react";
 import type { ReplyType } from "../background-app/data";
-import { typeTweet } from "./type-tweet";
+import { extractPostDetails, typeLinkedIn, typeTweet } from "./type-actions";
 import { app } from "../ui/app";
 import { Button } from "./button";
-
+import { useSiteType } from "./use-site-type";
+import { useSiteTypeStore } from "./site-type-store";
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
   disabled: boolean;
@@ -19,9 +20,11 @@ const useReplyTypeButton = (
   disabled: boolean,
   onLoading: (loading: boolean) => void
 ) => {
+  const contentType = useSiteType();
   const [state, setState] = useState<ButtonState>({
     loading: false,
   });
+  const parent = useSiteTypeStore((state) => state.parent);
 
   const onSuperLoading = useCallback(
     (loading: boolean) => {
@@ -33,21 +36,45 @@ const useReplyTypeButton = (
 
   const handleReplyTypeClick = async () => {
     onSuperLoading(true);
-    const tweetText = document
-      .querySelector('[data-testid="tweetText"]')
-      ?.textContent?.trim();
-    if (!tweetText) {
+    const getText = () => {
+      if (contentType === "twitter") {
+        return document
+          .querySelector('[data-testid="tweetText"]')
+          ?.textContent?.trim();
+      } else if (contentType === "linkedin") {
+        const postDetails = extractPostDetails(
+          parent?.closest(`[role="article"]`) as HTMLElement
+        );
+
+        const { text, authorName, authorPosition } = postDetails;
+        return `${text}\n\n${authorName} - ${authorPosition}`;
+      }
+    };
+    console.log("getText", getText());
+    const text = getText();
+    if (!text) {
       console.warn("hypertweet: no tweet text");
       onSuperLoading(false);
       return;
     }
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const reply = await app.ai.generateReply(
+      contentType,
       replyType.profileId,
-      tweetText,
+      text,
       replyType.prompt
     );
-    typeTweet(reply);
+
+    if (contentType === "twitter") {
+      typeTweet(reply);
+    } else {
+      const editor = parent
+        ?.closest(`[role="article"]`)
+        ?.querySelector(
+          'div[data-test-ql-editor-contenteditable="true"]'
+        ) as HTMLElement;
+      typeLinkedIn(editor, reply);
+    }
     onSuperLoading(false);
   };
 

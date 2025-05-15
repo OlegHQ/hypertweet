@@ -36,7 +36,12 @@ export function newAI(dataLayer: DataLayer) {
     ): Promise<string> {
       return buildFormatInstructionsPrompt(opts);
     },
-    async generateReply(profileId: string, postText: string, prompt: string) {
+    async generateReply(
+      site: "twitter" | "linkedin",
+      profileId: string,
+      postText: string,
+      prompt: string
+    ) {
       const model = await getModel(dataLayer, profileId);
       const personaSnippet = await dataLayer.config.get<string>(
         profileId,
@@ -61,7 +66,8 @@ export function newAI(dataLayer: DataLayer) {
         personaSnippet,
         prompt,
         buildFormatInstructionsPrompt(formatInstructions),
-        postText
+        postText,
+        site
       );
     },
     buildPersonaPayload: async (profileId: string) => {

@@ -2,12 +2,23 @@ import { useEffect, useState } from "react";
 import { bgApp } from "./bg-app";
 import type { ReplyType } from "../background-app/data";
 import ReplyTypeButton from "./reply-type-button";
-import { Button } from "./button";
-import { typeTweet } from "./type-tweet";
 import { motion } from "framer-motion";
+import { useSiteTypeStore } from "./site-type-store";
 
-export default function Panel() {
+export default function Panel({
+  siteType: type,
+  parent,
+}: {
+  siteType: "twitter" | "linkedin";
+  parent: HTMLElement;
+}) {
   const [replyTypes, setReplyTypes] = useState<ReplyType[]>([]);
+  const setSiteType = useSiteTypeStore((state) => state.setSiteType);
+  const setParent = useSiteTypeStore((state) => state.setParent);
+  useEffect(() => {
+    setSiteType(type);
+    setParent(parent);
+  }, [type, setSiteType, setParent, parent]);
 
   useEffect(() => {
     async function load() {

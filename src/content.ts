@@ -1,7 +1,8 @@
 import { onMessage } from "./utils/browser-api";
 import { makeContentApp } from "./content-app/context";
 import { makePathInvoker } from "./utils/proxy-handler";
-import { injectReplyStuff } from "./content-app/inject";
+import { injectTwitterReplyStuff } from "./content-app/inject-twitter";
+import { injectLinkedInReplyStuff } from "./content-app/inject-linkedin";
 
 const app = makeContentApp();
 const invoker = makePathInvoker(app);
@@ -13,4 +14,5 @@ onMessage(async (message: any) => {
   throw new Error("unknown message");
 });
 
-injectReplyStuff();
+injectTwitterReplyStuff();
+injectLinkedInReplyStuff();

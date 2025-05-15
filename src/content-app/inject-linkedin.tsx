@@ -1,22 +1,28 @@
 import { createRoot } from "react-dom/client";
-import { bgApp } from "./bg-app";
-import React from "react";
 import Panel from "./panel";
 
-export function injectReplyStuff() {
+export function injectLinkedInReplyStuff() {
   // 1. Set up a MutationObserver to watch the whole page
   const observer = new MutationObserver((mutations) => {
     for (const { addedNodes } of mutations) {
       for (const node of Array.from(addedNodes) as HTMLElement[]) {
         if (node.nodeType !== 1) continue; // skip non-elements
 
-        // 2. Check if this node _is_ your target, or contains it
-        const target = node.matches('[data-testid="inline_reply_offscreen"]')
+        // 2. Check if this node _is_ your target editor, or contains it
+        const editorNode = node.matches(
+          '[data-test-ql-editor-contenteditable="true"]'
+        )
           ? node
-          : node.querySelector('[data-testid="inline_reply_offscreen"]');
+          : node.querySelector('[data-test-ql-editor-contenteditable="true"]');
 
-        if (target) {
-          injectAiToneButtons(target as HTMLElement);
+        if (editorNode) {
+          // Find the parent form
+          const formElement = (editorNode as HTMLElement).closest(
+            "form.comments-comment-box__form"
+          );
+          if (formElement) {
+            injectAiToneButtons(formElement as HTMLElement);
+          }
         }
       }
     }
@@ -26,6 +32,7 @@ export function injectReplyStuff() {
     childList: true,
     subtree: true,
   });
+
   const injectingLock = { current: false };
   const isStyleInjected = { current: false };
 
@@ -60,35 +67,44 @@ export function injectReplyStuff() {
             background-color: rgba(29, 155, 240, 0.2);
           }
         }
+        /* Styles for the button container itself */
+        .ai-tone-buttons {
+          display: flex;
+          justify-content: flex-start; /* Or flex-end, depending on desired alignment */
+          padding-top: 8px; /* Add some spacing */
+          gap: 8px; /* Spacing between buttons if Panel renders multiple */
+        }
       `;
     document.head.appendChild(style);
   }
 
-  // 3. Inject your button list (only once per container)
-  async function injectAiToneButtons(container: HTMLElement) {
+  // 3. Inject your button list (only once per form)
+  async function injectAiToneButtons(formElement: HTMLElement) {
     injectStyle();
 
     if (injectingLock.current) {
       return;
     }
 
-    if (container.parentNode?.querySelector(".ai-tone-buttons")) {
-      console.log("already injected");
+    // Check if buttons are already injected in this specific form
+    if (formElement.querySelector(".ai-tone-buttons")) {
+      // console.log("AI Tone buttons already injected in this form");
       return;
     }
 
     injectingLock.current = true;
-
+    // Release lock after a short delay to prevent race conditions during rapid DOM changes
     setTimeout(() => {
       injectingLock.current = false;
-    }, 1000);
+    }, 500);
 
     const wrapper = document.createElement("div");
     wrapper.className = "ai-tone-buttons";
-    wrapper.style.cssText = `
-      z-index: 2;
-    `;
-    container.parentNode?.insertBefore(wrapper, container.nextSibling);
-    createRoot(wrapper).render(<Panel />);
+    // CSS for the wrapper is now handled by the injected stylesheet
+
+    formElement.appendChild(wrapper); // Append as the last child of the form
+    createRoot(wrapper).render(
+      <Panel siteType="linkedin" parent={formElement} />
+    );
   }
 }
