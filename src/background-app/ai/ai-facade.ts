@@ -12,7 +12,7 @@ import {
   defaultOptions as defaultFormatInstructionsOptions,
   type InstructionOptions,
 } from "./format-instructions";
-import type { PersonalityType } from "./personality-type";
+import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
 
 export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}
@@ -122,7 +122,9 @@ export class AIFacade {
     const author: Record<string, any> = {};
     author.name = twitterProfile?.name ?? profile?.name ?? "user";
     if (personalityType) {
-      author.personalityType = personalityType;
+      author.personalityType = PERSONALITY_TYPES.find(
+        (type) => type.value === personalityType
+      )?.label.replace("The ", "");
     }
     if (twitterProfile) {
       author.username = twitterProfile.username;

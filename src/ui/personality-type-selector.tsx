@@ -9,16 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./library/select";
-import { ConfigTypeKey } from "src/background-app/domain";
-import type { PersonalityType } from "src/background-app/ai/personality-type";
-
-const PERSONALITY_TYPES: { value: PersonalityType; label: string }[] = [
-  { value: "unspecified", label: "Unspecified" },
-  { value: "leader", label: "The Leader" },
-  { value: "reluctant_hero", label: "The Reluctant Hero" },
-  { value: "reporter", label: "The Reporter or Crusader" },
-  { value: "adventurer", label: "The Adventurer or Crusader" },
-];
+import { ConfigTypeKey } from "../background-app/domain";
+import {
+  PERSONALITY_TYPES,
+  type PersonalityType,
+} from "../background-app/ai/personality-type";
 
 export default function PersonalityTypeSelector() {
   const { selectedProfile } = useGlobalState();
