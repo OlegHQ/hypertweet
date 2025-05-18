@@ -25,7 +25,13 @@ export const getRecentTweets = async (
       tweetElements = tweetElements.slice(0, maxTweets);
     }
     return tweetElements
-      .map((tweet) => extractTweet(tweet as HTMLElement))
+      .map((tweet) => {
+        const res = extractTweet(tweet as HTMLElement);
+        if (res) {
+          return res[1];
+        }
+        return null;
+      })
       .filter((x) => x) as Tweet[];
   };
 

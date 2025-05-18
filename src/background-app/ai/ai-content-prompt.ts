@@ -28,10 +28,8 @@ export class AiContentPrompt {
   }
 
   async getPromptGenerateJSON(profileId: string, usernames: string[]) {
-    const profiles = await this.dataLayer.savedProfiles.getByUsernames(
-      profileId,
-      usernames
-    );
+    const profiles =
+      await this.dataLayer.twitterProfile.getByUsernames(usernames);
     const result = await this.ai.getBaseJSONPrompt(profileId);
     result.tweetsForReference = profiles
       .map((x) =>
