@@ -11,7 +11,7 @@ export class ScrapingService {
       return null;
     }
     const contentApp = getContentApp(tabs[0].id!);
-    const profile = await contentApp.scrapeProfile();
+    const profile = await contentApp.twitter.scrapeProfile();
     if (profile.username.length === 0) {
       return null;
     }
@@ -27,7 +27,7 @@ export class ScrapingService {
       return null;
     }
     const contentApp = getContentApp(tabs[0].id!);
-    const twitterThread = await contentApp.copyTweets();
+    const twitterThread = await contentApp.twitter.copyTweets();
     return twitterThread;
   }
 }

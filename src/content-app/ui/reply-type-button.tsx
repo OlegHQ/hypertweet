@@ -1,10 +1,11 @@
 import { useCallback, useState } from "react";
-import type { ReplyType } from "../background-app/domain";
-import { extractPostDetails, typeLinkedIn, typeTweet } from "./type-actions";
-import { app } from "../ui/app";
-import { Button } from "./button";
+import type { ReplyType } from "../../background-app/domain";
+import { extractPostDetails, typeLinkedIn } from "../linkedin/type-actions";
+import { typeTweet } from "../twitter/type-tweet";
+import { app } from "../../ui/app";
 import { useSiteType } from "./use-site-type";
 import { useSiteTypeStore } from "./site-type-store";
+import { Button } from "./button";
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
   disabled: boolean;
@@ -50,7 +51,6 @@ const useReplyTypeButton = (
         return `${text}\n\n${authorName} - ${authorPosition}`;
       }
     };
-    console.log("getText", getText());
     const text = getText();
     if (!text) {
       console.warn("hypertweet: no tweet text");

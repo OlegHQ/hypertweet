@@ -71,7 +71,6 @@ export function injectTwitterReplyStuff() {
     }
 
     if (container.parentNode?.querySelector(".ai-tone-buttons")) {
-      console.log("already injected");
       return;
     }
 

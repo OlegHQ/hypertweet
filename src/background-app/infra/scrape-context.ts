@@ -50,7 +50,7 @@ export class ScrapingContext {
   async scrapeTwitterProfile(twitterUrl: string): Promise<XProfile> {
     return doOnTab(twitterUrl, async (tabId) => {
       const contentApp = getContentApp(tabId);
-      const result = await contentApp.scrapeProfile(10);
+      const result = await contentApp.twitter.scrapeProfile(10);
       if (!result) {
         throw new Error("Failed to scrape profile data");
       }
@@ -61,7 +61,7 @@ export class ScrapingContext {
   async scrapeLinkedInProfile(linkedInUrl: string): Promise<LinkedInProfile> {
     return doOnTab(linkedInUrl, async (tabId) => {
       const contentApp = getContentApp(tabId);
-      const result = await contentApp.scrapeLinkedInProfile();
+      const result = await contentApp.linkedin.scrapeLinkedInProfile();
       if (!result) {
         throw new Error("Failed to scrape LinkedIn profile data");
       }

@@ -88,7 +88,6 @@ export function injectLinkedInReplyStuff() {
 
     // Check if buttons are already injected in this specific form
     if (formElement.querySelector(".ai-tone-buttons")) {
-      // console.log("AI Tone buttons already injected in this form");
       return;
     }
 
