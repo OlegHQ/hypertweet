@@ -26,22 +26,62 @@ export class TwitterProfileRepository {
       profile.username
     );
 
+    const updatedProfile = {
+      ...profile,
+    };
+
     if (existingProfile) {
       // Merge non-undefined attributes from new profile into existing one
       const mergedProfile = {
         ...existingProfile,
         ...Object.fromEntries(
-          Object.entries(profile).filter(([_, value]) => value !== undefined)
+          Object.entries(updatedProfile).filter(
+            ([_, value]) => value !== undefined
+          )
         ),
       };
       await this.db.put(STORES.TWITTER_PROFILES, mergedProfile);
     } else {
-      await this.db.put(STORES.TWITTER_PROFILES, profile);
+      await this.db.put(STORES.TWITTER_PROFILES, updatedProfile);
     }
   }
 
   async getAll(): Promise<XProfile[]> {
     return this.db.getAll(STORES.TWITTER_PROFILES);
+  }
+
+  async getRecentProfiles(limit: number = 50): Promise<XProfile[]> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) {
+        reject(new Error("Database not initialized"));
+        return;
+      }
+
+      const transaction = this.db.transaction(
+        STORES.TWITTER_PROFILES,
+        "readonly"
+      );
+      const store = transaction.objectStore(STORES.TWITTER_PROFILES);
+      const index = store.index("updatedAtNegative");
+
+      const request = index.openCursor();
+      const profiles: XProfile[] = [];
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue | null>)
+          .result;
+        if (cursor && profiles.length < limit) {
+          profiles.push(cursor.value as XProfile);
+          cursor.continue();
+        } else {
+          resolve(profiles);
+        }
+      };
+
+      request.onerror = () => {
+        reject(request.error);
+      };
+    });
   }
 
   async getTweets(username: string): Promise<Tweet[]> {

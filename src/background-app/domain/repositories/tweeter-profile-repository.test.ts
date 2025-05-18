@@ -1,8 +1,11 @@
 import "fake-indexeddb/auto"; // Polyfill for IndexedDB
-import { test, expect } from "bun:test";
+import { test, expect, beforeEach } from "bun:test";
 import { Database, STORES } from "../../infra/database";
 import { TwitterProfileRepository } from "./tweeter-profile-repository";
 import type { XProfile } from "../models/social-profile";
+
+// Use a fixed timestamp for testing
+const TEST_TIMESTAMP = 1747596676293;
 
 const mockProfile: XProfile = {
   username: "testuser",
@@ -14,6 +17,7 @@ const mockProfile: XProfile = {
   following: 100,
   followers: 200,
   recentTweets: [],
+  updatedAtNegative: -TEST_TIMESTAMP,
 };
 
 const updatedProfile: XProfile = {
@@ -25,13 +29,21 @@ const updatedProfile: XProfile = {
   following: 150,
   followers: 250,
   recentTweets: [],
+  updatedAtNegative: -TEST_TIMESTAMP,
 };
 
-test("should store and retrieve profile", async () => {
-  const db = new Database();
-  await db.init();
-  const repository = new TwitterProfileRepository(db);
+let db: Database;
+let repository: TwitterProfileRepository;
 
+beforeEach(async () => {
+  db = new Database();
+  await db.init();
+  repository = new TwitterProfileRepository(db);
+  // Clear the database before each test
+  await db.clearStore(STORES.TWITTER_PROFILES);
+});
+
+test("should store and retrieve profile", async () => {
   await repository.upsert(mockProfile);
   const storedProfile = await db.get<XProfile>(
     STORES.TWITTER_PROFILES,
@@ -42,10 +54,6 @@ test("should store and retrieve profile", async () => {
 });
 
 test("should update existing profile while preserving undefined fields", async () => {
-  const db = new Database();
-  await db.init();
-  const repository = new TwitterProfileRepository(db);
-
   // First insert the original profile
   await repository.upsert(mockProfile);
 
@@ -71,10 +79,6 @@ test("should update existing profile while preserving undefined fields", async (
 });
 
 test("should handle multiple profiles", async () => {
-  const db = new Database();
-  await db.init();
-  const repository = new TwitterProfileRepository(db);
-
   const profile2: XProfile = {
     ...mockProfile,
     username: "testuser2",
@@ -98,13 +102,10 @@ test("should handle multiple profiles", async () => {
 });
 
 test("should handle profile with minimal data", async () => {
-  const db = new Database();
-  await db.init();
-  const repository = new TwitterProfileRepository(db);
-
   const minimalProfile: XProfile = {
     username: "minimaluser",
     name: "Minimal User",
+    updatedAtNegative: -TEST_TIMESTAMP,
   };
 
   await repository.upsert(minimalProfile);
@@ -114,4 +115,63 @@ test("should handle profile with minimal data", async () => {
   );
 
   expect(storedProfile).toEqual(minimalProfile);
+});
+
+test("should get recent profiles sorted by update time", async () => {
+  // Create profiles with different timestamps
+  const profile1: XProfile = {
+    username: "user1",
+    name: "User 1",
+    updatedAtNegative: -(TEST_TIMESTAMP - 2000), // 2 seconds ago
+  };
+  const profile2: XProfile = {
+    username: "user2",
+    name: "User 2",
+    updatedAtNegative: -(TEST_TIMESTAMP - 1000), // 1 second ago
+  };
+  const profile3: XProfile = {
+    username: "user3",
+    name: "User 3",
+    updatedAtNegative: -TEST_TIMESTAMP, // now
+  };
+
+  // Insert in random order
+  await repository.upsert(profile1);
+  await repository.upsert(profile3);
+  await repository.upsert(profile2);
+
+  // Get recent profiles
+  const recentProfiles = await repository.getRecentProfiles();
+
+  // Should be sorted by updatedAt in descending order
+  expect(recentProfiles).toHaveLength(3);
+  expect(recentProfiles[0]!.username).toBe("user3");
+  expect(recentProfiles[1]!.username).toBe("user2");
+  expect(recentProfiles[2]!.username).toBe("user1");
+});
+
+test("should respect limit when getting recent profiles", async () => {
+  // Create 5 profiles
+  for (let i = 0; i < 5; i++) {
+    const profile: XProfile = {
+      username: `user${i}`,
+      name: `User ${i}`,
+      updatedAtNegative: -(TEST_TIMESTAMP - i * 1000), // Each profile 1 second older than the previous
+    };
+    await repository.upsert(profile);
+  }
+
+  // Get only 3 most recent profiles
+  const recentProfiles = await repository.getRecentProfiles(3);
+
+  // Should only return 3 profiles, sorted by updatedAt
+  expect(recentProfiles).toHaveLength(3);
+  expect(recentProfiles[0]!.username).toBe("user0");
+  expect(recentProfiles[1]!.username).toBe("user1");
+  expect(recentProfiles[2]!.username).toBe("user2");
+});
+
+test("should handle empty database when getting recent profiles", async () => {
+  const recentProfiles = await repository.getRecentProfiles();
+  expect(recentProfiles).toHaveLength(0);
 });

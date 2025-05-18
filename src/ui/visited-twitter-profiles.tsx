@@ -200,7 +200,16 @@ export default function VisitedTwitterProfiles({
       </div>
       <div className="space-y-2">
         {filteredProfiles.length === 0 ? (
-          <div className="text-center p-4 text-gray-500">No profiles found</div>
+          <div className="text-center p-4 text-gray-500">
+            {searchQuery ? (
+              "No profiles match your search"
+            ) : (
+              <div className="space-y-2">
+                <p>Your profile library is empty</p>
+                <p className="text-sm">Keep browsing Twitter and your library will be automatically updated with profiles that make high-impression posts</p>
+              </div>
+            )}
+          </div>
         ) : (
           filteredProfiles.map((profile) => (
             <div

@@ -1,5 +1,5 @@
 const DB_NAME = "hypertweet";
-const DB_VERSION = 8;
+const DB_VERSION = 10;
 
 export const STORES = {
   PROFILES: "profiles",
@@ -45,9 +45,15 @@ export class Database {
         }
 
         if (!db.objectStoreNames.contains(STORES.TWITTER_PROFILES)) {
-          db.createObjectStore(STORES.TWITTER_PROFILES, {
+          const twitterProfilesStore = db.createObjectStore(STORES.TWITTER_PROFILES, {
             keyPath: "username",
           });
+          twitterProfilesStore.createIndex("updatedAtNegative", "updatedAtNegative", { unique: false });
+        } else if (event.oldVersion < 9) {
+          const twitterProfilesStore = db.transaction(STORES.TWITTER_PROFILES, "readwrite").objectStore(STORES.TWITTER_PROFILES);
+          if (!twitterProfilesStore.indexNames.contains("updatedAtNegative")) {
+            twitterProfilesStore.createIndex("updatedAtNegative", "updatedAtNegative", { unique: false });
+          }
         }
 
         // Create profiles store

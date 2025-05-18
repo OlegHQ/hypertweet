@@ -110,6 +110,7 @@ export class TwitterScraper {
         following,
         followers,
         recentTweets,
+        updatedAtNegative: -Date.now(),
       };
       return profile;
     });

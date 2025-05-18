@@ -24,6 +24,7 @@ export interface XProfile {
   followers?: number;
   recentTweets?: Tweet[];
   totalSavedTweets?: number;
+  updatedAtNegative: number;
 }
 
 export interface LinkedInProfile {

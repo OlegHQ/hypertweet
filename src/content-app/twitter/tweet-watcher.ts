@@ -25,6 +25,7 @@ async function handleNewTweet(t: HTMLElement, minImpressions: number = 1000) {
     await bgApp.dataLayer.twitterProfile.upsert({
       username: tweet.from,
       name: profileName ?? "<unknown>",
+      updatedAtNegative: -Date.now(),
     });
     console.log(`tweet added ${tweet.id} from ${profileName} (${tweet.from})`);
   }
