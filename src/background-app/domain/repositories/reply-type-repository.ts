@@ -1,5 +1,5 @@
-import type { ReplyType } from "../database";
-import { Database } from "../database";
+import type { ReplyType } from "../models/reply-type";
+import { Database } from "../../infra/database";
 
 export class ReplyTypeRepository {
   constructor(private db: Database) {}

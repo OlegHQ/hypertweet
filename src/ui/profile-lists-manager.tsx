@@ -64,7 +64,7 @@ export default function ProfileListsManager({
     if (!selectedProfile?.id) {
       return;
     }
-    const profile = await app.profiles.saveOne(selectedProfile.id);
+    const profile = await app.profiles.scrapeOneAndSave(selectedProfile.id);
     if (!profile) {
       return;
     }

@@ -1,4 +1,4 @@
-import { Database } from "./database";
+import { Database } from "../infra/database";
 import { ProfileRepository } from "./repositories/profile-repository";
 import { ConfigRepository } from "./repositories/config-repository";
 import { SavedProfilesRepository } from "./repositories/saved-profiles-repository";

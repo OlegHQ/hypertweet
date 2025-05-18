@@ -1,9 +1,3 @@
-import type { ReplyType } from "./models/reply-type";
-
-interface Settings {
-  openAiKey: string;
-}
-
 const DB_NAME = "hypertweet";
 const DB_VERSION = 4;
 

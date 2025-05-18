@@ -1,6 +1,6 @@
 import "fake-indexeddb/auto"; // Polyfill for IndexedDB
 import { test, expect } from "bun:test";
-import { Database } from "../database";
+import { Database } from "../../infra/database";
 import { ConfigRepository } from "./config-repository";
 import { ConfigTypeKey } from "../models/config-type-key";
 

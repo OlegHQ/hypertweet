@@ -1,4 +1,4 @@
-import { STORES, type Database } from "../database";
+import { Database, STORES } from "../../infra/database";
 import type { XProfile } from "../models/social-profile";
 
 export class SavedProfilesRepository {

@@ -1,4 +1,4 @@
-import { Database, STORES } from "../database";
+import { Database, STORES } from "../../infra/database";
 import type { ConfigTypeKey } from "../models/config-type-key";
 
 export class ConfigRepository {

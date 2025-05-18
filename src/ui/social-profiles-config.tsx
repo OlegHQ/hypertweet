@@ -115,7 +115,7 @@ export default function SocialProfilesConfig() {
     }
     await app.dataLayer.config.delete(
       selectedProfile?.id,
-      `${platform}Profile`
+      `${platform}Profile` as ConfigTypeKey
     );
     loadStoredConfigs();
   };

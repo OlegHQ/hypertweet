@@ -1,5 +1,5 @@
 import type { Profile } from "../models/profile";
-import { Database } from "../database";
+import { Database } from "../../infra/database";
 
 export class ProfileRepository {
   constructor(private db: Database) {}
