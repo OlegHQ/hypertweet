@@ -16,4 +16,8 @@ export class TweetRepository {
     );
     return tweets.length;
   }
+
+  async getByUsername(username: string): Promise<Tweet[]> {
+    return this.db.getAllByIndex(STORES.TWEETS, "username", username);
+  }
 }

@@ -1,5 +1,5 @@
 import { STORES, type Database } from "../../infra/database";
-import type { XProfile } from "../models/social-profile";
+import type { XProfile, Tweet } from "../models/social-profile";
 
 export class TwitterProfileRepository {
   constructor(private db: Database) {}
@@ -42,5 +42,10 @@ export class TwitterProfileRepository {
 
   async getAll(): Promise<XProfile[]> {
     return this.db.getAll(STORES.TWITTER_PROFILES);
+  }
+
+  async getTweets(username: string): Promise<Tweet[]> {
+    const profile = await this.getByUsername(username);
+    return profile?.recentTweets ?? [];
   }
 }
