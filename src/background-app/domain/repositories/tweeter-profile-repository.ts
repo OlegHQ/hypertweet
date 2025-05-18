@@ -23,4 +23,8 @@ export class TwitterProfileRepository {
       await this.db.put(STORES.TWITTER_PROFILES, profile);
     }
   }
+
+  async getAll(): Promise<XProfile[]> {
+    return this.db.getAll(STORES.TWITTER_PROFILES);
+  }
 }

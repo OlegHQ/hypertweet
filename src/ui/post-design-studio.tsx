@@ -14,9 +14,11 @@ import { Toast } from "./library/toast";
 import { useGlobalState } from "./state";
 import { Plus, Copy, X } from "lucide-react";
 import ProfileListsManager from "./profile-lists-manager";
+import VisitedTwitterProfiles from "./visited-twitter-profiles";
 import { app } from "./app";
 
 type TweetType = "authority" | "growth" | "personality";
+type ViewMode = "lists" | "visited";
 
 const TWEET_TYPES: { value: TweetType; label: string; description: string }[] =
   [
@@ -48,6 +50,7 @@ export default function PostDesignStudio() {
     "success"
   );
   const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
+  const [viewMode, setViewMode] = useState<ViewMode>("lists");
 
   const handleGeneratePrompt = async () => {
     if (selectedProfile?.id) {
@@ -147,14 +150,47 @@ export default function PostDesignStudio() {
             Generate Prompt for ChatGPT
           </Button>
         </div>
+
         <div className="mt-8">
-          <ProfileListsManager
-            selectedUsernames={selectedUsernames}
-            onItemAdded={(x) =>
-              setSelectedUsernames((y) => Array.from(new Set([...y, x])))
-            }
-          />
+          <div className="flex border-b border-gray-200 dark:border-gray-700 mb-4">
+            <button
+              className={`px-4 py-2 font-medium text-sm ${
+                viewMode === "lists"
+                  ? "text-primary-600 border-b-2 border-primary-600"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+              onClick={() => setViewMode("lists")}
+            >
+              Profile Lists
+            </button>
+            <button
+              className={`px-4 py-2 font-medium text-sm ${
+                viewMode === "visited"
+                  ? "text-primary-600 border-b-2 border-primary-600"
+                  : "text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+              }`}
+              onClick={() => setViewMode("visited")}
+            >
+              Visited Profiles
+            </button>
+          </div>
+
+          {viewMode === "lists" ? (
+            <ProfileListsManager
+              selectedUsernames={selectedUsernames}
+              onItemAdded={(x) =>
+                setSelectedUsernames((y) => Array.from(new Set([...y, x])))
+              }
+            />
+          ) : (
+            <VisitedTwitterProfiles
+              onItemAdded={(x) =>
+                setSelectedUsernames((y) => Array.from(new Set([...y, x])))
+              }
+            />
+          )}
         </div>
+
         {showCopied && (
           <Toast
             message={toastMessage}

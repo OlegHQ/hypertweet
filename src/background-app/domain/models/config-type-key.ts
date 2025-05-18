@@ -8,4 +8,5 @@ export enum ConfigTypeKey {
   HIDDEN_REPLY_TYPES = "hiddenReplyTypes",
   FORMAT_INSTRUCTIONS = "formatInstructions",
   PERSONALITY_TYPE = "personalityType",
+  FAV_VISITED_PROFILES = "favVisitedProfiles",
 }
