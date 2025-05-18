@@ -51,6 +51,7 @@ export default function PostDesignStudio() {
   );
   const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("lists");
+  const [tweetTopic, setTweetTopic] = useState("");
 
   // Load saved selection from config
   useEffect(() => {
@@ -91,7 +92,9 @@ export default function PostDesignStudio() {
       try {
         const json = await app.content.getPromptGenerateJSON(
           selectedProfile?.id,
-          selectedUsernames
+          selectedUsernames,
+          tweetTopic,
+          selectedType
         );
 
         // Copy to clipboard
@@ -152,6 +155,21 @@ export default function PostDesignStudio() {
               {selectedTypeInfo.description}
             </p>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+            What to tweet about (optional)
+          </label>
+          <textarea
+            value={tweetTopic}
+            onChange={(e) => setTweetTopic(e.target.value)}
+            placeholder="Enter your tweet topic or idea here..."
+            className="w-full h-24 px-3 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 resize-none"
+          />
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Leave empty to generate 3 variants, or specify a topic to create engaging posts about it
+          </p>
         </div>
 
         {selectedUsernames.length > 0 && (
