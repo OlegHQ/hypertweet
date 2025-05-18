@@ -1,11 +1,13 @@
 const DB_NAME = "hypertweet";
-const DB_VERSION = 4;
+const DB_VERSION = 5;
 
 export const STORES = {
   PROFILES: "profiles",
   SETTINGS: "settings",
   REPLY_TYPES: "replyTypes",
   SAVED_PROFILES: "savedProfiles",
+  TWEETS: "tweets",
+  TWITTER_PROFILES: "twitterProfiles",
 } as const;
 
 export class Database {
@@ -31,6 +33,18 @@ export class Database {
           });
           profilesStore.createIndex("linkedInUrl", "linkedInUrl", {
             unique: true,
+          });
+        }
+
+        if (!db.objectStoreNames.contains(STORES.TWEETS)) {
+          const tweetsStore = db.createObjectStore(STORES.TWEETS, {
+            keyPath: "id",
+          });
+        }
+
+        if (!db.objectStoreNames.contains(STORES.TWITTER_PROFILES)) {
+          db.createObjectStore(STORES.TWITTER_PROFILES, {
+            keyPath: "id",
           });
         }
 

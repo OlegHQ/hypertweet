@@ -1,4 +1,6 @@
 export interface Tweet {
+  id: string;
+  from: string;
   text: string;
   time: string;
   url: string;

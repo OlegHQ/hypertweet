@@ -5,6 +5,7 @@ import { injectLinkedInReplyStuff } from "./content-app/ui/inject-linkedin";
 import { ContentApp } from "./content-app/context";
 import { TwitterScraper } from "./content-app/twitter/twitter-scraper";
 import { LinkedInScraper } from "./content-app/linkedin/linkedin-scraper";
+import { startWatching } from "./content-app/twitter/tweet-watcher";
 
 const app = new ContentApp(new TwitterScraper(), new LinkedInScraper());
 const invoker = makePathInvoker(app);
@@ -18,3 +19,4 @@ onMessage(async (message: any) => {
 
 injectTwitterReplyStuff();
 injectLinkedInReplyStuff();
+startWatching();

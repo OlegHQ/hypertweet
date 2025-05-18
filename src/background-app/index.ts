@@ -2,15 +2,13 @@ import { defaultReplyTypes } from "./ai/default-reply-types";
 import {
   ConfigTypeKey,
   DataLayer,
-  type Profile,
   type ReplyType,
-  type Settings,
   type XProfile,
 } from "./domain";
 import { ReplyTypeRepository } from "./domain/repositories/reply-type-repository";
 import { ScrapingContext } from "./infra/scrape-context";
 import { AIFacade } from "./ai/ai-facade";
-import { STORES, Database } from "./infra/database";
+import { Database } from "./infra/database";
 import { AiContentPrompt } from "./ai/ai-content-prompt";
 import { ScrapingService } from "./infra/scraping-service";
 import { BackupService } from "./infra/backup-service";
