@@ -4,6 +4,22 @@ import type { XProfile } from "../models/social-profile";
 export class TwitterProfileRepository {
   constructor(private db: Database) {}
 
+  async getByUsername(username: string): Promise<XProfile | null> {
+    return this.db.get<XProfile>(STORES.TWITTER_PROFILES, username);
+  }
+
+  async getByUsernames(usernames: string[]): Promise<XProfile[]> {
+    return (
+      await Promise.all(
+        usernames.map((username) => this.getByUsername(username))
+      )
+    ).filter((x) => x !== null) as XProfile[];
+  }
+
+  async delete(username: string): Promise<void> {
+    await this.db.delete(STORES.TWITTER_PROFILES, username);
+  }
+
   async upsert(profile: XProfile): Promise<void> {
     const existingProfile = await this.db.get<XProfile>(
       STORES.TWITTER_PROFILES,

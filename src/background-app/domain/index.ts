@@ -1,20 +1,17 @@
 import { Database } from "../infra/database";
 import { ProfileRepository } from "./repositories/profile-repository";
 import { ConfigRepository } from "./repositories/config-repository";
-import { SavedProfilesRepository } from "./repositories/saved-profiles-repository";
 import { TweetRepository } from "./repositories/tweet-repository";
 import { TwitterProfileRepository } from "./repositories/tweeter-profile-repository";
 
 export class DataLayer {
   profile: ProfileRepository;
   config: ConfigRepository;
-  savedProfiles: SavedProfilesRepository;
   tweet: TweetRepository;
   twitterProfile: TwitterProfileRepository;
   constructor(private db: Database) {
     this.profile = new ProfileRepository(db);
     this.config = new ConfigRepository(db);
-    this.savedProfiles = new SavedProfilesRepository(db);
     this.tweet = new TweetRepository(db);
     this.twitterProfile = new TwitterProfileRepository(db);
   }

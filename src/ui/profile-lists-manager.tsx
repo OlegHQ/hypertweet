@@ -1,21 +1,11 @@
 import React from "react";
-import { Button } from "./library/button";
 import { Input } from "./library/input";
-import { Trash2, Save, Plus, Search, ExternalLink } from "lucide-react";
+import { Plus, Search, ExternalLink } from "lucide-react";
 import type { XProfile } from "../background-app/domain/models/social-profile";
 import { app } from "./app";
-import { Toast } from "./library/toast";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "./library/alert-dialog";
 import { useGlobalState } from "./state";
+import { ConfigTypeKey } from "../background-app/domain/models/config-type-key";
+import { Button } from "./library/button";
 
 interface ProfileListsManagerProps {
   selectedUsernames: string[];
@@ -30,61 +20,29 @@ export default function ProfileListsManager({
   const [savedProfiles, setSavedProfiles] = React.useState<XProfile[]>([]);
   const [isLoading, setIsLoading] = React.useState(true);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const [profileToDelete, setProfileToDelete] = React.useState<string | null>(
-    null
-  );
-  const [showToast, setShowToast] = React.useState(false);
-  const [toastMessage, setToastMessage] = React.useState("");
 
   React.useEffect(() => {
-    loadSavedProfiles();
+    loadFavProfiles();
   }, []);
 
-  React.useEffect(() => {
-    if (showToast) {
-      const timer = setTimeout(() => {
-        setShowToast(false);
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showToast]);
-
-  const loadSavedProfiles = async () => {
+  const loadFavProfiles = async () => {
     try {
-      const profiles = await app.dataLayer.savedProfiles.getAll();
-      setSavedProfiles(profiles);
+      if (selectedProfile?.id) {
+        const favUsernames = await app.dataLayer.config.get<string[]>(
+          null,
+          ConfigTypeKey.FAV_VISITED_PROFILES
+        );
+
+        if (favUsernames?.length) {
+          const profiles =
+            await app.dataLayer.twitterProfile.getByUsernames(favUsernames);
+          setSavedProfiles(profiles);
+        }
+      }
     } catch (error) {
-      console.error("Failed to load saved profiles:", error);
+      console.error("Failed to load favorite profiles:", error);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleSaveProfile = async () => {
-    if (!selectedProfile?.id) {
-      return;
-    }
-    const profile = await app.profiles.scrapeOneAndSave(selectedProfile.id);
-    if (!profile) {
-      return;
-    }
-
-    await loadSavedProfiles();
-    setToastMessage(
-      `Profile saved with ${profile.recentTweets?.length} tweets`
-    );
-    setShowToast(true);
-  };
-
-  const handleDeleteProfile = async (username: string) => {
-    if (!selectedProfile?.id) {
-      return;
-    }
-    try {
-      await app.dataLayer.savedProfiles.delete(selectedProfile.id, username);
-      await loadSavedProfiles();
-    } catch (error) {
-      console.error("Failed to delete profile:", error);
     }
   };
 
@@ -119,27 +77,10 @@ export default function ProfileListsManager({
 
   return (
     <div className="space-y-4">
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          variant="success"
-          onClose={() => setShowToast(false)}
-        />
-      )}
       <div className="flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-          Saved Profiles
+          Favorite Profiles
         </label>
-        <div className="flex gap-2">
-          <Button
-            onClick={handleSaveProfile}
-            size="sm"
-            className="bg-primary-600 hover:bg-primary-700"
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Save Current Profile
-          </Button>
-        </div>
       </div>
 
       <div className="relative">
@@ -158,7 +99,7 @@ export default function ProfileListsManager({
           <div className="text-center py-8 text-gray-500 dark:text-gray-400">
             {searchQuery
               ? "No profiles match your search."
-              : "No saved profiles yet. Save a profile to see it here."}
+              : "No favorite profiles yet. Add profiles to favorites from the Visited Profiles tab."}
           </div>
         ) : (
           filteredProfiles.map((profile) => (
@@ -194,60 +135,22 @@ export default function ProfileListsManager({
                     </span>
                   )}
                 </div>
-                <div className="flex gap-2">
-                  {!selectedUsernames.includes(profile.username) && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onItemAdded(profile.username)}
-                      className="h-6 w-6"
-                    >
-                      <Plus className="h-3 w-3 text-primary-500" />
-                    </Button>
-                  )}
+                {!selectedUsernames.includes(profile.username) && (
                   <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => setProfileToDelete(profile.username)}
+                    onClick={() => onItemAdded(profile.username)}
                     className="h-6 w-6"
+                    title="Add to selected profiles"
                   >
-                    <Trash2 className="h-3 w-3 text-red-500" />
+                    <Plus className="h-3 w-3 text-primary-500" />
                   </Button>
-                </div>
+                )}
               </div>
             </div>
           ))
         )}
       </div>
-
-      <AlertDialog
-        open={!!profileToDelete}
-        onOpenChange={() => setProfileToDelete(null)}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Profile</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete this profile? This action cannot
-              be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                if (profileToDelete) {
-                  handleDeleteProfile(profileToDelete);
-                  setProfileToDelete(null);
-                }
-              }}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }

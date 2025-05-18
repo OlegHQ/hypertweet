@@ -17,7 +17,10 @@ export async function setupBackgroundApp() {
 
   const ai = new AIFacade(dataLayer);
   const scrapingService = new ScrapingService();
-  const profiles = new ProfileService(dataLayer.savedProfiles, scrapingService);
+  const profiles = new ProfileService(
+    dataLayer.twitterProfile,
+    scrapingService
+  );
 
   const content = new AiContentPrompt(dataLayer, ai, scrapingService);
   const replyTypeRepository = new ReplyTypeRepository(db);

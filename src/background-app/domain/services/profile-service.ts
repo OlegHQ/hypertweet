@@ -1,18 +1,15 @@
 import type { ScrapingService } from "src/background-app/infra/scraping-service";
 import type { XProfile } from "../models/social-profile";
-import type { SavedProfilesRepository } from "../repositories/saved-profiles-repository";
+import type { TwitterProfileRepository } from "../repositories/tweeter-profile-repository";
 
 export class ProfileService {
   constructor(
-    private readonly savedProfiles: SavedProfilesRepository,
+    private readonly profiles: TwitterProfileRepository,
     private readonly scraping: ScrapingService
   ) {}
 
-  async saveOne(profileId: string, profile: XProfile) {
-    const existingProfile = await this.savedProfiles.getByUsername(
-      profileId,
-      profile.username
-    );
+  async saveOne(profile: XProfile) {
+    const existingProfile = await this.profiles.getByUsername(profile.username);
     if (existingProfile) {
       const a = Object.fromEntries(
         existingProfile.recentTweets?.map((x) => [x.text, x]) ?? []
@@ -30,15 +27,15 @@ export class ProfileService {
 
       profile.recentTweets = Object.values(b);
     }
-    await this.savedProfiles.add(profileId, profile);
+    await this.profiles.upsert(profile);
     return profile;
   }
 
-  async scrapeOneAndSave(profileId: string) {
+  async scrapeOneAndSave() {
     const profile = await this.scraping.getTwitterProfileOnActivePage();
     if (!profile) {
       return null;
     }
-    return this.saveOne(profileId, profile);
+    return this.saveOne(profile);
   }
 }
