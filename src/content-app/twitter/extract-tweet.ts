@@ -5,13 +5,21 @@ const getNumberFromText = (text: string) => {
   return num ? parseInt(num) : 0;
 };
 
-export function extractTweet(tweet: HTMLElement): Tweet | null {
+export function extractTweet(
+  tweet: HTMLElement
+): [string | null, Tweet] | null {
   const text =
     tweet.querySelector('[data-testid="tweetText"]')?.textContent?.trim() || "";
   const time = tweet.querySelector("time")?.getAttribute("datetime") || "";
   const url =
     (tweet.querySelector('a[href*="/status/"]') as HTMLAnchorElement)?.href ||
     "";
+
+  const profileName =
+    tweet
+      .querySelector(`[data-testid="User-Name"]`)
+      ?.querySelector(`[role=link]`)
+      ?.textContent?.trim() || "";
 
   const id = url
     .trim()
@@ -25,7 +33,7 @@ export function extractTweet(tweet: HTMLElement): Tweet | null {
     .map((x) => {
       const y = x?.textContent?.trim();
       if (y?.startsWith("@")) {
-        return y;
+        return y.slice(1);
       }
       return null;
     })
@@ -65,16 +73,19 @@ export function extractTweet(tweet: HTMLElement): Tweet | null {
     return num;
   };
 
-  return {
-    id,
-    from,
-    text,
-    time,
-    url,
-    likes: getEngagementCount('[data-testid="like"]'),
-    retweets: getEngagementCount('[data-testid="retweet"]'),
-    replies: getEngagementCount('[data-testid="reply"]'),
-    bookmarks: getEngagementCount('[data-testid="bookmark"]'),
-    impressions: getImpressions(),
-  };
+  return [
+    profileName,
+    {
+      id,
+      from,
+      text,
+      time,
+      url,
+      likes: getEngagementCount('[data-testid="like"]'),
+      retweets: getEngagementCount('[data-testid="retweet"]'),
+      replies: getEngagementCount('[data-testid="reply"]'),
+      bookmarks: getEngagementCount('[data-testid="bookmark"]'),
+      impressions: getImpressions(),
+    },
+  ];
 }

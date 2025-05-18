@@ -1,5 +1,5 @@
 const DB_NAME = "hypertweet";
-const DB_VERSION = 5;
+const DB_VERSION = 7;
 
 export const STORES = {
   PROFILES: "profiles",
@@ -7,7 +7,7 @@ export const STORES = {
   REPLY_TYPES: "replyTypes",
   SAVED_PROFILES: "savedProfiles",
   TWEETS: "tweets",
-  TWITTER_PROFILES: "twitterProfiles",
+  TWITTER_PROFILES: "xProfiles",
 } as const;
 
 export class Database {
@@ -40,11 +40,12 @@ export class Database {
           const tweetsStore = db.createObjectStore(STORES.TWEETS, {
             keyPath: "id",
           });
+          tweetsStore.createIndex("username", "username");
         }
 
         if (!db.objectStoreNames.contains(STORES.TWITTER_PROFILES)) {
           db.createObjectStore(STORES.TWITTER_PROFILES, {
-            keyPath: "id",
+            keyPath: "username",
           });
         }
 

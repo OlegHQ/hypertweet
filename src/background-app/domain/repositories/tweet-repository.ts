@@ -7,4 +7,13 @@ export class TweetRepository {
   async add(tweet: Tweet): Promise<void> {
     await this.db.put(STORES.TWEETS, tweet);
   }
+
+  async getCountByUsername(username: string): Promise<number> {
+    const tweets = await this.db.getAllByIndex(
+      STORES.TWEETS,
+      "username",
+      username
+    );
+    return tweets.length;
+  }
 }

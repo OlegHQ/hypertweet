@@ -11,13 +11,22 @@ import { extractTweet } from "./extract-tweet";
 const TWEET_SEL = '[data-testid="tweet"]';
 const TIMELINE_SEL = '[aria-label^="Timeline"]';
 const ALLOWED_HOST_RE = /^(?:www\.)?(?:twitter\.com|x\.com)$/i;
+const MIN_IMPRESSIONS = 1000;
 
-async function handleNewTweet(t: HTMLElement) {
+async function handleNewTweet(t: HTMLElement, minImpressions: number = 1000) {
   /* …same as before… */
-  const tweet = extractTweet(t);
-  if (tweet) {
+  const result = extractTweet(t);
+  if (result) {
+    const [profileName, tweet] = result;
+    if (tweet.impressions < minImpressions) {
+      return;
+    }
     await bgApp.dataLayer.tweet.add(tweet);
-    console.log(`tweet added ${tweet.id} from ${tweet.from}`);
+    await bgApp.dataLayer.twitterProfile.upsert({
+      username: tweet.from,
+      name: profileName ?? "<unknown>",
+    });
+    console.log(`tweet added ${tweet.id} from ${profileName} (${tweet.from})`);
   }
 }
 
@@ -50,10 +59,10 @@ export function startWatching() {
       for (const mut of muts) {
         for (const node of Array.from(mut.addedNodes)) {
           if (!(node instanceof HTMLElement)) continue;
-          if (node.matches(TWEET_SEL)) handleNewTweet(node);
+          if (node.matches(TWEET_SEL)) handleNewTweet(node, MIN_IMPRESSIONS);
           node
             .querySelectorAll(TWEET_SEL)
-            .forEach((t) => handleNewTweet(t as HTMLElement));
+            .forEach((t) => handleNewTweet(t as HTMLElement, MIN_IMPRESSIONS));
         }
       }
     });
@@ -79,6 +88,4 @@ export function startWatching() {
 
   // Clean up the polling interval on unload
   window.addEventListener("beforeunload", () => clearInterval(pollId));
-
-  console.log("tweet watcher started");
 }
