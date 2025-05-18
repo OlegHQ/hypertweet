@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Layout } from "./layout";
 import { PageHeader } from "./page-header";
 import { motion } from "framer-motion";
@@ -16,6 +16,7 @@ import { Plus, Copy, X } from "lucide-react";
 import ProfileListsManager from "./profile-lists-manager";
 import VisitedTwitterProfiles from "./visited-twitter-profiles";
 import { app } from "./app";
+import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
 
 type TweetType = "authority" | "growth" | "personality";
 type ViewMode = "lists" | "visited";
@@ -43,7 +44,6 @@ const TWEET_TYPES: { value: TweetType; label: string; description: string }[] =
 export default function PostDesignStudio() {
   const { selectedProfile } = useGlobalState();
   const [selectedType, setSelectedType] = useState<TweetType>("authority");
-  const [currentListId, setCurrentListId] = useState<string>("default");
   const [showCopied, setShowCopied] = useState(false);
   const [toastMessage, setToastMessage] = useState("");
   const [toastVariant, setToastVariant] = useState<"success" | "error">(
@@ -52,6 +52,40 @@ export default function PostDesignStudio() {
   const [selectedUsernames, setSelectedUsernames] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>("lists");
 
+  // Load saved selection from config
+  useEffect(() => {
+    const loadSavedSelection = async () => {
+      try {
+        const savedSelection = await app.dataLayer.config.get<string[]>(
+          null,
+          ConfigTypeKey.POSTS_STUDIO_SELECTION
+        );
+        if (savedSelection) {
+          setSelectedUsernames(savedSelection);
+        }
+      } catch (error) {
+        console.error("Failed to load saved selection:", error);
+      }
+    };
+    loadSavedSelection();
+  }, []);
+
+  // Save selection to config whenever it changes
+  useEffect(() => {
+    const saveSelection = async () => {
+      try {
+        await app.dataLayer.config.set(
+          null,
+          ConfigTypeKey.POSTS_STUDIO_SELECTION,
+          selectedUsernames
+        );
+      } catch (error) {
+        console.error("Failed to save selection:", error);
+      }
+    };
+    saveSelection();
+  }, [selectedUsernames]);
+
   const handleGeneratePrompt = async () => {
     if (selectedProfile?.id) {
       try {
@@ -59,10 +93,10 @@ export default function PostDesignStudio() {
           selectedProfile?.id,
           selectedUsernames
         );
-        
+
         // Copy to clipboard
         await navigator.clipboard.writeText(JSON.stringify(json, null, 2));
-        
+
         // Show success toast
         setToastMessage("Prompt JSON copied to clipboard!");
         setToastVariant("success");

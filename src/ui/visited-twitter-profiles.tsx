@@ -15,6 +15,7 @@ import {
   Bookmark,
   Eye,
   Search,
+  ExternalLink,
 } from "lucide-react";
 
 interface VisitedTwitterProfilesProps {
@@ -33,7 +34,8 @@ export default function VisitedTwitterProfiles({
 
   useEffect(() => {
     const loadVisitedProfiles = async () => {
-      const visitedProfiles = await app.dataLayer.twitterProfile.getAll();
+      const visitedProfiles =
+        await app.dataLayer.twitterProfile.getRecentProfiles(100000);
       setVisitedProfiles(visitedProfiles);
 
       const favVisitedProfiles = await app.dataLayer.config.get(
@@ -87,6 +89,10 @@ export default function VisitedTwitterProfiles({
     }
   };
 
+  const openTwitterProfile = (username: string) => {
+    window.open(`https://twitter.com/${username}`, '_blank');
+  };
+
   const handleBack = () => {
     setSelectedProfile(null);
     setTweets([]);
@@ -123,22 +129,33 @@ export default function VisitedTwitterProfiles({
   if (selectedProfile) {
     return (
       <div className="space-y-4">
-        <div className="flex items-center gap-2 p-2">
+        <div className="flex items-center justify-between p-2">
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleBack}
+              className="h-8 w-8"
+              title="Back to profiles"
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Button>
+            <div>
+              <div className="font-medium">{selectedProfile.name}</div>
+              <div className="text-sm text-gray-500">
+                @{selectedProfile.username}
+              </div>
+            </div>
+          </div>
           <Button
             variant="ghost"
             size="icon"
-            onClick={handleBack}
+            onClick={() => openTwitterProfile(selectedProfile.username)}
             className="h-8 w-8"
-            title="Back to profiles"
+            title="Open Twitter profile"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <ExternalLink className="h-4 w-4" />
           </Button>
-          <div>
-            <div className="font-medium">{selectedProfile.name}</div>
-            <div className="text-sm text-gray-500">
-              @{selectedProfile.username}
-            </div>
-          </div>
         </div>
 
         {isLoadingTweets ? (
@@ -206,7 +223,10 @@ export default function VisitedTwitterProfiles({
             ) : (
               <div className="space-y-2">
                 <p>Your profile library is empty</p>
-                <p className="text-sm">Keep browsing Twitter and your library will be automatically updated with profiles that make high-impression posts</p>
+                <p className="text-sm">
+                  Keep browsing Twitter and your library will be automatically
+                  updated with profiles that make high-impression posts
+                </p>
               </div>
             )}
           </div>
@@ -227,30 +247,41 @@ export default function VisitedTwitterProfiles({
                   </span>
                 </div>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => toggleFavorite(profile)}
-                className={`h-8 w-8 ${
-                  favVisitedProfiles.includes(profile.username)
-                    ? "text-yellow-500 hover:text-yellow-600"
-                    : "text-gray-400 hover:text-yellow-500"
-                }`}
-                title={
-                  favVisitedProfiles.includes(profile.username)
-                    ? "Remove from favorites"
-                    : "Add to favorites"
-                }
-              >
-                <Star
-                  className="h-4 w-4"
-                  fill={
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => openTwitterProfile(profile.username)}
+                  className="h-8 w-8"
+                  title="Open Twitter profile"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => toggleFavorite(profile)}
+                  className={`h-8 w-8 ${
                     favVisitedProfiles.includes(profile.username)
-                      ? "currentColor"
-                      : "none"
+                      ? "text-yellow-500 hover:text-yellow-600"
+                      : "text-gray-400 hover:text-yellow-500"
+                  }`}
+                  title={
+                    favVisitedProfiles.includes(profile.username)
+                      ? "Remove from favorites"
+                      : "Add to favorites"
                   }
-                />
-              </Button>
+                >
+                  <Star
+                    className="h-4 w-4"
+                    fill={
+                      favVisitedProfiles.includes(profile.username)
+                        ? "currentColor"
+                        : "none"
+                    }
+                  />
+                </Button>
+              </div>
             </div>
           ))
         )}

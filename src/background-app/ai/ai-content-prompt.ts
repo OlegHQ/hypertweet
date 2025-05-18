@@ -28,21 +28,19 @@ export class AiContentPrompt {
   }
 
   async getPromptGenerateJSON(profileId: string, usernames: string[]) {
-    const profiles =
-      await this.dataLayer.twitterProfile.getByUsernames(usernames);
-
-    const impressions = await this.dataLayer.tweet.getByUsername(
-      usernames[0] ?? ""
-    );
+    const tweets = (
+      await Promise.all(
+        usernames.map(async (username) => {
+          const tweets = await this.dataLayer.tweet.getByUsername(username);
+          return tweets
+            .sort((a, b) => b.impressions - a.impressions)
+            .slice(0, 5);
+        })
+      )
+    ).flat();
 
     const result = await this.ai.getBaseJSONPrompt(profileId);
-    result.tweetsForReference = profiles
-      .map((x) =>
-        x.recentTweets
-          ?.sort((a, b) => b.impressions - a.impressions)
-          .slice(0, 5)
-      )
-      .flat();
+    result.tweetsForReference = tweets;
     result.task =
       "generate 3 variants of posts based on the bio and profile, use .tweetsForReference as examples for making engaging posts, use the personality type of the author to make the posts more engaging, follow aesthetic writing style of the author";
     return result;

@@ -9,4 +9,5 @@ export enum ConfigTypeKey {
   FORMAT_INSTRUCTIONS = "formatInstructions",
   PERSONALITY_TYPE = "personalityType",
   FAV_VISITED_PROFILES = "favVisitedProfiles",
+  POSTS_STUDIO_SELECTION = "postsStudioSelection",
 }

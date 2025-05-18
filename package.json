@@ -26,6 +26,7 @@
     "clsx": "^2.1.1",
     "compromise": "^14.14.4",
     "fake-indexeddb": "^6.0.1",
+    "fflate": "^0.8.2",
     "framer-motion": "^12.10.5",
     "lucide-react": "^0.509.0",
     "openai": "^4.97.0",

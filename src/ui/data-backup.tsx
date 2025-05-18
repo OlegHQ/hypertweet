@@ -12,6 +12,7 @@ import {
   Database,
 } from "lucide-react";
 import { cn } from "./library/utils";
+import { gunzipSync } from "fflate";
 
 export default function DataBackup() {
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +46,17 @@ export default function DataBackup() {
       setSuccess(null);
       setIsImporting(true);
 
-      const text = await file.text();
-      await app.backup.importData(text);
+      const buf = new Uint8Array(await file.arrayBuffer());
+
+      // Quick magic-number check: 1F 8B → gzip
+      const isGzip = buf[0] === 0x1f && buf[1] === 0x8b;
+
+      // Inflate if needed, otherwise use as-is
+      const json = isGzip
+        ? new TextDecoder().decode(gunzipSync(buf))
+        : new TextDecoder().decode(buf); // or await file.text()
+      await app.backup.importData(json);
+
       setSuccess("Backup has been imported successfully!");
     } catch (err) {
       setError(
@@ -134,7 +144,7 @@ export default function DataBackup() {
                       <label className="block">
                         <input
                           type="file"
-                          accept=".json"
+                          accept=".json,.gz"
                           onChange={handleImport}
                           className="hidden"
                           id="backup-file"
