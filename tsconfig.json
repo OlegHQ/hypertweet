@@ -29,7 +29,7 @@
     // Additional options
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["chrome", "webextension-polyfill"]
+    "types": ["chrome", "webextension-polyfill", "bun-types"]
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

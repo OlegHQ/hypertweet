@@ -1,18 +1,6 @@
-import type { ContentApp } from "../content-app/context";
-import { browserApi } from "../utils/browser-api";
-import type { LinkedInProfile, XProfile } from "./data";
-import { createProxyHandler } from "../utils/proxy-handler";
-
-export function getContentApp(tabId: number): ContentApp {
-  return createProxyHandler<ContentApp>(async (path, args) => {
-    const result = await browserApi.tabs.sendMessage(tabId, {
-      name: "content-proxy",
-      path,
-      args,
-    });
-    return result;
-  });
-}
+import { browserApi } from "../../utils/browser-api";
+import type { LinkedInProfile, XProfile } from "../data";
+import { getContentApp } from "./utils";
 
 async function waitForTabLoad(tabId: number): Promise<void> {
   return new Promise((resolve) => {

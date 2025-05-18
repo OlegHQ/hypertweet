@@ -1,110 +1,78 @@
 import { defaultReplyTypes } from "./ai/default-reply-types";
-import { ConfigTypeKey, createDataLayer, type XProfile } from "./data";
+import { ConfigTypeKey, DataLayer, type XProfile } from "./data";
 import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
-import { getContentApp, ScrapingContext } from "./scrape-context";
-import { newAI } from "./ai-facade";
+import { ScrapingContext } from "./infra/scrape-context";
+import { AIFacade } from "./ai/ai-facade";
 import {
   STORES,
   type Profile,
   type Settings,
   type ReplyType,
+  Database,
 } from "./data/database";
 import { browserApi } from "../utils/browser-api";
 import type { ThreadTask } from "./ai/thread-tasks";
-import {
-  buildFormatInstructionsPrompt,
-  defaultOptions,
-  type InstructionOptions,
-} from "./ai/format-instructions";
-import type { PersonalityType } from "./ai/personality-type";
+import { AiContentPrompt } from "./ai/ai-content-prompt";
+import { ScrapingService } from "./infra/scraping-service";
+
+class ProfileService {
+  constructor(
+    private readonly dataLayer: DataLayer,
+    private readonly scraping: ScrapingService
+  ) {}
+
+  async saveOne(profileId: string, profile: XProfile) {
+    const existingProfile = await this.dataLayer.savedProfiles.getByUsername(
+      profileId,
+      profile.username
+    );
+    if (existingProfile) {
+      const a = Object.fromEntries(
+        existingProfile.recentTweets?.map((x) => [x.text, x]) ?? []
+      );
+
+      const b = Object.fromEntries(
+        profile.recentTweets?.map((x) => [x.text, x]) ?? []
+      );
+
+      for (const key in a) {
+        if (a[key]) {
+          b[key] = a[key];
+        }
+      }
+
+      profile.recentTweets = Object.values(b);
+    }
+    await this.dataLayer.savedProfiles.add(profileId, profile);
+    return profile;
+  }
+
+  async scrapeOneAndSave(profileId: string) {
+    const profile = await this.scraping.getTwitterProfileOnActivePage();
+    if (!profile) {
+      return null;
+    }
+    return this.saveOne(profileId, profile);
+  }
+}
 
 export async function setupBackgroundApp() {
-  const [dataLayer, db] = await createDataLayer();
+  const db = new Database();
+
+  const dataLayer = new DataLayer(db);
+  await dataLayer.init();
+
+  const ai = new AIFacade(dataLayer);
+  const scrapingService = new ScrapingService();
+  const profiles = new ProfileService(dataLayer, scrapingService);
+
+  const content = new AiContentPrompt(dataLayer, ai, scrapingService);
   const replyTypeRepository = new ReplyTypeRepository(db);
   const scraping = new ScrapingContext();
-  async function getBaseJSONPrompt(profileId: string) {
-    const profile = await dataLayer.profile.get(profileId);
-    const prompt = await dataLayer.config.get<string>(
-      profileId,
-      ConfigTypeKey.SYSTEM_PROMPT
-    );
-    const formatInstructions =
-      (await dataLayer.config.get<InstructionOptions>(
-        profileId,
-        ConfigTypeKey.FORMAT_INSTRUCTIONS
-      )) ?? defaultOptions;
 
-    const twitterProfile = await dataLayer.config.get<XProfile>(
-      profileId,
-      ConfigTypeKey.TWITTER_PROFILE
-    );
-
-    const personalityType = await dataLayer.config.get<PersonalityType>(
-      profileId,
-      ConfigTypeKey.PERSONALITY_TYPE
-    );
-    const result: Record<string, any> = {};
-    const author: Record<string, any> = {};
-    author.name = twitterProfile?.name ?? profile?.name ?? "user";
-    if (personalityType) {
-      author.personalityType = personalityType;
-    }
-    if (twitterProfile) {
-      author.username = twitterProfile.username;
-      author.website = twitterProfile.website;
-    }
-
-    if (prompt) {
-      author.persona = prompt;
-    }
-
-    result.author = author;
-    result.responseSize = "tweet";
-    result.responseFormat = buildFormatInstructionsPrompt(formatInstructions);
-    return result;
-  }
   return {
     dataLayer,
-    profiles: {
-      async saveOne(profileId: string) {
-        const tabs = await browserApi.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
-        if (!tabs[0]) {
-          return null;
-        }
-        const contentApp = getContentApp(tabs[0].id!);
-        const profile = await contentApp.scrapeProfile();
-        if (profile.username.length === 0) {
-          return null;
-        }
-
-        const existingProfile = await dataLayer.savedProfiles.getByUsername(
-          profileId,
-          profile.username
-        );
-        if (existingProfile) {
-          const a = Object.fromEntries(
-            existingProfile.recentTweets?.map((x) => [x.text, x]) ?? []
-          );
-
-          const b = Object.fromEntries(
-            profile.recentTweets?.map((x) => [x.text, x]) ?? []
-          );
-
-          for (const key in a) {
-            if (a[key]) {
-              b[key] = a[key];
-            }
-          }
-
-          profile.recentTweets = Object.values(b);
-        }
-        await dataLayer.savedProfiles.add(profileId, profile);
-        return profile;
-      },
-    },
+    profiles,
     scraping,
     system: {
       async getCurrentProfileId() {
@@ -115,46 +83,7 @@ export async function setupBackgroundApp() {
         return lastId;
       },
     },
-    content: {
-      async getTaskThreadJSON(profileId: string, task: ThreadTask) {
-        const tabs = await browserApi.tabs.query({
-          active: true,
-          currentWindow: true,
-        });
-        if (!tabs[0]) {
-          return null;
-        }
-        const contentApp = getContentApp(tabs[0].id!);
-        const twitterThread = await contentApp.copyTweets();
-        const result = await getBaseJSONPrompt(profileId);
-        result.twitterThread = twitterThread;
-        result.task = task;
-
-        if (twitterThread.currentResponse) {
-          result.currentResponse = twitterThread.currentResponse;
-        }
-        delete twitterThread.currentResponse;
-
-        return result;
-      },
-      async getPromptGenerateJSON(profileId: string, usernames: string[]) {
-        const profiles = await dataLayer.savedProfiles.getByUsernames(
-          profileId,
-          usernames
-        );
-        const result = await getBaseJSONPrompt(profileId);
-        result.tweetsForReference = profiles
-          .map((x) =>
-            x.recentTweets
-              ?.sort((a, b) => b.impressions - a.impressions)
-              .slice(0, 5)
-          )
-          .flat();
-        result.task =
-          "generate 3 variants of posts based on the bio and profile, use .tweetsForReference as examples for making engaging posts, use the personality type of the author to make the posts more engaging, follow aesthetic writing style of the author";
-        return result;
-      },
-    },
+    content,
     replyTypes: {
       add: replyTypeRepository.add.bind(replyTypeRepository),
       update: replyTypeRepository.update.bind(replyTypeRepository),
@@ -286,7 +215,7 @@ export async function setupBackgroundApp() {
         ]);
       },
     },
-    ai: newAI(dataLayer),
+    ai,
   };
 }
 

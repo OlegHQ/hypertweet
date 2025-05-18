@@ -3,25 +3,21 @@ import { ProfileRepository } from "./repositories/profile-repository";
 import { ConfigRepository } from "./repositories/config-repository";
 import { SavedProfilesRepository } from "./repositories/saved-profiles-repository";
 
-export interface DataLayer {
+export class DataLayer {
   profile: ProfileRepository;
   config: ConfigRepository;
   savedProfiles: SavedProfilesRepository;
-}
-export async function createDataLayer(): Promise<[DataLayer, Database]> {
-  const db = new Database();
-  console.log("db", db);
-  await db.init();
+  constructor(private db: Database) {
+    this.profile = new ProfileRepository(db);
+    this.config = new ConfigRepository(db);
+    this.savedProfiles = new SavedProfilesRepository(db);
+  }
 
-  return [
-    {
-      profile: new ProfileRepository(db),
-      config: new ConfigRepository(db),
-      savedProfiles: new SavedProfilesRepository(db),
-    },
-    db,
-  ];
+  async init() {
+    await this.db.init();
+  }
 }
+
 export * from "./models/profile";
 export * from "./models/settings";
 export * from "./models/social-profile";

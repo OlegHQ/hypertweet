@@ -2,6 +2,7 @@ import type { ChatCompletionMessageParam } from "openai/resources/chat";
 import type { PersonaPayload } from "./system-prompt-gen";
 import { tokenManager } from "./token-manager";
 import { ModelType } from "./model-type";
+
 export async function buildPersonalitySnippet(
   key: string,
   model: ModelType,

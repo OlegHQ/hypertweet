@@ -1,9 +1,13 @@
 import { Database, STORES } from "../database";
+import type { ConfigTypeKey } from "../models/config-type-key";
 
 export class ConfigRepository {
   constructor(private db: Database) {}
 
-  async get<T>(profileId: string | null, key: string): Promise<T | null> {
+  async get<T>(
+    profileId: string | null,
+    key: ConfigTypeKey
+  ): Promise<T | null> {
     const result = await this.db.get<T>(
       STORES.SETTINGS,
       this.makeKey(profileId, key)
@@ -14,20 +18,24 @@ export class ConfigRepository {
     return (result as unknown as { value: T }).value;
   }
 
-  async set<T>(profileId: string | null, key: string, value: T): Promise<void> {
+  async set<T>(
+    profileId: string | null,
+    key: ConfigTypeKey,
+    value: T
+  ): Promise<void> {
     await this.db.put(STORES.SETTINGS, {
       id: this.makeKey(profileId, key),
       value,
     });
   }
 
-  async delete(profileId: string | null, key: string): Promise<void> {
+  async delete(profileId: string | null, key: ConfigTypeKey): Promise<void> {
     await this.db.delete(STORES.SETTINGS, this.makeKey(profileId, key));
   }
 
   async getCredential(
     profileId: string | null,
-    key: string
+    key: ConfigTypeKey
   ): Promise<string | null> {
     const encoded = await this.get<string>(profileId, key);
     if (!encoded) {
@@ -43,7 +51,7 @@ export class ConfigRepository {
 
   async setCredential(
     profileId: string | null,
-    key: string,
+    key: ConfigTypeKey,
     value: string
   ): Promise<void> {
     try {
@@ -55,7 +63,7 @@ export class ConfigRepository {
     }
   }
 
-  private makeKey(profileId: string | null, key: string): string {
+  private makeKey(profileId: string | null, key: ConfigTypeKey): string {
     if (!profileId) {
       return key;
     }
