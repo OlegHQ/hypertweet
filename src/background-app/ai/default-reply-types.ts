@@ -1,4 +1,4 @@
-import type { ReplyType } from "../data/models/reply-type";
+import type { ReplyType } from "../domain/models/reply-type";
 
 export function defaultReplyTypes(profileId: string): ReplyType[] {
   return [

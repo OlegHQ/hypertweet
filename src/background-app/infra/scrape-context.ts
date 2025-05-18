@@ -1,5 +1,5 @@
 import { browserApi } from "../../utils/browser-api";
-import type { LinkedInProfile, XProfile } from "../data";
+import type { LinkedInProfile, XProfile } from "../domain";
 import { getContentApp } from "./utils";
 
 async function waitForTabLoad(tabId: number): Promise<void> {

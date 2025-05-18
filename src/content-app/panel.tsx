@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { bgApp } from "./bg-app";
-import type { ReplyType } from "../background-app/data";
+import type { ReplyType } from "../background-app/domain";
 import ReplyTypeButton from "./reply-type-button";
 import { motion } from "framer-motion";
 import { useSiteTypeStore } from "./site-type-store";

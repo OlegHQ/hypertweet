@@ -1,4 +1,4 @@
-import type { Tweet, XProfile, LinkedInProfile } from "../background-app/data";
+import type { Tweet, XProfile, LinkedInProfile } from "../background-app/domain";
 
 const getRecentTweets = async (
   maxTweets: number | undefined,

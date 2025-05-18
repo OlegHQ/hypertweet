@@ -14,7 +14,7 @@ import { motion } from "framer-motion";
 
 import { app } from "./app";
 import { Plus, X } from "lucide-react";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 import { useGlobalState } from "./state";
 import type { InstructionOptions } from "src/background-app/ai/format-instructions";
 

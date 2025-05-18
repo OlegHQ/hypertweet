@@ -1,6 +1,6 @@
 import { browserApi } from "src/utils/browser-api";
 import type { ThreadTask } from "./thread-tasks";
-import type { DataLayer } from "../data";
+import type { DataLayer } from "../domain";
 import type { AIFacade } from "./ai-facade";
 import type { ScrapingService } from "../infra/scraping-service";
 

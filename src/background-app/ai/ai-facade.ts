@@ -3,7 +3,7 @@ import {
   type DataLayer,
   type LinkedInProfile,
   type XProfile,
-} from "../data";
+} from "../domain";
 import { buildPersonalitySnippet, generateReply } from "./context";
 import { buildPersonaPayload } from "./system-prompt-gen";
 import { defaultModel, ModelType } from "./model-type";

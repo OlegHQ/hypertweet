@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import type { ReplyType } from "../background-app/data";
+import type { ReplyType } from "../background-app/domain";
 import { extractPostDetails, typeLinkedIn, typeTweet } from "./type-actions";
 import { app } from "../ui/app";
 import { Button } from "./button";

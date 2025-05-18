@@ -1,6 +1,6 @@
 import { defaultReplyTypes } from "./ai/default-reply-types";
-import { ConfigTypeKey, DataLayer, type XProfile } from "./data";
-import { ReplyTypeRepository } from "./data/repositories/reply-type-repository";
+import { ConfigTypeKey, DataLayer, type XProfile } from "./domain";
+import { ReplyTypeRepository } from "./domain/repositories/reply-type-repository";
 import { ScrapingContext } from "./infra/scrape-context";
 import { AIFacade } from "./ai/ai-facade";
 import {
@@ -9,7 +9,7 @@ import {
   type Settings,
   type ReplyType,
   Database,
-} from "./data/database";
+} from "./domain/database";
 import { browserApi } from "../utils/browser-api";
 import type { ThreadTask } from "./ai/thread-tasks";
 import { AiContentPrompt } from "./ai/ai-content-prompt";

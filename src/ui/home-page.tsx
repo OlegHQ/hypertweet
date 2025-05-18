@@ -4,7 +4,7 @@ import { Layout } from "./layout";
 import { useGlobalState } from "./state";
 import { Card, CardContent, CardHeader } from "./library/card";
 import { motion } from "framer-motion";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 import { MessageSquare, Reply, UserCircle, Settings } from "lucide-react";
 
 export default function HomePage() {

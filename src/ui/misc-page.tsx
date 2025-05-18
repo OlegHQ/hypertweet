@@ -7,7 +7,7 @@ import { app } from "./app";
 import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { Database, ArrowRight } from "lucide-react";
-import { ConfigTypeKey } from "../background-app/data";
+import { ConfigTypeKey } from "../background-app/domain";
 import { ModelType } from "../background-app/ai/model-type";
 import {
   Select,

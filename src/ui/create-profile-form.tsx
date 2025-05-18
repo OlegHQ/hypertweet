@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { app } from "./app";
 import { useGlobalState } from "./state";
-import type { Profile } from "../background-app/data";
+import type { Profile } from "../background-app/domain";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "./library/card";
 import { Button } from "./library/button";

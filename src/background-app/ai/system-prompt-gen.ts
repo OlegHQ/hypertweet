@@ -1,6 +1,6 @@
 import nlp from "compromise";
 import { removeStopwords } from "stopword";
-import type { LinkedInProfile, Tweet, XProfile } from "../data";
+import type { LinkedInProfile, Tweet, XProfile } from "../domain";
 
 export type PersonaPayload = ReturnType<typeof buildPersonaPayload>;
 export function buildPersonaPayload(

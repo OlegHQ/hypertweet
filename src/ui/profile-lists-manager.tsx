@@ -2,7 +2,7 @@ import React from "react";
 import { Button } from "./library/button";
 import { Input } from "./library/input";
 import { Trash2, Save, Plus, Search, ExternalLink } from "lucide-react";
-import type { XProfile } from "../background-app/data/models/social-profile";
+import type { XProfile } from "../background-app/domain/models/social-profile";
 import { app } from "./app";
 import { Toast } from "./library/toast";
 import {

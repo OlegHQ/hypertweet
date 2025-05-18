@@ -3,7 +3,7 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 import { TwitterProfile } from "./twitter-profile";
 import { LinkedInProfile } from "./linkedin-profile";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 
 export default function SocialProfilesConfig() {
   const { selectedProfile, setSelectedProfile } = useGlobalState();

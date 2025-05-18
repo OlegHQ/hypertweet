@@ -6,7 +6,7 @@ import { Button } from "./library/button";
 import { Textarea } from "./library/textarea";
 import { motion, AnimatePresence } from "framer-motion";
 import { Edit2, Trash2, Save, Sparkles, AlertTriangle } from "lucide-react";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 
 export default function SystemPromptConfig() {
   const {

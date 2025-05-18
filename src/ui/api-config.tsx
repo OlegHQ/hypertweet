@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from "./library/card";
 import { Button } from "./library/button";
 import { Input } from "./library/input";
 import { motion } from "framer-motion";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 
 export default function ApiConfig() {
   const { selectedProfile } = useGlobalState();

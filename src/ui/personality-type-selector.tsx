@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./library/select";
-import { ConfigTypeKey } from "src/background-app/data";
+import { ConfigTypeKey } from "src/background-app/domain";
 import type { PersonalityType } from "src/background-app/ai/personality-type";
 
 const PERSONALITY_TYPES: { value: PersonalityType; label: string }[] = [

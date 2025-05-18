@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Profile, ReplyType } from "../background-app/data";
+import type { Profile, ReplyType } from "../background-app/domain";
 
 export type Route =
   | "/"
