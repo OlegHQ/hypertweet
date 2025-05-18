@@ -6,7 +6,16 @@ import type {
 import { app } from "./app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
 import { Button } from "./library/button";
-import { Star, ArrowLeft } from "lucide-react";
+import {
+  Star,
+  ArrowLeft,
+  Heart,
+  Repeat2,
+  MessageSquare,
+  Bookmark,
+  Eye,
+  Search,
+} from "lucide-react";
 
 interface VisitedTwitterProfilesProps {
   onItemAdded: (username: string) => void;
@@ -20,6 +29,7 @@ export default function VisitedTwitterProfiles({
   const [selectedProfile, setSelectedProfile] = useState<XProfile | null>(null);
   const [tweets, setTweets] = useState<Tweet[]>([]);
   const [isLoadingTweets, setIsLoadingTweets] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const loadVisitedProfiles = async () => {
@@ -65,7 +75,6 @@ export default function VisitedTwitterProfiles({
     setSelectedProfile(profile);
     setIsLoadingTweets(true);
     try {
-      // TODO: Replace with actual tweet fetching logic
       const fetchedTweets = await app.dataLayer.tweet.getByUsername(
         profile.username
       );
@@ -82,6 +91,34 @@ export default function VisitedTwitterProfiles({
     setSelectedProfile(null);
     setTweets([]);
   };
+
+  const formatNumber = (num: number) => {
+    if (num >= 1000000) {
+      return (num / 1000000).toFixed(1) + "M";
+    }
+    if (num >= 1000) {
+      return (num / 1000).toFixed(1) + "K";
+    }
+    return num.toString();
+  };
+
+  const renderStat = (icon: React.ReactNode, value: number) => {
+    if (value === 0) return null;
+    return (
+      <div className="flex items-center gap-1">
+        {icon}
+        <span>{formatNumber(value)}</span>
+      </div>
+    );
+  };
+
+  const filteredProfiles = visitedProfiles.filter((profile) => {
+    const searchLower = searchQuery.toLowerCase();
+    return (
+      profile.name.toLowerCase().includes(searchLower) ||
+      profile.username.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (selectedProfile) {
     return (
@@ -125,8 +162,21 @@ export default function VisitedTwitterProfiles({
                     </span>
                   ))}
                 </p>
-                <div className="text-xs text-gray-500 mt-1">
-                  {new Date(tweet.time).toLocaleDateString()}
+                <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                  {renderStat(<Heart className="h-3 w-3" />, tweet.likes)}
+                  {renderStat(<Repeat2 className="h-3 w-3" />, tweet.retweets)}
+                  {renderStat(
+                    <MessageSquare className="h-3 w-3" />,
+                    tweet.replies
+                  )}
+                  {renderStat(
+                    <Bookmark className="h-3 w-3" />,
+                    tweet.bookmarks
+                  )}
+                  {renderStat(<Eye className="h-3 w-3" />, tweet.impressions)}
+                  <div className="ml-auto">
+                    {new Date(tweet.time).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
             ))}
@@ -137,52 +187,65 @@ export default function VisitedTwitterProfiles({
   }
 
   return (
-    <div className="space-y-2">
-      {visitedProfiles.map((profile) => (
-        <div
-          key={profile.username}
-          className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
-        >
-          <div
-            className="flex-1 cursor-pointer min-w-0"
-            onClick={() => handleProfileClick(profile)}
-          >
-            <div className="flex items-center gap-2">
-              <span className="font-medium truncate">{profile.name}</span>
-              <span className="text-gray-500 truncate">
-                @{profile.username}
-              </span>
+    <div className="space-y-4">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+        <input
+          type="text"
+          placeholder="Search profiles..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400"
+        />
+      </div>
+      <div className="space-y-2">
+        {filteredProfiles.length === 0 ? (
+          <div className="text-center p-4 text-gray-500">No profiles found</div>
+        ) : (
+          filteredProfiles.map((profile) => (
+            <div
+              key={profile.username}
+              className="flex items-center justify-between p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            >
+              <div
+                className="flex-1 cursor-pointer min-w-0"
+                onClick={() => handleProfileClick(profile)}
+              >
+                <div className="flex items-center gap-2">
+                  <span className="font-medium truncate">{profile.name}</span>
+                  <span className="text-gray-500 truncate">
+                    @{profile.username}
+                  </span>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => toggleFavorite(profile)}
+                className={`h-8 w-8 ${
+                  favVisitedProfiles.includes(profile.username)
+                    ? "text-yellow-500 hover:text-yellow-600"
+                    : "text-gray-400 hover:text-yellow-500"
+                }`}
+                title={
+                  favVisitedProfiles.includes(profile.username)
+                    ? "Remove from favorites"
+                    : "Add to favorites"
+                }
+              >
+                <Star
+                  className="h-4 w-4"
+                  fill={
+                    favVisitedProfiles.includes(profile.username)
+                      ? "currentColor"
+                      : "none"
+                  }
+                />
+              </Button>
             </div>
-            <div className="text-sm text-gray-500">
-              {profile.followers ? `${profile.followers} followers` : "-"}
-            </div>
-          </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => toggleFavorite(profile)}
-            className={`h-8 w-8 ${
-              favVisitedProfiles.includes(profile.username)
-                ? "text-yellow-500 hover:text-yellow-600"
-                : "text-gray-400 hover:text-yellow-500"
-            }`}
-            title={
-              favVisitedProfiles.includes(profile.username)
-                ? "Remove from favorites"
-                : "Add to favorites"
-            }
-          >
-            <Star
-              className="h-4 w-4"
-              fill={
-                favVisitedProfiles.includes(profile.username)
-                  ? "currentColor"
-                  : "none"
-              }
-            />
-          </Button>
-        </div>
-      ))}
+          ))
+        )}
+      </div>
     </div>
   );
 }

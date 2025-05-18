@@ -73,6 +73,7 @@ export function extractTweet(
     return num;
   };
 
+  const impressions = getImpressions();
   return [
     profileName,
     {
@@ -85,7 +86,8 @@ export function extractTweet(
       retweets: getEngagementCount('[data-testid="retweet"]'),
       replies: getEngagementCount('[data-testid="reply"]'),
       bookmarks: getEngagementCount('[data-testid="bookmark"]'),
-      impressions: getImpressions(),
+      impressions,
+      impressionsNeg: impressions * -1,
     },
   ];
 }

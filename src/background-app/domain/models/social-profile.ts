@@ -9,6 +9,7 @@ export interface Tweet {
   replies: number;
   bookmarks: number;
   impressions: number;
+  impressionsNeg: number;
 }
 
 export interface XProfile {

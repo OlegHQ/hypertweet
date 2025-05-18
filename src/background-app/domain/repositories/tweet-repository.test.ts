@@ -15,6 +15,7 @@ const mockTweet: Tweet = {
   replies: 2,
   bookmarks: 1,
   impressions: 100,
+  impressionsNeg: -100,
 };
 
 const mockTweet2: Tweet = {
@@ -28,6 +29,7 @@ const mockTweet2: Tweet = {
   replies: 5,
   bookmarks: 2,
   impressions: 200,
+  impressionsNeg: -200,
 };
 
 const mockTweet3: Tweet = {
@@ -41,6 +43,7 @@ const mockTweet3: Tweet = {
   replies: 3,
   bookmarks: 1,
   impressions: 150,
+  impressionsNeg: -150,
 };
 
 test("should add and retrieve tweets", async () => {
@@ -99,4 +102,4 @@ test("should return 0 count for non-existent username", async () => {
 
   const count = await repository.getCountByUsername("nonexistentuser");
   expect(count).toBe(0);
-}); 
+});

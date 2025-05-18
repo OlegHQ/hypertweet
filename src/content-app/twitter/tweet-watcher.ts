@@ -11,7 +11,7 @@ import { extractTweet } from "./extract-tweet";
 const TWEET_SEL = '[data-testid="tweet"]';
 const TIMELINE_SEL = '[aria-label^="Timeline"]';
 const ALLOWED_HOST_RE = /^(?:www\.)?(?:twitter\.com|x\.com)$/i;
-const MIN_IMPRESSIONS = 1000;
+const MIN_IMPRESSIONS = 3000;
 
 async function handleNewTweet(t: HTMLElement, minImpressions: number = 1000) {
   /* …same as before… */

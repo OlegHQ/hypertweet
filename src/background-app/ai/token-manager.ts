@@ -10,8 +10,6 @@ class TokenManager {
   private clients: Map<string, CachedClient> = new Map();
   private readonly CACHE_EXPIRY = 30 * 60 * 1000; // 30 minutes
 
-  private constructor() {}
-
   static getInstance(): TokenManager {
     if (!TokenManager.instance) {
       TokenManager.instance = new TokenManager();

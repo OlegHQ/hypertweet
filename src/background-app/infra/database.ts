@@ -41,6 +41,7 @@ export class Database {
             keyPath: "id",
           });
           tweetsStore.createIndex("username", "from");
+          tweetsStore.createIndex("username_impressions", ["from", "impressionsNeg"], { unique: false });
         }
 
         if (!db.objectStoreNames.contains(STORES.TWITTER_PROFILES)) {
@@ -70,6 +71,11 @@ export class Database {
         }
       };
     });
+  }
+
+  transaction(storeName: string, mode: IDBTransactionMode): IDBTransaction {
+    if (!this.db) throw new Error("Database not initialized");
+    return this.db.transaction(storeName, mode);
   }
 
   async put<T>(storeName: string, value: T): Promise<void> {
@@ -131,6 +137,16 @@ export class Database {
 
       request.onsuccess = () => resolve(request.result ?? []);
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  getIndex(storeName: string, indexName: string): Promise<IDBIndex> {
+    return new Promise((resolve, reject) => {
+      if (!this.db) return reject(new Error("Database not initialized"));
+      const transaction = this.db.transaction(storeName, "readonly");
+      const store = transaction.objectStore(storeName);
+      const index = store.index(indexName);
+      resolve(index);
     });
   }
 

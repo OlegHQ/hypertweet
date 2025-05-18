@@ -31,6 +31,10 @@ export class AiContentPrompt {
     const profiles =
       await this.dataLayer.twitterProfile.getByUsernames(usernames);
 
+    const impressions = await this.dataLayer.tweet.getByUsername(
+      usernames[0] ?? ""
+    );
+
     const result = await this.ai.getBaseJSONPrompt(profileId);
     result.tweetsForReference = profiles
       .map((x) =>
