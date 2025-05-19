@@ -97,6 +97,8 @@ function ModelSelector() {
                 <SelectItem value={ModelType.GPT_4_1_MINI}>
                   GPT-4.1 Mini
                 </SelectItem>
+                <SelectItem value={ModelType.GPT_4_1}>GPT-4.1</SelectItem>
+                <SelectItem value={ModelType.GPT_4_0}>GPT-4o</SelectItem>
               </SelectContent>
             </Select>
           </div>
