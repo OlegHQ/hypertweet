@@ -25,15 +25,7 @@ function ComplexModePanel() {
   return <>d</>;
 }
 
-function ModeSwitcher({
-  complexMode,
-  setComplexMode,
-  onSettingsClick,
-}: {
-  complexMode: boolean;
-  setComplexMode: (mode: boolean) => void;
-  onSettingsClick: () => void;
-}) {
+function ModelSelector() {
   const [selectedModel, setSelectedModel] = useState<ModelType>(
     ModelType.GPT_3_5_TURBO
   );
@@ -79,6 +71,37 @@ function ModeSwitcher({
   };
 
   return (
+    <div className="w-[120px]">
+      <Select
+        value={selectedModel}
+        onValueChange={handleModelChange}
+        disabled={isLoading}
+      >
+        <SelectTrigger className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
+          <SelectValue placeholder="Select model" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ModelType.GPT_3_5_TURBO}>GPT-3.5</SelectItem>
+          <SelectItem value={ModelType.GPT_4O_MINI}>GPT-4o Mini</SelectItem>
+          <SelectItem value={ModelType.GPT_4_1_MINI}>GPT-4.1 Mini</SelectItem>
+          <SelectItem value={ModelType.GPT_4_1}>GPT-4.1</SelectItem>
+          <SelectItem value={ModelType.GPT_4_0}>GPT-4o</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+}
+
+function ModeSwitcher({
+  complexMode,
+  setComplexMode,
+  onSettingsClick,
+}: {
+  complexMode: boolean;
+  setComplexMode: (mode: boolean) => void;
+  onSettingsClick: () => void;
+}) {
+  return (
     <div className="flex items-center gap-2">
       <Tooltip content="Simple Mode" delayDuration={0}>
         <button
@@ -104,24 +127,6 @@ function ModeSwitcher({
           <Brain size={16} />
         </button>
       </Tooltip>
-      <div className="w-[120px]">
-        <Select
-          value={selectedModel}
-          onValueChange={handleModelChange}
-          disabled={isLoading}
-        >
-          <SelectTrigger className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
-            <SelectValue placeholder="Select model" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value={ModelType.GPT_3_5_TURBO}>GPT-3.5</SelectItem>
-            <SelectItem value={ModelType.GPT_4O_MINI}>GPT-4o Mini</SelectItem>
-            <SelectItem value={ModelType.GPT_4_1_MINI}>GPT-4.1 Mini</SelectItem>
-            <SelectItem value={ModelType.GPT_4_1}>GPT-4.1</SelectItem>
-            <SelectItem value={ModelType.GPT_4_0}>GPT-4o</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
       <Tooltip content="Settings" delayDuration={0}>
         <button
           className="text-[#1d9bf0] hover:opacity-80"
@@ -182,12 +187,13 @@ export default function Panel({
 
   return (
     <div className={cn("w-full flex flex-col h-full", className)}>
-      <div className="flex items-center justify-start gap-2 px-4 py-2">
+      <div className="flex items-center justify-between gap-2 px-4 py-2">
         <ModeSwitcher
           complexMode={complexMode}
           setComplexMode={setComplexMode}
           onSettingsClick={() => setIsSettingsOpen(true)}
         />
+        <ModelSelector />
       </div>
       {complexMode ? <ComplexModePanel /> : <ReplyTypesPanel />}
       <SettingsModal
