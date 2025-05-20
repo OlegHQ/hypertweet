@@ -213,8 +213,8 @@ function ModeSwitcher({
           onClick={() => setComplexMode(false)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            !complexMode && "opacity-100",
-            complexMode && "opacity-50"
+            complexMode && "opacity-100",
+            !complexMode && "opacity-50"
           )}
         >
           <Zap size={16} />
@@ -225,8 +225,8 @@ function ModeSwitcher({
           onClick={() => setComplexMode(true)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            complexMode && "opacity-100",
-            !complexMode && "opacity-50"
+            !complexMode && "opacity-100",
+            complexMode && "opacity-50"
           )}
         >
           <Brain size={16} />
