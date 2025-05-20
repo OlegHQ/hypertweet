@@ -28,19 +28,10 @@ export default function InnerPanel() {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      style={{ display: "flex", flexDirection: "row", gap: "8px" }}
+      className="flex flex-row gap-2"
     >
       <motion.div
-        style={{
-          flex: 1,
-          display: "flex",
-          flexWrap: "wrap",
-          gap: "4px",
-          marginBottom: "8px",
-          paddingLeft: "16px",
-          paddingRight: "16px",
-          justifyContent: "center",
-        }}
+        className="flex-1 flex flex-wrap gap-1 mb-2 px-4"
       >
         {replyTypes.map((replyType, index) => (
           <motion.div

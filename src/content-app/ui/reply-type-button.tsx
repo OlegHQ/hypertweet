@@ -147,6 +147,7 @@ export default function ReplyTypeButton({
 
   return (
     <Button
+      className="pr-3"
       disabled={disabled}
       onClick={handleReplyTypeClick}
       loading={state.loading}
