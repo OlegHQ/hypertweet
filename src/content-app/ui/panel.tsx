@@ -14,6 +14,7 @@ import {
   Lightbulb,
   Quote,
   ThumbsUp,
+  Sidebar,
 } from "lucide-react";
 import { createPortal } from "react-dom";
 import Draggable from "src/ui/library/draggable";
@@ -35,6 +36,7 @@ import { useLastUsedProfileId } from "./use-last-used-profile-id";
 import { Card, CardContent } from "src/ui/library/card";
 import { ActionButtonsGrid } from "src/ui/library/action-buttons-grid";
 import { ThreadTask } from "src/background-app/ai/thread-tasks";
+import FormatInstructionBuilder from "src/ui/format-instructions-builder";
 
 function MiniActionButtonsGrid({
   onCopyThread,
@@ -211,8 +213,8 @@ function ModeSwitcher({
           onClick={() => setComplexMode(false)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            complexMode && "opacity-100",
-            !complexMode && "opacity-50"
+            !complexMode && "opacity-100",
+            complexMode && "opacity-50"
           )}
         >
           <Zap size={16} />
@@ -223,13 +225,23 @@ function ModeSwitcher({
           onClick={() => setComplexMode(true)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            !complexMode && "opacity-100",
-            complexMode && "opacity-50"
+            complexMode && "opacity-100",
+            !complexMode && "opacity-50"
           )}
         >
           <Brain size={16} />
         </button>
       </Tooltip>
+      {false && (
+        <Tooltip content="Open Sidebar" delayDuration={0}>
+          <button
+            onClick={() => bgApp.system.openSidebar()}
+            className="text-[#1d9bf0] hover:opacity-80"
+          >
+            <Sidebar size={16} />
+          </button>
+        </Tooltip>
+      )}
       <Tooltip content="Settings" delayDuration={0}>
         <button
           className="text-[#1d9bf0] hover:opacity-80"
@@ -251,6 +263,7 @@ function SettingsModal({
   onClose: () => void;
   showBackdrop?: boolean;
 }) {
+  const lastUsedProfileId = useLastUsedProfileId();
   return (
     <Modal
       isOpen={isOpen}
@@ -258,12 +271,14 @@ function SettingsModal({
       title="Settings"
       showBackdrop={showBackdrop}
     >
-      <div className="space-y-4">
-        {/* Add your settings content here */}
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          Settings content will go here
-          <Button>Close</Button>
-        </div>
+      <div className="w-[350px]">
+        {lastUsedProfileId && (
+          <FormatInstructionBuilder
+            selectedProfileId={lastUsedProfileId}
+            app={bgApp}
+            withPreview={false}
+          />
+        )}
       </div>
     </Modal>
   );

@@ -8,6 +8,23 @@ import { ScrapingService } from "./infra/scraping-service";
 import { BackupService } from "./infra/backup-service";
 import { ProfileService } from "./domain/services/profile-service";
 import { ReplyTypeService } from "./domain/services/reply-type-service";
+import type { Tabs } from "webextension-polyfill";
+import { browserApi } from "src/utils/browser-api";
+
+export function openSidebar(tab: Tabs.Tab) {
+  if (tab.id && "sidebarAction" in browserApi) {
+    browserApi.sidebarAction.open();
+  } else if (tab.id && typeof chrome.sidePanel !== "undefined") {
+    chrome.sidePanel.open(
+      {
+        tabId: tab.id!,
+      },
+      () => {
+        // -> ("Side panel opened");
+      }
+    );
+  }
+}
 
 export async function setupBackgroundApp() {
   const db = new Database();
@@ -36,6 +53,19 @@ export async function setupBackgroundApp() {
     profiles,
     scraping,
     system: {
+      async openSidebar() {
+        const tabs = await browserApi.tabs.query({
+          active: true,
+          currentWindow: true,
+        });
+        if (!tabs[0]) {
+          return null;
+        }
+        console.log("tab", tabs[0]);
+        if (tabs[0]) {
+          openSidebar(tabs[0]);
+        }
+      },
       async getCurrentProfileId() {
         const lastId = await dataLayer.config.get<string>(
           null,
