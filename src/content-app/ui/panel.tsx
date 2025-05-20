@@ -2,7 +2,19 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useSiteTypeStore, type SiteType } from "./site-type-store";
 import ReplyTypesPanel from "./reply-types-panel";
 import { cn } from "src/ui/library/utils";
-import { Settings, Brain, Zap } from "lucide-react";
+import {
+  Settings,
+  Brain,
+  Zap,
+  Info,
+  MessageSquare,
+  Wand2,
+  Sparkles,
+  BookOpen,
+  Lightbulb,
+  Quote,
+  ThumbsUp,
+} from "lucide-react";
 import { createPortal } from "react-dom";
 import Draggable from "src/ui/library/draggable";
 import Modal from "src/ui/library/modal";
@@ -20,9 +32,92 @@ import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "../../background-app/domain";
 import { useGlobalState } from "../../ui/state";
 import { useLastUsedProfileId } from "./use-last-used-profile-id";
+import { Card, CardContent } from "src/ui/library/card";
+import { ActionButtonsGrid } from "src/ui/library/action-buttons-grid";
+import { ThreadTask } from "src/background-app/ai/thread-tasks";
+
+function MiniActionButtonsGrid({
+  onCopyThread,
+}: {
+  onCopyThread: (task: ThreadTask) => Promise<void>;
+}) {
+  const tasks = [
+    {
+      task: ThreadTask.FIVE_VARIANTS,
+      icon: MessageSquare,
+      label: "5 Variants",
+      tooltip: "Generate 5 response variants based on author's persona",
+    },
+    {
+      task: ThreadTask.CLEANUP,
+      icon: Wand2,
+      label: "Clean Up",
+      tooltip: "Clean up and format your current response",
+    },
+    {
+      task: ThreadTask.IMPACTFUL,
+      icon: Sparkles,
+      label: "Impact",
+      tooltip: "Generate an impactful response based on personality",
+    },
+    {
+      task: ThreadTask.STORY,
+      icon: BookOpen,
+      label: "Story",
+      tooltip: "Share a short, relevant story based on the thread",
+    },
+    {
+      task: ThreadTask.PERSPECTIVE,
+      icon: Lightbulb,
+      label: "Perspective",
+      tooltip: "Share a unique perspective or insight",
+    },
+    {
+      task: ThreadTask.METAPHOR,
+      icon: Quote,
+      label: "Metaphor",
+      tooltip: "Write a smart phrase, metaphor, or simile",
+    },
+    {
+      task: ThreadTask.TIP,
+      icon: ThumbsUp,
+      label: "Tip",
+      tooltip: "Share your personal experience with the tip",
+    },
+  ];
+
+  return (
+    <div className="flex flex-wrap gap-2">
+      {tasks.map(({ task, icon: Icon, label, tooltip }) => (
+        <Tooltip key={task} content={tooltip}>
+          <button
+            onClick={() => onCopyThread(task)}
+            className="w-[56px] h-[56px] flex flex-col items-center justify-center p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          >
+            <div className="p-1 bg-primary-50 dark:bg-primary-900/20 rounded-md mb-1">
+              <Icon className="h-3 w-3 text-primary-600 dark:text-primary-400" />
+            </div>
+            <span className="text-[10px] text-gray-600 dark:text-gray-400 truncate w-full text-center">
+              {label}
+            </span>
+          </button>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
 
 function ComplexModePanel() {
-  return <>d</>;
+  const handleCopyThread = async (task: ThreadTask) => {
+    // TODO: Implement complex mode thread copying
+    console.log("Complex mode thread copy:", task);
+  };
+
+  return (
+    <div className="space-y-4 px-4">
+      <MiniActionButtonsGrid onCopyThread={handleCopyThread} />
+    </div>
+  );
 }
 
 function ModelSelector() {
@@ -77,7 +172,15 @@ function ModelSelector() {
         onValueChange={handleModelChange}
         disabled={isLoading}
       >
-        <SelectTrigger className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2">
+        <SelectTrigger
+          onMouseEnter={() => {
+            document.body.style.overflow = "hidden";
+          }}
+          onMouseLeave={() => {
+            document.body.style.overflow = "auto";
+          }}
+          className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
+        >
           <SelectValue placeholder="Select model" />
         </SelectTrigger>
         <SelectContent>
@@ -108,8 +211,8 @@ function ModeSwitcher({
           onClick={() => setComplexMode(false)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            !complexMode && "opacity-100",
-            complexMode && "opacity-50"
+            complexMode && "opacity-100",
+            !complexMode && "opacity-50"
           )}
         >
           <Zap size={16} />
@@ -120,8 +223,8 @@ function ModeSwitcher({
           onClick={() => setComplexMode(true)}
           className={cn(
             "text-[#1d9bf0] hover:opacity-80",
-            complexMode && "opacity-100",
-            !complexMode && "opacity-50"
+            !complexMode && "opacity-100",
+            complexMode && "opacity-50"
           )}
         >
           <Brain size={16} />
@@ -187,7 +290,7 @@ export default function Panel({
 
   return (
     <div className={cn("w-full flex flex-col h-full", className)}>
-      <div className="flex items-center justify-between gap-2 px-4 py-2">
+      <div className="flex items-center justify-start gap-2 px-4 py-2">
         <ModeSwitcher
           complexMode={complexMode}
           setComplexMode={setComplexMode}

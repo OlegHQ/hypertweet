@@ -94,6 +94,8 @@ export function injectTwitterReplyStuff() {
       :root {
         --primary: 203, 89%, 53%;
         --border: 220, 13%, 91%;
+        --colors-gray-900: 221, 39%, 11%;
+        --colors-gray-50: 210, 20%, 98%;
       }
     `;
     document.head.appendChild(style);
