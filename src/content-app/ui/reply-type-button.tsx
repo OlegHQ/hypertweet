@@ -21,7 +21,7 @@ const useReplyTypeButton = (
   disabled: boolean,
   onLoading: (loading: boolean) => void
 ) => {
-  const contentType = useSiteType();
+  const siteType = useSiteType();
   const [state, setState] = useState<ButtonState>({
     loading: false,
   });
@@ -35,47 +35,97 @@ const useReplyTypeButton = (
     [onLoading]
   );
 
-  const handleReplyTypeClick = async () => {
-    onSuperLoading(true);
-    const getText = () => {
-      if (contentType === "twitter") {
-        return document
-          .querySelector('[data-testid="tweetText"]')
-          ?.textContent?.trim();
-      } else if (contentType === "linkedin") {
-        const postDetails = extractPostDetails(
-          parent?.closest(`[role="article"]`) as HTMLElement
-        );
+  const handleTwitterReply = async (
+    replyType: ReplyType,
+    onSuperLoading: (loading: boolean) => void
+  ) => {
+    const text = document
+      .querySelector('[data-testid="tweetText"]')
+      ?.textContent?.trim();
 
-        const { text, authorName, authorPosition } = postDetails;
-        return `${text}\n\n${authorName} - ${authorPosition}`;
-      }
-    };
-    const text = getText();
     if (!text) {
       console.warn("hypertweet: no tweet text");
       onSuperLoading(false);
       return;
     }
+
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const reply = await app.ai.generateReply(
-      contentType,
+      "twitter",
       replyType.profileId,
       text,
       replyType.prompt
     );
 
-    if (contentType === "twitter") {
-      typeTweet(reply);
-    } else {
-      const editor = parent
-        ?.closest(`[role="article"]`)
-        ?.querySelector(
-          'div[data-test-ql-editor-contenteditable="true"]'
-        ) as HTMLElement;
-      typeLinkedIn(editor, reply);
+    typeTweet(reply);
+  };
+
+  const handleLinkedInReply = async (
+    replyType: ReplyType,
+    parent: HTMLElement | null,
+    onSuperLoading: (loading: boolean) => void
+  ) => {
+    const postDetails = extractPostDetails(
+      parent?.closest(`[role="article"]`) as HTMLElement
+    );
+
+    const { text, authorName, authorPosition } = postDetails;
+    const fullText = `${text}\n\n${authorName} - ${authorPosition}`;
+
+    if (!fullText) {
+      console.warn("hypertweet: no LinkedIn post text");
+      onSuperLoading(false);
+      return;
     }
-    onSuperLoading(false);
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const reply = await app.ai.generateReply(
+      "linkedin",
+      replyType.profileId,
+      fullText,
+      replyType.prompt
+    );
+
+    const editor = parent
+      ?.closest(`[role="article"]`)
+      ?.querySelector(
+        'div[data-test-ql-editor-contenteditable="true"]'
+      ) as HTMLElement;
+    typeLinkedIn(editor, reply);
+  };
+
+  const handleDebuggingReply = async (
+    replyType: ReplyType,
+    onSuperLoading: (loading: boolean) => void
+  ) => {
+    // For debugging mode, we'll use a mock text
+    const mockText = "This is a mock tweet for debugging purposes.";
+
+    alert(mockText);
+  };
+
+  const handleReplyTypeClick = async () => {
+    onSuperLoading(true);
+
+    try {
+      switch (siteType) {
+        case "twitter":
+          await handleTwitterReply(replyType, onSuperLoading);
+          break;
+        case "linkedin":
+          await handleLinkedInReply(replyType, parent, onSuperLoading);
+          break;
+        case "debugging":
+          await handleDebuggingReply(replyType, onSuperLoading);
+          break;
+        default:
+          console.warn("hypertweet: unknown site type");
+      }
+    } catch (error) {
+      console.error("hypertweet: error generating reply:", error);
+    } finally {
+      onSuperLoading(false);
+    }
   };
 
   return {

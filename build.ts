@@ -34,12 +34,12 @@ function copyImages(outDir: string) {
   cpSync(srcImg, destImg, { recursive: true });
 }
 
-function writeSidebar(outDir: string) {
+function writeHtml(outDir: string, filename: string) {
   const html =
     `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"></head>` +
     `<body><div id=\"root\"></div>` +
-    `<script type=\"module\" src=\"sidebar.js\"></script></body></html>`;
-  writeFileSync(join(outDir, "sidebar.html"), html);
+    `<script type=\"module\" src=\"${filename}.js\"></script></body></html>`;
+  writeFileSync(join(outDir, filename + ".html"), html);
 }
 
 function writeManifest(outDir: string, chrome: boolean) {
@@ -69,6 +69,12 @@ function writeManifest(outDir: string, chrome: boolean) {
       default_panel: "sidebar.html",
       open_at_install: true,
     },
+    web_accessible_resources: [
+      {
+        resources: ["debugging.html"],
+        matches: ["<all_urls>"],
+      },
+    ],
     content_scripts: [
       {
         matches: ["https://x.com/*", "*://*.linkedin.com/*"],
@@ -105,7 +111,8 @@ function writeManifest(outDir: string, chrome: boolean) {
 
 function prepareStatics(outDir: string, chrome: boolean) {
   ensureDir(outDir);
-  writeSidebar(outDir);
+  writeHtml(outDir, "sidebar");
+  writeHtml(outDir, "debugging");
   writeManifest(outDir, chrome);
   copyImages(outDir);
 }
@@ -125,6 +132,8 @@ async function runBuild(target: "firefox" | "chrome") {
     "./src/content.ts",
     "--entrypoints",
     "./src/sidebar.tsx",
+    "--entrypoints",
+    "./src/debugging.tsx",
     "--outdir",
     outDir,
   ];

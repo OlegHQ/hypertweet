@@ -5,7 +5,17 @@ import { useGlobalState } from "./state";
 import { Card, CardContent, CardHeader } from "./library/card";
 import { motion } from "framer-motion";
 import { ConfigTypeKey } from "src/background-app/domain";
-import { MessageSquare, Reply, UserCircle, Settings, Sparkles, Brain, Zap, BookOpen } from "lucide-react";
+import {
+  MessageSquare,
+  Reply,
+  UserCircle,
+  Settings,
+  Sparkles,
+  Brain,
+  Zap,
+  BookOpen,
+} from "lucide-react";
+import { browserApi } from "src/utils/browser-api";
 
 export default function HomePage() {
   const {
@@ -65,7 +75,9 @@ export default function HomePage() {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 dark:text-gray-300">
-              Create engaging X posts with AI assistance. Generate viral content, analyze high-performing tweets, and maintain your unique voice.
+              Create engaging X posts with AI assistance. Generate viral
+              content, analyze high-performing tweets, and maintain your unique
+              voice.
             </p>
           </CardContent>
         </Card>
@@ -143,6 +155,11 @@ export default function HomePage() {
             </p>
           </CardContent>
         </Card>
+        <div>
+          <a href={browserApi.runtime.getURL("debugging.html")} target="_blank">
+            Debugging
+          </a>
+        </div>
       </motion.div>
     </Layout>
   );

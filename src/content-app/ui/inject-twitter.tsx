@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import Panel from "./panel";
+import { installTailwind } from "src/utils/install-tailwind";
 
 export function injectTwitterReplyStuff() {
   // 1. Set up a MutationObserver to watch the whole page
@@ -86,6 +87,18 @@ export function injectTwitterReplyStuff() {
       z-index: 2;
     `;
     container.parentNode?.insertBefore(wrapper, container.nextSibling);
+    // Add style
+    const style = document.createElement("style");
+    style.textContent = `
+    /** it needs to be hsl, used like that hsl(var(--primary)) */
+      :root {
+        --primary: 203, 89%, 53%;
+        --border: 220, 13%, 91%;
+      }
+    `;
+    document.head.appendChild(style);
+
+    installTailwind();
     createRoot(wrapper).render(<Panel siteType="twitter" parent={container} />);
   }
 }

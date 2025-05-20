@@ -4,7 +4,7 @@ import { Button } from "./library/button";
 import { Input } from "./library/input";
 import { motion, AnimatePresence } from "framer-motion";
 import { RefreshCw, ExternalLink, Edit2, Save, X } from "lucide-react";
-import { cn } from "../lib/utils";
+import { cn } from "./library/utils";
 
 interface ProfileSectionProps {
   title: string;
