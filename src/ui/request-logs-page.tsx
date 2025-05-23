@@ -5,10 +5,19 @@ import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { app } from "./app";
 import type { RequestLogItem } from "../background-app/domain/models/request-log-item";
-import { Trash2 } from "lucide-react";
+import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "./library/button";
 import { useInView } from "react-intersection-observer";
 import dayjs from "dayjs";
+import type { ChatCompletion, ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
+
+function formatMessageContent(content: any): string {
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map(part => part.text || "").join("");
+  }
+  return JSON.stringify(content);
+}
 
 function RequestLogCard({
   item,
@@ -17,6 +26,10 @@ function RequestLogCard({
   item: RequestLogItem;
   onDelete: (id: string) => void;
 }) {
+  const [expanded, setExpanded] = React.useState(false);
+  const request = item.request as ChatCompletionCreateParamsNonStreaming;
+  const response = item.response as ChatCompletion;
+
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
@@ -24,33 +37,97 @@ function RequestLogCard({
           <div className="text-sm text-gray-500 dark:text-gray-400">
             {dayjs(item.createdAt).format("MMM DD, YYYY HH:mm:ss")}
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-8 w-8"
-            onClick={() => onDelete(item.id)}
-          >
-            <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
-          </Button>
-        </div>
-        <div className="space-y-2">
-          <div>
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Request:
-            </div>
-            <pre className="text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded overflow-x-auto">
-              {JSON.stringify(item.request, null, 2)}
-            </pre>
-          </div>
-          <div>
-            <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Response:
-            </div>
-            <pre className="text-xs bg-gray-50 dark:bg-gray-800 p-2 rounded overflow-x-auto">
-              {JSON.stringify(item.response, null, 2)}
-            </pre>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? (
+                <ChevronUp className="h-4 w-4 text-gray-500" />
+              ) : (
+                <ChevronDown className="h-4 w-4 text-gray-500" />
+              )}
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => onDelete(item.id)}
+            >
+              <Trash2 className="h-4 w-4 text-gray-500 hover:text-red-500" />
+            </Button>
           </div>
         </div>
+
+        {expanded && (
+          <div className="space-y-4 mt-4">
+            {/* Request Section */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Request
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-gray-500">Model:</div>
+                  <div className="font-mono">{request.model}</div>
+                  <div className="text-gray-500">Temperature:</div>
+                  <div className="font-mono">{request.temperature}</div>
+                  <div className="text-gray-500">Max Tokens:</div>
+                  <div className="font-mono">{request.max_tokens}</div>
+                </div>
+
+                <div className="mt-2">
+                  <div className="text-gray-500 mb-1">Messages:</div>
+                  <div className="space-y-1">
+                    {request.messages.map((msg, idx) => (
+                      <div
+                        key={idx}
+                        className="bg-gray-50 dark:bg-gray-800 p-2 rounded"
+                      >
+                        <div className="text-gray-500 mb-1">{msg.role}:</div>
+                        <div className="font-mono whitespace-pre-wrap break-words">
+                          {formatMessageContent(msg.content)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Response Section */}
+            <div>
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Response
+              </div>
+              <div className="space-y-2 text-xs">
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-gray-500">Model:</div>
+                  <div className="font-mono">{response.model}</div>
+                  <div className="text-gray-500">Created:</div>
+                  <div className="font-mono">
+                    {dayjs.unix(response.created).format("HH:mm:ss")}
+                  </div>
+                  <div className="text-gray-500">Usage:</div>
+                  <div className="font-mono">
+                    {response.usage?.total_tokens} tokens
+                  </div>
+                </div>
+
+                <div className="mt-2">
+                  <div className="text-gray-500 mb-1">Content:</div>
+                  <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                    <div className="font-mono whitespace-pre-wrap break-words">
+                      {formatMessageContent(response.choices[0]?.message?.content)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
