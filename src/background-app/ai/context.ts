@@ -25,3 +25,19 @@ export async function buildPersonalitySnippet(
 
   return chat?.choices?.[0]?.message?.content?.trim() ?? "";
 }
+
+export async function editReply(
+  key: string,
+  model: ModelType,
+  text: string,
+  mode: "simplify" | "smarter" | "randomize" | "bro"
+) {
+  const openai = tokenManager.getClient(key);
+  const chat = await openai.chat.completions.create({
+    model,
+    messages: [
+      { role: "system", content: "You are a helpful assistant." },
+      { role: "user", content: text },
+    ],
+  });
+}

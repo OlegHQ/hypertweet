@@ -11,6 +11,7 @@ interface AIReplyPanelProps {
 
 export default function AIReplyPanel({ editMode, text }: AIReplyPanelProps) {
   const [copied, setCopied] = useState(false);
+  const [editedText, setEditedText] = useState(text);
 
   const handleCopy = async () => {
     const textarea = document.querySelector('[data-text="true"]');
@@ -22,12 +23,13 @@ export default function AIReplyPanel({ editMode, text }: AIReplyPanelProps) {
   };
 
   const handleAIAction = (action: string) => {
-    const textarea = document.querySelector('[data-text="true"]');
-    if (!textarea?.textContent) return;
+    
+    // const textarea = document.querySelector('[data-text="true"]');
+    // if (!textarea?.textContent) return;
 
-    // Here you would implement the actual AI transformations
-    // For now, we'll just log the action
-    console.log(`AI Action: ${action}`, textarea.textContent);
+    // // Here you would implement the actual AI transformations
+    // // For now, we'll just log the action
+    // console.log(`AI Action: ${action}`, textarea.textContent);
   };
 
   return (
