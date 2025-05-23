@@ -10,4 +10,5 @@ export interface RequestLogItem {
   profileId: string;
   request: ChatCompletionCreateParamsNonStreaming;
   response: ChatCompletion;
+  type: "generate" | "edit" | null;
 }

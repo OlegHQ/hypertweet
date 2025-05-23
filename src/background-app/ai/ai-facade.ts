@@ -4,7 +4,7 @@ import {
   type LinkedInProfile,
   type XProfile,
 } from "../domain";
-import { buildPersonalitySnippet } from "./context";
+import { buildPersonalitySnippet, editReply } from "./context";
 import { generateReply } from "./generate-reply";
 import { buildPersonaPayload } from "./system-prompt-gen";
 import { defaultModel, ModelType } from "./model-type";
@@ -17,6 +17,46 @@ import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
 
 export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}
+
+  async editReply(
+    _: "twitter" | "linkedin" | "debugging",
+    profileId: string,
+    postText: string,
+    currentReply: string,
+    mode: "simplify" | "smarter" | "randomize" | "bro"
+  ) {
+    const model = await this.getModel(profileId);
+
+    const personalityType = await this.dataLayer.config.get<PersonalityType>(
+      profileId,
+      ConfigTypeKey.PERSONALITY_TYPE
+    );
+    const openAiKey = await this.dataLayer.config.getCredential(
+      profileId,
+      ConfigTypeKey.OPENAI_API_KEY
+    );
+    if (!openAiKey) {
+      throw new Error("Missing required config");
+    }
+    const [reply, request, response] = await editReply(
+      openAiKey,
+      model,
+      personalityType,
+      postText,
+      currentReply,
+      mode
+    );
+    await this.dataLayer.requestLog.save({
+      profileId,
+      request,
+      response,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      type: "edit",
+    });
+    return reply;
+  }
 
   async generateReply(
     site: "twitter" | "linkedin",
@@ -64,6 +104,7 @@ export class AIFacade {
       id: crypto.randomUUID(),
       createdAt: new Date(),
       updatedAt: new Date(),
+      type: "generate",
     });
 
     return reply;
