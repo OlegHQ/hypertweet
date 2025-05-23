@@ -155,8 +155,12 @@ export default function HomePage() {
             </p>
           </CardContent>
         </Card>
-        <div>
-          <a href={browserApi.runtime.getURL("debugging.html")} target="_blank">
+        <div className="flex justify-center pt-4">
+          <a
+            href={browserApi.runtime.getURL("debugging.html")}
+            target="_blank"
+            className="text-sm text-gray-500 hover:text-primary-600 dark:text-gray-400 dark:hover:text-primary-400 transition-colors"
+          >
             Debugging
           </a>
         </div>
