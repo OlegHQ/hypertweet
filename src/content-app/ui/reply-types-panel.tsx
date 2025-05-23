@@ -4,8 +4,13 @@ import ReplyTypeButton from "./reply-type-button";
 import { motion } from "framer-motion";
 import { bgApp } from "../bg-app";
 
-export default function InnerPanel() {
+interface ReplyTypesPanelProps {
+  mode: "complex" | "simple" | "edit";
+}
+
+export default function ReplyTypesPanel({ mode }: ReplyTypesPanelProps) {
   const [replyTypes, setReplyTypes] = useState<ReplyType[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -21,7 +26,6 @@ export default function InnerPanel() {
     }
     load();
   }, []);
-  const [loading, setLoading] = useState(false);
 
   return (
     <motion.div
@@ -30,9 +34,7 @@ export default function InnerPanel() {
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="flex flex-row gap-2"
     >
-      <motion.div
-        className="flex-1 flex flex-wrap gap-1 mb-2 px-4"
-      >
+      <motion.div className="flex-1 flex flex-wrap gap-1 mb-2 px-4">
         {replyTypes.map((replyType, index) => (
           <motion.div
             key={replyType.id}
