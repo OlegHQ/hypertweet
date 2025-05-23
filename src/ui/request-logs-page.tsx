@@ -5,16 +5,25 @@ import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
 import { app } from "./app";
 import type { RequestLogItem } from "../background-app/domain/models/request-log-item";
-import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  MessageSquare,
+  Hash,
+} from "lucide-react";
 import { Button } from "./library/button";
 import { useInView } from "react-intersection-observer";
 import dayjs from "dayjs";
-import type { ChatCompletion, ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat/completions";
+import type {
+  ChatCompletion,
+  ChatCompletionCreateParamsNonStreaming,
+} from "openai/resources/chat/completions";
 
 function formatMessageContent(content: any): string {
   if (typeof content === "string") return content;
   if (Array.isArray(content)) {
-    return content.map(part => part.text || "").join("");
+    return content.map((part) => part.text || "").join("");
   }
   return JSON.stringify(content);
 }
@@ -29,13 +38,30 @@ function RequestLogCard({
   const [expanded, setExpanded] = React.useState(false);
   const request = item.request as ChatCompletionCreateParamsNonStreaming;
   const response = item.response as ChatCompletion;
+  const requestType = item.type ?? "unknown";
+
+  const totalTokens = response.usage?.total_tokens ?? 0;
+  const promptTokens = response.usage?.prompt_tokens ?? 0;
+  const completionTokens = response.usage?.completion_tokens ?? 0;
 
   return (
     <Card className="mb-4">
       <CardContent className="p-4">
         <div className="flex justify-between items-start mb-2">
-          <div className="text-sm text-gray-500 dark:text-gray-400">
-            {dayjs(item.createdAt).format("MMM DD, YYYY HH:mm:ss")}
+          <div className="space-y-1">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              {dayjs(item.createdAt).format("MMM DD, YYYY HH:mm:ss")}
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-1 text-gray-500">
+                <MessageSquare size={12} />
+                <span className="capitalize">{requestType}</span>
+              </div>
+              <div className="flex items-center gap-1 text-gray-500">
+                <Hash size={12} />
+                <span>{totalTokens} tokens</span>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Button
@@ -110,17 +136,21 @@ function RequestLogCard({
                   <div className="font-mono">
                     {dayjs.unix(response.created).format("HH:mm:ss")}
                   </div>
-                  <div className="text-gray-500">Usage:</div>
-                  <div className="font-mono">
-                    {response.usage?.total_tokens} tokens
-                  </div>
+                  <div className="text-gray-500">Total Tokens:</div>
+                  <div className="font-mono">{totalTokens}</div>
+                  <div className="text-gray-500">Prompt Tokens:</div>
+                  <div className="font-mono">{promptTokens}</div>
+                  <div className="text-gray-500">Completion Tokens:</div>
+                  <div className="font-mono">{completionTokens}</div>
                 </div>
 
                 <div className="mt-2">
                   <div className="text-gray-500 mb-1">Content:</div>
                   <div className="bg-gray-50 dark:bg-gray-800 p-2 rounded">
                     <div className="font-mono whitespace-pre-wrap break-words">
-                      {formatMessageContent(response.choices[0]?.message?.content)}
+                      {formatMessageContent(
+                        response.choices[0]?.message?.content
+                      )}
                     </div>
                   </div>
                 </div>
