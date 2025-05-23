@@ -1,4 +1,3 @@
-import type { ChatCompletionMessageParam } from "openai/resources/chat";
 import type { PersonaPayload } from "./system-prompt-gen";
 import { tokenManager } from "./token-manager";
 import { ModelType } from "./model-type";
@@ -25,62 +24,4 @@ export async function buildPersonalitySnippet(
   });
 
   return chat?.choices?.[0]?.message?.content?.trim() ?? "";
-}
-
-const TWEET_CONTEXT =
-  "You are composing a reply tweet. Output only the reply text, no greeting, no hashtags unless present in the post.";
-
-const LINKEDIN_CONTEXT =
-  "You are composing a reply to a LinkedIn post. Output only the reply text, no greeting, no hashtags unless present in the post.";
-
-function getContext(siteType: "twitter" | "linkedin") {
-  return siteType === "twitter" ? TWEET_CONTEXT : LINKEDIN_CONTEXT;
-}
-
-export async function generateReply(
-  key: string,
-  model: ModelType,
-  personaSnippet: string | null,
-  prompt: string,
-  formatInstructions: string,
-  postText: string,
-  siteType: "twitter" | "linkedin"
-): Promise<string> {
-  const messages: ChatCompletionMessageParam[] = [];
-  if (personaSnippet) {
-    messages.push({ role: "system", content: personaSnippet });
-  }
-  messages.push({ role: "system", content: getContext(siteType) });
-  messages.push({ role: "system", content: prompt });
-  messages.push({
-    role: "system",
-    content: formatInstructions,
-  });
-  messages.push({
-    role: "user",
-    content: `Tweet: """${postText.slice(0, 400)}"""`,
-  });
-
-  const openai = tokenManager.getClient(key);
-  const res = await openai.chat.completions.create({
-    model,
-    messages,
-    max_tokens: 60,
-    temperature: 0.7,
-    stop: ["\n"],
-  });
-
-  return postProcess(res?.choices?.[0]?.message?.content?.trim() ?? "");
-}
-
-function postProcess(text: string): string {
-  // replace “ and ” with "
-  text = text.replace(/“/g, '"');
-  text = text.replace(/”/g, '"');
-
-  // replace ’ with '
-  text = text.replace(/’/g, "'");
-  text = text.replace(/—/g, ",");
-
-  return text;
 }

@@ -9,7 +9,8 @@ export type Route =
   | "/misc"
   | "/data-backup"
   | "/chatgpt-prompts"
-  | "/posts-studio";
+  | "/posts-studio"
+  | "/request-logs";
 
 interface ApiKey {
   id: string;

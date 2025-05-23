@@ -28,8 +28,8 @@ export function Button({
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
-    >
-      {loading ? loadingText : children}
+        >
+          {loading ? loadingText : children}
     </button>
   );
 }

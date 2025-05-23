@@ -4,7 +4,8 @@ import {
   type LinkedInProfile,
   type XProfile,
 } from "../domain";
-import { buildPersonalitySnippet, generateReply } from "./context";
+import { buildPersonalitySnippet } from "./context";
+import { generateReply } from "./generate-reply";
 import { buildPersonaPayload } from "./system-prompt-gen";
 import { defaultModel, ModelType } from "./model-type";
 import {
@@ -16,6 +17,57 @@ import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
 
 export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}
+
+  async generateReply(
+    site: "twitter" | "linkedin",
+    profileId: string,
+    postText: string,
+    prompt: string
+  ) {
+    const model = await this.getModel(profileId);
+    const personaSnippet = await this.dataLayer.config.get<string>(
+      profileId,
+      ConfigTypeKey.SYSTEM_PROMPT
+    );
+    const personalityType = await this.dataLayer.config.get<PersonalityType>(
+      profileId,
+      ConfigTypeKey.PERSONALITY_TYPE
+    );
+    const openAiKey = await this.dataLayer.config.getCredential(
+      profileId,
+      ConfigTypeKey.OPENAI_API_KEY
+    );
+    if (!openAiKey) {
+      throw new Error("Missing required config");
+    }
+    const formatInstructions =
+      (await this.dataLayer.config.get<InstructionOptions>(
+        profileId,
+        ConfigTypeKey.FORMAT_INSTRUCTIONS
+      )) ?? defaultFormatInstructionsOptions;
+
+    const [reply, request, response] = await generateReply(
+      openAiKey,
+      model,
+      personaSnippet,
+      personalityType,
+      prompt,
+      await this.buildFormatInstructionsPrompt(formatInstructions),
+      postText,
+      site
+    );
+
+    await this.dataLayer.requestLog.save({
+      profileId,
+      request,
+      response,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    return reply;
+  }
 
   async getFormatInstructionOptions(profileId: string) {
     const formatInstructions =
@@ -31,41 +83,6 @@ export class AIFacade {
     opts: InstructionOptions
   ): Promise<string> {
     return buildFormatInstructionsPrompt(opts);
-  }
-
-  async generateReply(
-    site: "twitter" | "linkedin",
-    profileId: string,
-    postText: string,
-    prompt: string
-  ) {
-    const model = await this.getModel(profileId);
-    const personaSnippet = await this.dataLayer.config.get<string>(
-      profileId,
-      ConfigTypeKey.SYSTEM_PROMPT
-    );
-    const openAiKey = await this.dataLayer.config.getCredential(
-      profileId,
-      ConfigTypeKey.OPENAI_API_KEY
-    );
-    if (!openAiKey) {
-      throw new Error("Missing required config");
-    }
-    const formatInstructions =
-      (await this.dataLayer.config.get<InstructionOptions>(
-        profileId,
-        ConfigTypeKey.FORMAT_INSTRUCTIONS
-      )) ?? defaultFormatInstructionsOptions;
-
-    return await generateReply(
-      openAiKey,
-      model,
-      personaSnippet,
-      prompt,
-      await this.buildFormatInstructionsPrompt(formatInstructions),
-      postText,
-      site
-    );
   }
 
   async buildPersonaPayload(profileId: string) {

@@ -6,7 +6,7 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
-import { Database, ArrowRight } from "lucide-react";
+import { Database, ArrowRight, History } from "lucide-react";
 import { ConfigTypeKey } from "../background-app/domain";
 import { ModelType } from "../background-app/ai/model-type";
 import {
@@ -122,6 +122,33 @@ export default function MiscPage() {
       >
         <ApiConfig />
         <ModelSelector />
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card
+            className="cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setCurrentRoute("/request-logs")}
+          >
+            <CardContent className="flex items-start gap-4 p-6">
+              <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+                <History className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                    Request Logs
+                  </h2>
+                  <ArrowRight className="h-5 w-5 text-gray-400" />
+                </div>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">
+                  View and manage your AI request history, including prompts and responses.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
