@@ -6,6 +6,7 @@ import { app } from "../../ui/app";
 import { useSiteType } from "./use-site-type";
 import { useSiteTypeStore } from "./site-type-store";
 import { Button } from "./button";
+import usePostText from "./use-post-text";
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
   disabled: boolean;
@@ -35,6 +36,10 @@ const useReplyTypeButton = (
     [onLoading]
   );
 
+  const loadPostContent = usePostText();
+  const setEditedText = useSiteTypeStore((state) => state.setEditedText);
+  const setMode = useSiteTypeStore((state) => state.setMode);
+
   const handleTwitterReply = async (
     replyType: ReplyType,
     onSuperLoading: (loading: boolean) => void
@@ -57,7 +62,14 @@ const useReplyTypeButton = (
       replyType.prompt
     );
 
-    typeTweet(reply);
+    const res = await loadPostContent();
+    const currentReply = res?.currentReply;
+    if (currentReply && currentReply !== "") {
+      setMode("edit");
+      setEditedText(reply);
+    } else {
+      typeTweet(reply);
+    }
   };
 
   const handleLinkedInReply = async (

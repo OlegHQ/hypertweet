@@ -20,9 +20,8 @@ export default function Panel({
 }) {
   const setSiteType = useSiteTypeStore((state) => state.setSiteType);
   const setParent = useSiteTypeStore((state) => state.setParent);
-  // const [complexMode, setComplexMode] = useState(false);
-  // const [editMode, setEditMode] = useState(false);
-  const [mode, setMode] = useState<"complex" | "simple" | "edit">("simple");
+  const mode = useSiteTypeStore((state) => state.mode);
+  const setMode = useSiteTypeStore((state) => state.setMode);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentText, setCurrentText] = useState<string | null>(null);
 
@@ -50,7 +49,13 @@ export default function Panel({
   }, [type]);
 
   return (
-    <div className={cn("w-full flex flex-col h-full", type ==="twitter" ? "pl-[40px]" : null, className)}>
+    <div
+      className={cn(
+        "w-full flex flex-col h-full",
+        type === "twitter" ? "pl-[40px]" : null,
+        className
+      )}
+    >
       <div className="flex items-center justify-start gap-2 px-4 py-2">
         <ModeSwitcher
           mode={mode}

@@ -15,6 +15,7 @@ import usePostText from "./use-post-text";
 import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
 import type { ActionType } from "src/background-app/ai/ai-facade";
+import { useSiteTypeStore } from "./site-type-store";
 
 interface AIReplyPanelProps {
   editMode?: boolean;
@@ -23,7 +24,8 @@ interface AIReplyPanelProps {
 
 export default function AIReplyPanel({ text }: AIReplyPanelProps) {
   const [copied, setCopied] = useState(false);
-  const [editedText, setEditedText] = useState(text);
+  const editedText = useSiteTypeStore((state) => state.editedText);
+  const setEditedText = useSiteTypeStore((state) => state.setEditedText);
   const [loadingAction, setLoadingAction] = useState<ActionType | null>(null);
 
   const siteType = useSiteType();
