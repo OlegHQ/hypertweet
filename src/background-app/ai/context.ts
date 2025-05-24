@@ -1,108 +1,137 @@
-import type { PersonaPayload } from "./system-prompt-gen";
-import { tokenManager } from "./token-manager";
-import { ModelType } from "./model-type";
-import type { PersonalityType } from "./personality-type";
+// openai-utils.ts
+// 2025-05-24 — simplified, easier to tweak.
+
 import type {
   ChatCompletion,
   ChatCompletionCreateParamsNonStreaming,
+  ChatCompletionMessageParam,
 } from "openai/resources/chat/completions";
+import { tokenManager } from "./token-manager";
+import type { ModelType } from "./model-type";
+import type { PersonalityType } from "./personality-type";
+import type { ActionType } from "./ai-facade";
 import { postProcess } from "./post-process";
 
-export async function buildPersonalitySnippet(
-  key: string,
-  model: ModelType,
-  payload: PersonaPayload
-): Promise<string> {
-  const openai = tokenManager.getClient(key);
-  const chat = await openai.chat.completions.create({
-    model,
-    messages: [
-      {
-        role: "system",
-        content:
-          "You distill profile text into a first‑person personality blurb, ≤20 tokens, casual English. Return ONLY the blurb.",
-      },
-      { role: "user", content: JSON.stringify(payload) },
-    ],
-    max_tokens: 30,
-    temperature: 0.5,
-    stop: ["\n"],
+/* -------------------------------------------------------------------------- */
+/*  ✅ Tweak-friendly prompt dictionaries                                      */
+/* -------------------------------------------------------------------------- */
+
+export const PERSONALITY_PROMPTS: Record<
+  Exclude<PersonalityType, null>,
+  string
+> = {
+  unspecified: "Helpful assistant.",
+  analyst: "Data-driven, logical thinker.",
+  motivator: "Upbeat and encouraging voice.",
+  witty_comedian: "Clever commentator with wit.",
+  empathetic_friend: "Supportive, understanding friend.",
+  insider_expert: "Authoritative professional insights.",
+  visionary_leader: "Bold, future-focused leader.",
+  no_nonsense_leader: "Direct, decisive leader.",
+  sarcastic_leader: "Witty authority, dry humor.",
+  seasoned_pro: "Calm, experienced professional.",
+};
+
+export const MODE_PROMPTS: Record<ActionType, string> = {
+  simplify: "Simplify while keeping the core message.",
+  smarter: "Enrich with deeper insight and refined language.",
+  randomize: "Add creative twists and unexpected elements.",
+  bro: "Convert to friendly 'bro' speak (light touch).",
+  cleanup: "Polish grammar and remove clutter.",
+};
+
+/* -------------------------------------------------------------------------- */
+/*  🛠 Common helper to hit Chat Completions                                   */
+/* -------------------------------------------------------------------------- */
+
+/* -------------------------------------------------------------------------- */
+/*  📝 System prompt builder — override maps if you like                       */
+/* -------------------------------------------------------------------------- */
+
+export function buildSystemPrompt({
+  mode,
+  personalityType,
+  personalityMap = {},
+  modeMap = {},
+  limit = 280,
+}: {
+  mode: ActionType;
+  personalityType?: PersonalityType | null;
+  personalityMap?: Partial<typeof PERSONALITY_PROMPTS>;
+  modeMap?: Partial<typeof MODE_PROMPTS>;
+  limit?: number;
+}): string {
+  const persona = { ...PERSONALITY_PROMPTS, ...personalityMap };
+  const modes = { ...MODE_PROMPTS, ...modeMap };
+
+  const personaLine = persona[personalityType ?? "unspecified"];
+  const modeLine = modes[mode];
+
+  return `${personaLine} ${modeLine} Limit to ${limit} characters. Return only the transformed reply.`;
+}
+
+/* -------------------------------------------------------------------------- */
+/*  ✂️ Main transform function                                                */
+/* -------------------------------------------------------------------------- */
+
+export async function editReply({
+  key,
+  model,
+  personalityType = null,
+  postText,
+  currentReply,
+  mode,
+  overrides = {},
+  maxTokens = 150,
+}: {
+  key: string;
+  model: ModelType;
+  personalityType?: PersonalityType | null;
+  postText: string;
+  currentReply: string;
+  mode: ActionType;
+  overrides?: {
+    personalityMap?: Partial<typeof PERSONALITY_PROMPTS>;
+    modeMap?: Partial<typeof MODE_PROMPTS>;
+    limit?: number;
+  };
+  maxTokens?: number;
+}): Promise<
+  [
+    string, // final reply
+    ChatCompletionCreateParamsNonStreaming, // raw request
+    ChatCompletion, // raw response
+  ]
+> {
+  const systemPrompt = buildSystemPrompt({
+    mode,
+    personalityType,
+    ...overrides,
   });
 
-  return chat?.choices?.[0]?.message?.content?.trim() ?? "";
-}
+  const messages: ChatCompletionMessageParam[] = [
+    { role: "system", content: systemPrompt },
+    {
+      role: "user",
+      content: `Original post:\n${postText}\n\nCurrent reply:\n${currentReply}`,
+    },
+  ];
 
-function getSystemPrompt(
-  mode: "simplify" | "smarter" | "randomize" | "bro",
-  personalityType: PersonalityType | null
-): string {
-  const personalityPrompts: Record<PersonalityType, string> = {
-    unspecified: "You are a helpful assistant.",
-    analyst:
-      "You are a data-driven, analytical thinker who focuses on facts and logic.",
-    motivator:
-      "You are an upbeat, inspirational voice who encourages and uplifts others.",
-    witty_comedian:
-      "You are a clever, playful commentator who uses smart humor and wit.",
-    empathetic_friend:
-      "You are a supportive, understanding friend who shows genuine care.",
-    insider_expert:
-      "You are an authoritative expert who shares valuable professional insights.",
-    visionary_leader:
-      "You are a bold, future-focused leader who inspires with big-picture thinking.",
-    no_nonsense_leader:
-      "You are a direct, decisive leader who cuts through the noise.",
-    sarcastic_leader:
-      "You are a witty authority figure who uses dry humor and sharp observations.",
-    seasoned_pro:
-      "You are a calm, experienced professional who shares best practices and wisdom.",
-  };
-
-  const modePrompts: Record<
-    "simplify" | "smarter" | "randomize" | "bro",
-    string
-  > = {
-    simplify:
-      "Simplify the text while maintaining its core message. Make it more concise and easier to understand.",
-    smarter:
-      "Enhance the text with more sophisticated language and deeper insights while keeping it engaging.",
-    randomize:
-      "Transform the text with creative variations while preserving its main points. Add some unexpected elements.",
-    bro: "Convert the text into casual, friendly 'bro' speak while keeping it authentic and not overdoing it.",
-  };
-
-  const personalityPrompt = personalityType
-    ? personalityPrompts[personalityType]
-    : personalityPrompts.unspecified;
-  const modePrompt = modePrompts[mode];
-
-  return `${personalityPrompt} ${modePrompt} Keep the response concise and Twitter-friendly (280 characters or less).`;
-}
-
-export async function editReply(
-  key: string,
-  model: ModelType,
-  personalityType: PersonalityType | null,
-  postText: string,
-  currentReply: string,
-  mode: "simplify" | "smarter" | "randomize" | "bro"
-): Promise<[string, ChatCompletionCreateParamsNonStreaming, ChatCompletion]> {
-  const openai = tokenManager.getClient(key);
-  const systemPrompt = getSystemPrompt(mode, personalityType);
-
-  const request: ChatCompletionCreateParamsNonStreaming = {
+  const rawRequest: ChatCompletionCreateParamsNonStreaming = {
     model,
-    messages: [
-      { role: "system", content: systemPrompt },
-      {
-        role: "user",
-        content: `Original post: ${postText}\n\nCurrent reply: ${currentReply}\n\nTransform this reply according to the instructions.`,
-      },
-    ],
-    max_tokens: 150,
+    messages,
+    max_tokens: maxTokens,
     temperature: mode === "randomize" ? 0.8 : 0.5,
+    response_format: { type: "text" },
   };
-  const chat = await openai.chat.completions.create(request);
-  const reply = postProcess(chat?.choices?.[0]?.message?.content?.trim() ?? "");
-  return [reply, request, chat];
+
+  const chatResult = await tokenManager
+    .getClient(key)
+    .chat.completions.create(rawRequest);
+
+  const reply = postProcess(
+    chatResult.choices[0]?.message?.content?.trim() ?? ""
+  );
+
+  return [reply, rawRequest, chatResult];
 }

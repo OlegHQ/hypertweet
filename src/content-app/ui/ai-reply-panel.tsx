@@ -7,19 +7,19 @@ import {
   Shuffle,
   MessageSquare,
   Loader2,
+  Brush,
 } from "lucide-react";
 import { Tooltip } from "src/ui/library/tooltip";
 import { useSiteType } from "./use-site-type";
 import usePostText from "./use-post-text";
 import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
+import type { ActionType } from "src/background-app/ai/ai-facade";
 
 interface AIReplyPanelProps {
   editMode?: boolean;
   text: string | null;
 }
-
-type ActionType = "simplify" | "smarter" | "randomize" | "bro";
 
 export default function AIReplyPanel({ text }: AIReplyPanelProps) {
   const [copied, setCopied] = useState(false);
@@ -133,6 +133,7 @@ export default function AIReplyPanel({ text }: AIReplyPanelProps) {
       </div>
 
       <div className="flex items-center gap-2">
+        <ActionButton action="cleanup" icon={Brush} label="Clean Up" />
         <ActionButton action="simplify" icon={Wand2} label="Simplify" />
         <ActionButton action="smarter" icon={Sparkles} label="Make Smarter" />
         <ActionButton action="randomize" icon={Shuffle} label="Randomize" />

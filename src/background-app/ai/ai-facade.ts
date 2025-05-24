@@ -4,7 +4,8 @@ import {
   type LinkedInProfile,
   type XProfile,
 } from "../domain";
-import { buildPersonalitySnippet, editReply } from "./context";
+import { editReply } from "./context";
+import { buildPersonalitySnippet } from "./build-personality-snippet";
 import { generateReply } from "./generate-reply";
 import { buildPersonaPayload } from "./system-prompt-gen";
 import { defaultModel, ModelType } from "./model-type";
@@ -15,6 +16,13 @@ import {
 } from "./format-instructions";
 import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
 
+export type ActionType =
+  | "simplify"
+  | "smarter"
+  | "randomize"
+  | "bro"
+  | "cleanup";
+
 export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}
 
@@ -23,7 +31,7 @@ export class AIFacade {
     profileId: string,
     postText: string,
     currentReply: string,
-    mode: "simplify" | "smarter" | "randomize" | "bro"
+    mode: ActionType
   ) {
     const model = await this.getModel(profileId);
 
@@ -38,14 +46,14 @@ export class AIFacade {
     if (!openAiKey) {
       throw new Error("Missing required config");
     }
-    const [reply, request, response] = await editReply(
-      openAiKey,
-      model,
-      personalityType,
-      postText,
-      currentReply,
-      mode
-    );
+    const [reply, request, response] = await editReply({
+      key: openAiKey,
+      model: model,
+      personalityType: personalityType,
+      postText: postText,
+      currentReply: currentReply,
+      mode: mode,
+    });
     await this.dataLayer.requestLog.save({
       profileId,
       request,

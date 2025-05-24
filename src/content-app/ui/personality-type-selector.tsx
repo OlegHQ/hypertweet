@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
-import { Tooltip } from "src/ui/library/tooltip";
 import {
   Select,
   SelectContent,
@@ -62,50 +61,37 @@ export default function PersonalityTypeSelector() {
     }
   };
 
-  const selectedPersonality = PERSONALITY_TYPES.find(
-    (type) => type.value === selectedType
-  );
-
   return (
     <div className="w-[180px]">
-      <Tooltip
-        content={
-          <div className="max-w-[300px]">
-            <div className="font-medium mb-1">Personality Type:</div>
-            <div>{selectedPersonality?.label}</div>
-          </div>
-        }
-      >
-        <div>
-          <Select
-            value={selectedType}
-            onValueChange={handleTypeChange}
-            disabled={isLoading}
+      <div>
+        <Select
+          value={selectedType}
+          onValueChange={handleTypeChange}
+          disabled={isLoading}
+        >
+          <SelectTrigger
+            onMouseEnter={() => {
+              document.body.style.overflow = "hidden";
+            }}
+            onMouseLeave={() => {
+              document.body.style.overflow = "auto";
+            }}
+            className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
           >
-            <SelectTrigger
-              onMouseEnter={() => {
-                document.body.style.overflow = "hidden";
-              }}
-              onMouseLeave={() => {
-                document.body.style.overflow = "auto";
-              }}
-              className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
-            >
-              <div className="flex items-center gap-2">
-                <User className="h-3 w-3 text-[#1d9bf0]" />
-                <SelectValue placeholder="Select type" />
-              </div>
-            </SelectTrigger>
-            <SelectContent>
-              {PERSONALITY_TYPES.map((type) => (
-                <SelectItem key={type.value} value={type.value}>
-                  {type.label.replace("The ", "").split(" – ")[0]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-      </Tooltip>
+            <div className="flex items-center gap-2">
+              <User className="h-3 w-3 text-[#1d9bf0]" />
+              <SelectValue placeholder="Select type" />
+            </div>
+          </SelectTrigger>
+          <SelectContent>
+            {PERSONALITY_TYPES.map((type) => (
+              <SelectItem key={type.value} value={type.value}>
+                {type.label.replace("The ", "").split(" – ")[0]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
     </div>
   );
 }

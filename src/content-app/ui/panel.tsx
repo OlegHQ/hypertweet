@@ -50,7 +50,7 @@ export default function Panel({
   }, [type]);
 
   return (
-    <div className={cn("w-full flex flex-col h-full", className)}>
+    <div className={cn("w-full flex flex-col h-full", type ==="twitter" ? "pl-[40px]" : null, className)}>
       <div className="flex items-center justify-start gap-2 px-4 py-2">
         <ModeSwitcher
           mode={mode}
