@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "src/ui/library/utils";
 
-export interface ButtonProps {
+export interface LinkButtonProps {
   children: React.ReactNode;
   disabled?: boolean;
   onClick?: () => void;
@@ -10,14 +10,14 @@ export interface ButtonProps {
   loadingText?: string;
 }
 
-export function Button({
+export function LinkButton({
   children,
   disabled = false,
   onClick,
   className = "",
   loading = false,
   loadingText = "Loading...",
-}: ButtonProps) {
+}: LinkButtonProps) {
   return (
     <button
       disabled={disabled}
@@ -28,8 +28,8 @@ export function Button({
         "disabled:opacity-50 disabled:cursor-not-allowed",
         className
       )}
-        >
-          {loading ? loadingText : children}
+    >
+      {loading ? loadingText : children}
     </button>
   );
 }

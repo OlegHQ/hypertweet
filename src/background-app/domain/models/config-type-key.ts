@@ -10,4 +10,5 @@ export enum ConfigTypeKey {
   PERSONALITY_TYPE = "personalityType",
   FAV_VISITED_PROFILES = "favVisitedProfiles",
   POSTS_STUDIO_SELECTION = "postsStudioSelection",
+  REPLY_TYPE_BUTTON_THEME = "replyTypeButtonTheme",
 }

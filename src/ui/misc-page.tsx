@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Layout } from "./layout";
 import ApiConfig from "./api-config";
 import { PageHeader } from "./page-header";
@@ -6,7 +6,7 @@ import { useGlobalState } from "./state";
 import { app } from "./app";
 import { Card, CardContent } from "./library/card";
 import { motion } from "framer-motion";
-import { Database, ArrowRight, History } from "lucide-react";
+import { Database, ArrowRight, History, Palette } from "lucide-react";
 import { ConfigTypeKey } from "../background-app/domain";
 import { ModelType } from "../background-app/ai/model-type";
 import {
@@ -17,14 +17,100 @@ import {
   SelectValue,
 } from "./library/select";
 
-function ModelSelector() {
+type ReplyTypeButtonTheme = "links" | "bubbles";
+
+function ThemeSelector() {
   const { selectedProfile } = useGlobalState();
-  const [selectedModel, setSelectedModel] = React.useState<ModelType>(
-    ModelType.GPT_3_5_TURBO
-  );
+  const [selectedTheme, setSelectedTheme] =
+    React.useState<ReplyTypeButtonTheme>("links");
   const [isLoading, setIsLoading] = React.useState(false);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (selectedProfile) {
+      loadTheme();
+    }
+  }, [selectedProfile]);
+
+  const loadTheme = async () => {
+    if (!selectedProfile) return;
+    try {
+      const theme = await app.dataLayer.config.get<string>(
+        selectedProfile.id,
+        ConfigTypeKey.REPLY_TYPE_BUTTON_THEME
+      );
+      if (theme) {
+        setSelectedTheme(theme as ReplyTypeButtonTheme);
+      }
+    } catch (error) {
+      console.error("Error loading theme:", error);
+    }
+  };
+
+  const handleThemeChange = async (value: string) => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.REPLY_TYPE_BUTTON_THEME,
+        value
+      );
+      setSelectedTheme(value as ReplyTypeButtonTheme);
+    } catch (error) {
+      console.error("Error saving theme:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!selectedProfile) {
+    return null;
+  }
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+      <Card className="cursor-pointer hover:shadow-md transition-shadow">
+        <CardContent className="flex items-start gap-4 p-6">
+          <div className="p-2 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
+            <Palette className="h-6 w-6 text-primary-600 dark:text-primary-400" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Reply Type Button Theme
+              </h2>
+            </div>
+            <p className="mt-2 text-gray-600 dark:text-gray-300 mb-4">
+              Choose the visual style for reply type buttons.
+            </p>
+            <Select
+              value={selectedTheme}
+              onValueChange={handleThemeChange}
+              disabled={isLoading}
+            >
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Select a theme" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="links">Links</SelectItem>
+                <SelectItem value="bubbles">Bubbles</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
+}
+
+function ModelSelector() {
+  const { selectedProfile } = useGlobalState();
+  const [selectedModel, setSelectedModel] = useState<ModelType>(
+    ModelType.GPT_3_5_TURBO
+  );
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
     if (selectedProfile) {
       loadModel();
     }
@@ -122,6 +208,7 @@ export default function MiscPage() {
       >
         <ApiConfig />
         <ModelSelector />
+        <ThemeSelector />
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -143,7 +230,8 @@ export default function MiscPage() {
                   <ArrowRight className="h-5 w-5 text-gray-400" />
                 </div>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">
-                  View and manage your AI request history, including prompts and responses.
+                  View and manage your AI request history, including prompts and
+                  responses.
                 </p>
               </div>
             </CardContent>

@@ -1,12 +1,17 @@
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import type { ReplyType } from "../../background-app/domain";
 import { extractPostDetails, typeLinkedIn } from "../linkedin/type-actions";
 import { typeTweet } from "../twitter/type-tweet";
 import { app } from "../../ui/app";
 import { useSiteType } from "./use-site-type";
 import { useSiteTypeStore } from "./site-type-store";
-import { Button } from "./button";
+import { LinkButton } from "./link-button";
+import { BubbleButton } from "./bubble-button";
 import usePostText from "./use-post-text";
+import { bgApp } from "../bg-app";
+import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
+import { cn } from "src/ui/library/utils";
+
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
   disabled: boolean;
@@ -17,6 +22,8 @@ interface ButtonState {
   loading: boolean;
 }
 
+type ReplyTypeButtonTheme = "links" | "bubbles";
+
 const useReplyTypeButton = (
   replyType: ReplyType,
   disabled: boolean,
@@ -26,7 +33,24 @@ const useReplyTypeButton = (
   const [state, setState] = useState<ButtonState>({
     loading: false,
   });
+  const [theme, setTheme] = useState<ReplyTypeButtonTheme>("links");
   const parent = useSiteTypeStore((state) => state.parent);
+
+  useEffect(() => {
+    async function loadTheme() {
+      const profileId = await bgApp.system.getCurrentProfileId();
+      if (!profileId) return;
+
+      const savedTheme = await bgApp.dataLayer.config.get<string>(
+        profileId,
+        ConfigTypeKey.REPLY_TYPE_BUTTON_THEME
+      );
+      if (savedTheme) {
+        setTheme(savedTheme as ReplyTypeButtonTheme);
+      }
+    }
+    loadTheme();
+  }, []);
 
   const onSuperLoading = useCallback(
     (loading: boolean) => {
@@ -143,6 +167,7 @@ const useReplyTypeButton = (
   return {
     state,
     handleReplyTypeClick,
+    theme,
   };
 };
 
@@ -151,15 +176,17 @@ export default function ReplyTypeButton({
   onLoading,
   disabled,
 }: ReplyTypeButtonProps) {
-  const { state, handleReplyTypeClick } = useReplyTypeButton(
+  const { state, handleReplyTypeClick, theme } = useReplyTypeButton(
     replyType,
     disabled,
     onLoading
   );
 
+  const ButtonComponent = theme === "bubbles" ? BubbleButton : LinkButton;
+
   return (
-    <Button
-      className="pr-3"
+    <ButtonComponent
+      className={cn("pr-3")}
       disabled={disabled}
       onClick={handleReplyTypeClick}
       loading={state.loading}
@@ -167,6 +194,6 @@ export default function ReplyTypeButton({
     >
       {replyType.icon ? <span className="mr-1">{replyType.icon}</span> : null}
       {replyType.name}
-    </Button>
+    </ButtonComponent>
   );
 }
