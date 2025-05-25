@@ -8,6 +8,9 @@ import ModeSwitcher from "./model-switcher";
 import PersonalityTypeSelector from "./personality-type-selector";
 import SettingsModal from "./settings-modal";
 import AIReplyPanel from "./ai-reply-panel";
+import { ConfigTypeKey } from "src/background-app/domain";
+import { bgApp } from "../bg-app";
+import { useLastUsedProfileId } from "./use-last-used-profile-id";
 
 export default function Panel({
   siteType: type,
@@ -20,9 +23,34 @@ export default function Panel({
 }) {
   const setSiteType = useSiteTypeStore((state) => state.setSiteType);
   const setParent = useSiteTypeStore((state) => state.setParent);
+  const setMode = useSiteTypeStore((state) => state.setMode);
   const mode = useSiteTypeStore((state) => state.mode);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentText, setCurrentText] = useState<string | null>(null);
+  const lastUsedProfileId = useLastUsedProfileId();
+
+  useEffect(() => {
+    if (mode === null && lastUsedProfileId) {
+      bgApp.dataLayer.config
+        .get<string>(lastUsedProfileId, ConfigTypeKey.LAST_USED_MODE)
+        .then((lastUsedMode) => {
+          if (lastUsedMode) {
+            setMode(lastUsedMode as "simple" | "complex" | "edit");
+          } else {
+            setMode("simple");
+          }
+        });
+
+      return;
+    }
+    if (mode !== "edit" && lastUsedProfileId) {
+      bgApp.dataLayer.config.set(
+        lastUsedProfileId,
+        ConfigTypeKey.LAST_USED_MODE,
+        mode
+      );
+    }
+  }, [mode, lastUsedProfileId]);
 
   useEffect(() => {
     setSiteType(type);
@@ -67,9 +95,9 @@ export default function Panel({
         <ComplexModePanel />
       ) : mode === "edit" ? (
         <AIReplyPanel editMode={mode === "edit"} text={currentText} />
-      ) : (
+      ) : mode === "simple" ? (
         <ReplyTypesPanel mode={mode} />
-      )}
+      ) : null}
       <SettingsModal
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

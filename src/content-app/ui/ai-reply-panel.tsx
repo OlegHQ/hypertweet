@@ -10,6 +10,8 @@ import {
   User,
   AlertCircle,
   Minus,
+  X,
+  Eraser,
 } from "lucide-react";
 import { Tooltip } from "src/ui/library/tooltip";
 import { useSiteType } from "./use-site-type";
@@ -18,6 +20,7 @@ import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
 import type { ActionType } from "src/background-app/ai/ai-facade";
 import { useSiteTypeStore } from "./site-type-store";
+import { ActionButton } from "./action-button";
 
 interface AIReplyPanelProps {
   editMode?: boolean;
@@ -41,7 +44,11 @@ export default function AIReplyPanel({ text }: AIReplyPanelProps) {
 
   const loadPostContent = usePostText();
 
-  const handleAIAction = async (action: ActionType) => {
+  const handleAIAction = async (action: ActionType | "clear") => {
+    if (action === "clear") {
+      setEditedText(null);
+      return;
+    }
     try {
       setLoadingAction(action);
       const content = await loadPostContent();
@@ -73,33 +80,6 @@ export default function AIReplyPanel({ text }: AIReplyPanelProps) {
       setLoadingAction(null);
     }
   };
-
-  const ActionButton = ({
-    action,
-    icon: Icon,
-    label,
-  }: {
-    action: ActionType;
-    icon: typeof Wand2;
-    label: string;
-  }) => (
-    <Tooltip delayDuration={0} content={label}>
-      <button
-        onClick={() => handleAIAction(action)}
-        disabled={!!loadingAction}
-        className={cn(
-          "text-[#1d9bf0] hover:opacity-80 p-2 rounded-full hover:bg-blue-50",
-          loadingAction && "opacity-50 cursor-not-allowed"
-        )}
-      >
-        {loadingAction === action ? (
-          <Loader2 size={20} className="animate-spin" />
-        ) : (
-          <Icon size={20} />
-        )}
-      </button>
-    </Tooltip>
-  );
 
   return (
     <div className="flex flex-col gap-4 p-4">
@@ -136,14 +116,65 @@ export default function AIReplyPanel({ text }: AIReplyPanelProps) {
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <ActionButton action="cleanup" icon={Brush} label="Clean Up" />
-        <ActionButton action="simplify" icon={Wand2} label="Simplify" />
-        <ActionButton action="story" icon={BookOpen} label="Story Mode" />
-        <ActionButton action="depth" icon={Brain} label="Depth Mode" />
-        <ActionButton action="humanize" icon={User} label="Humanize" />
-        <ActionButton action="challenge" icon={AlertCircle} label="Challenge" />
-        <ActionButton action="shorten" icon={Minus} label="Shorten" />
+      <div className="flex justify-between">
+        <div className="flex items-center gap-2">
+          <ActionButton
+            action="cleanup"
+            icon={Brush}
+            label="Clean Up"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="simplify"
+            icon={Wand2}
+            label="Simplify"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="story"
+            icon={BookOpen}
+            label="Story Mode"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="depth"
+            icon={Brain}
+            label="Depth Mode"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="humanize"
+            icon={User}
+            label="Humanize"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="challenge"
+            icon={AlertCircle}
+            label="Challenge"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+          <ActionButton
+            action="shorten"
+            icon={Minus}
+            label="Shorten"
+            loadingAction={loadingAction}
+            onClick={handleAIAction}
+          />
+        </div>
+        <ActionButton
+          action="clear"
+          icon={Eraser}
+          label="Clear"
+          loadingAction={loadingAction}
+          onClick={handleAIAction}
+        />
       </div>
     </div>
   );

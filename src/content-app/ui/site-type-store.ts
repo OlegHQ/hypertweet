@@ -5,8 +5,8 @@ export type SiteType = "twitter" | "linkedin" | "debugging";
 interface SiteTypeState {
   siteType: SiteType;
   setSiteType: (type: SiteType) => void;
-  mode: "simple" | "complex" | "edit";
-  setMode: (mode: "simple" | "complex" | "edit") => void;
+  mode: "simple" | "complex" | "edit" | null;
+  setMode: (mode: "simple" | "complex" | "edit" | null) => void;
   parent: HTMLElement | null;
   setParent: (parent: HTMLElement | null) => void;
   editedText: string | null;
@@ -16,7 +16,7 @@ interface SiteTypeState {
 export const useSiteTypeStore = create<SiteTypeState>((set) => ({
   siteType: "twitter", // Default content type
   setSiteType: (type) => set({ siteType: type }),
-  mode: "simple",
+  mode: null,
   setMode: (mode) => set({ mode }),
   parent: null,
   setParent: (parent: HTMLElement | null) => set({ parent }),
