@@ -1,8 +1,11 @@
 import { browserApi } from "src/utils/browser-api";
 import type { ThreadTask } from "./thread-tasks";
-import type { DataLayer } from "../domain";
+import { ConfigTypeKey, type DataLayer } from "../domain";
 import type { AIFacade } from "./ai-facade";
 import type { ScrapingService } from "../infra/scraping-service";
+import type { PersonalityType } from "./personality-type";
+import { tokenManager } from "./token-manager";
+import type { ChatCompletionCreateParamsNonStreaming } from "openai/resources/chat";
 
 type TweetType = "authority" | "growth" | "personality";
 
@@ -12,21 +15,103 @@ export class AiContentPrompt {
     private readonly ai: AIFacade,
     private readonly scraping: ScrapingService
   ) {}
+
+  async generateComplex(profileId: string, inTask: ThreadTask) {
+    const model = await this.ai.getModel(profileId);
+
+    const openAiKey = await this.dataLayer.config.getCredential(
+      profileId,
+      ConfigTypeKey.OPENAI_API_KEY
+    );
+    if (!openAiKey) {
+      throw new Error("Missing required config");
+    }
+
+    const res = await this.getTaskThreadJSON(profileId, inTask);
+
+    if (!res) {
+      throw new Error("Missing required config");
+    }
+
+    const { twitterThread, task, currentResponse, ...rest } = res;
+
+    const rawRequest: ChatCompletionCreateParamsNonStreaming = {
+      model,
+      messages: [
+        {
+          role: "system",
+          content: JSON.stringify(rest),
+        },
+        {
+          role: "user",
+          content: JSON.stringify({
+            twitterThread,
+            task,
+            numberOfVariants: 5,
+          }),
+        },
+      ],
+      max_tokens: 450,
+      temperature: 0.5,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "reply_variants_response",
+          strict: true,
+          schema: {
+            type: "object",
+            additionalProperties: false,
+            required: ["replyVariants"],
+            properties: {
+              replyVariants: {
+                type: "array",
+                items: { type: "string" },
+              },
+            },
+          },
+        },
+      },
+    };
+
+    const chatResult = await tokenManager
+      .getClient(openAiKey)
+      .chat.completions.create(rawRequest);
+
+    const reply = chatResult.choices[0]?.message?.content;
+
+    await this.dataLayer.requestLog.save({
+      profileId,
+      request: rawRequest,
+      response: chatResult,
+      id: crypto.randomUUID(),
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      type: "complex",
+    });
+    if (reply) {
+      return JSON.parse(reply) as { replyVariants: string[] };
+    }
+
+    return { replyVariants: [] };
+  }
+
   async getTaskThreadJSON(profileId: string, task: ThreadTask) {
     const result = await this.ai.getBaseJSONPrompt(profileId);
     const twitterThread = await this.scraping.getTwitterThreadOnActivePage();
     if (!twitterThread) {
       return null;
     }
-    result.twitterThread = twitterThread;
-    result.task = task;
 
-    if (twitterThread.currentResponse) {
-      result.currentResponse = twitterThread.currentResponse;
-    }
-    delete twitterThread.currentResponse;
+    const result2 = {
+      ...result,
+      twitterThread: twitterThread,
+      task: task,
+      currentResponse: twitterThread.currentResponse
+        ? twitterThread.currentResponse
+        : undefined,
+    };
 
-    return result;
+    return result2;
   }
 
   async getPromptGenerateJSON(
@@ -46,13 +131,18 @@ export class AiContentPrompt {
       )
     ).flat();
 
-    const result = await this.ai.getBaseJSONPrompt(profileId);
+    const result = (await this.ai.getBaseJSONPrompt(profileId)) as Record<
+      string,
+      any
+    >;
     result.tweetsForReference = tweets;
 
     const tweetTypeInstructions = {
-      authority: "focus on demonstrating expertise and establishing credibility",
+      authority:
+        "focus on demonstrating expertise and establishing credibility",
       growth: "focus on providing value through self-improvement content",
-      personality: "focus on showing authentic personality and connecting with people",
+      personality:
+        "focus on showing authentic personality and connecting with people",
     };
 
     if (tweetTopic?.trim()) {

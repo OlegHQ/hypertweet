@@ -19,10 +19,10 @@ interface ActionButtonsGridProps {
 export function ActionButtonsGrid({ onCopyThread }: ActionButtonsGridProps) {
   const tasks = [
     {
-      task: ThreadTask.FIVE_VARIANTS,
+      task: ThreadTask.BASIC,
       icon: MessageSquare,
-      label: "5 Variants",
-      tooltip: "Generate 5 response variants based on author's persona",
+      label: "Basic",
+      tooltip: "Generate a basic response based on author's persona",
     },
     {
       task: ThreadTask.CLEANUP,

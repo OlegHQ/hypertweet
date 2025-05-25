@@ -186,31 +186,32 @@ export class AIFacade {
       profileId,
       ConfigTypeKey.PERSONALITY_TYPE
     );
-    const result: Record<string, any> = {};
-    const author: Record<string, any> = {};
-    author.name = twitterProfile?.name ?? profile?.name ?? "user";
+    const name = twitterProfile?.name ?? profile?.name ?? "user";
+    let personalityTypeLabel = "";
     if (personalityType) {
-      author.personalityType = PERSONALITY_TYPES.find(
-        (type) => type.value === personalityType
-      )?.label.replace("The ", "");
-    }
-    if (twitterProfile) {
-      author.username = twitterProfile.username;
-      author.website = twitterProfile.website;
+      personalityTypeLabel =
+        PERSONALITY_TYPES.find(
+          (type) => type.value === personalityType
+        )?.label.replace("The ", "") ?? "";
     }
 
-    if (prompt) {
-      author.persona = prompt;
-    }
-
-    result.author = author;
-    result.responseSize = "tweet";
-    result.responseFormat =
-      await this.buildFormatInstructionsPrompt(formatInstructions);
-    return result;
+    return {
+      responseSize: "tweet",
+      responseFormat:
+        await this.buildFormatInstructionsPrompt(formatInstructions),
+      author: {
+        name,
+        personalityType: personalityTypeLabel
+          ? personalityTypeLabel
+          : undefined,
+        username: twitterProfile ? twitterProfile.username : undefined,
+        website: twitterProfile ? twitterProfile.website : undefined,
+        persona: prompt ? prompt : undefined,
+      },
+    };
   }
 
-  private async getModel(profileId: string) {
+  async getModel(profileId: string) {
     return ((await this.dataLayer.config.get<string>(
       profileId,
       ConfigTypeKey.COMPLETION_MODEL

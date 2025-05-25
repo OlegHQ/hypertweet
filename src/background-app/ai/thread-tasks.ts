@@ -1,5 +1,5 @@
 export enum ThreadTask {
-  FIVE_VARIANTS = "you have to reply to the .twitterThread accounting to the author's persona, give 5 options",
+  BASIC = "you have to reply to the .twitterThread accounting to the author's persona",
   CLEANUP = "clean up the .currentResponse, make sure it's readable and well-structured",
   IMPACTFUL = "generate an impactful response to the thread based on personality",
   STORY = "Share a short, relevant story based on the .twitterThread",
