@@ -18,10 +18,12 @@ import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
 
 export type ActionType =
   | "simplify"
-  | "smarter"
-  | "randomize"
-  | "bro"
-  | "cleanup";
+  | "cleanup"
+  | "story"
+  | "depth"
+  | "humanize"
+  | "challenge"
+  | "shorten";
 
 export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}

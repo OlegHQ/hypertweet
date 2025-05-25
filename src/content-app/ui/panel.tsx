@@ -21,7 +21,6 @@ export default function Panel({
   const setSiteType = useSiteTypeStore((state) => state.setSiteType);
   const setParent = useSiteTypeStore((state) => state.setParent);
   const mode = useSiteTypeStore((state) => state.mode);
-  const setMode = useSiteTypeStore((state) => state.setMode);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [currentText, setCurrentText] = useState<string | null>(null);
 
@@ -58,8 +57,6 @@ export default function Panel({
     >
       <div className="flex items-center justify-start gap-2 px-4 py-2">
         <ModeSwitcher
-          mode={mode}
-          setMode={setMode}
           onSettingsClick={() => setIsSettingsOpen(true)}
           hasText={!!currentText}
         />

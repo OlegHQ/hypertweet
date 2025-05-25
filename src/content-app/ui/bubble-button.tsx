@@ -23,7 +23,7 @@ export function BubbleButton({
       disabled={disabled}
       onClick={onClick}
       className={cn(
-        "rounded-full px-2 py-1",
+        "rounded-full px-2 py-1 text-sm",
         "border border-gray-200 dark:border-gray-700",
         "bg-transparent hover:bg-[#1d9bf0]/10",
         "text-[#1d9bf0] dark:text-[#1d9bf0]",

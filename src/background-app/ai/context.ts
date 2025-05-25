@@ -12,6 +12,15 @@ import type { PersonalityType } from "./personality-type";
 import type { ActionType } from "./ai-facade";
 import { postProcess } from "./post-process";
 
+const BAN_WORDS = [
+  "foster",
+  "leverage",
+  "crucial",
+  "delve",
+  "thrive",
+  "empower",
+  "nurturing",
+];
 /* -------------------------------------------------------------------------- */
 /*  ✅ Tweak-friendly prompt dictionaries                                      */
 /* -------------------------------------------------------------------------- */
@@ -33,11 +42,19 @@ export const PERSONALITY_PROMPTS: Record<
 };
 
 export const MODE_PROMPTS: Record<ActionType, string> = {
-  simplify: "Simplify while keeping the core message.",
-  smarter: "Enrich with deeper insight and refined language.",
-  randomize: "Add creative twists and unexpected elements.",
-  bro: "Convert to friendly 'bro' speak (light touch).",
   cleanup: "Polish grammar and remove clutter.",
+  simplify:
+    "use simple english, keep the core message, don't use complicated words, shorter tweet.",
+  story:
+    "Use the current reply as a narrative of a personal story or experience to tell for more thoughtful reply.",
+  depth:
+    "Add more depth to the reply, use more words, more details, more thought-provoking, more engaging.",
+  humanize:
+    "Make the reply more human, more natural, more engaging, more personal.",
+  challenge:
+    "Challenge the user to re-evaluate their current reply, give them a new perspective.",
+  shorten:
+    "Shorten the reply, keep the core message, don't use complicated words, shorter tweet.",
 };
 
 /* -------------------------------------------------------------------------- */
@@ -66,7 +83,6 @@ export function buildSystemPrompt({
 
   const personaLine = persona[personalityType ?? "unspecified"];
   const modeLine = modes[mode];
-
   return `${personaLine} ${modeLine} Limit to ${limit} characters. Return only the transformed reply.`;
 }
 
@@ -112,6 +128,10 @@ export async function editReply({
   const messages: ChatCompletionMessageParam[] = [
     { role: "system", content: systemPrompt },
     {
+      role: "system",
+      content: `BAN WORDS: ${BAN_WORDS.join(", ")}`,
+    },
+    {
       role: "user",
       content: `Original post:\n${postText}\n\nCurrent reply:\n${currentReply}`,
     },
@@ -121,7 +141,7 @@ export async function editReply({
     model,
     messages,
     max_tokens: maxTokens,
-    temperature: mode === "randomize" ? 0.8 : 0.5,
+    temperature: 0.5,
     response_format: { type: "text" },
   };
 

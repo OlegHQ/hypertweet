@@ -3,11 +3,13 @@ import { cn } from "src/ui/library/utils";
 import {
   Copy,
   Wand2,
-  Sparkles,
-  Shuffle,
-  MessageSquare,
   Loader2,
   Brush,
+  BookOpen,
+  Brain,
+  User,
+  AlertCircle,
+  Minus,
 } from "lucide-react";
 import { Tooltip } from "src/ui/library/tooltip";
 import { useSiteType } from "./use-site-type";
@@ -137,9 +139,11 @@ export default function AIReplyPanel({ text }: AIReplyPanelProps) {
       <div className="flex items-center gap-2">
         <ActionButton action="cleanup" icon={Brush} label="Clean Up" />
         <ActionButton action="simplify" icon={Wand2} label="Simplify" />
-        <ActionButton action="smarter" icon={Sparkles} label="Make Smarter" />
-        <ActionButton action="randomize" icon={Shuffle} label="Randomize" />
-        <ActionButton action="bro" icon={MessageSquare} label="Bro Talk" />
+        <ActionButton action="story" icon={BookOpen} label="Story Mode" />
+        <ActionButton action="depth" icon={Brain} label="Depth Mode" />
+        <ActionButton action="humanize" icon={User} label="Humanize" />
+        <ActionButton action="challenge" icon={AlertCircle} label="Challenge" />
+        <ActionButton action="shorten" icon={Minus} label="Shorten" />
       </div>
     </div>
   );
