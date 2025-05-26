@@ -12,4 +12,5 @@ export enum ConfigTypeKey {
   POSTS_STUDIO_SELECTION = "postsStudioSelection",
   REPLY_TYPE_BUTTON_THEME = "replyTypeButtonTheme",
   LAST_USED_MODE = "lastUsedMode",
+  COMPLEX_MODE_VARIANT_COUNT = "complexModeVariantCount",
 }

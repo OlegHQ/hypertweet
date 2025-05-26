@@ -11,6 +11,7 @@ import usePostText from "./use-post-text";
 import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
 import { cn } from "src/ui/library/utils";
+import useApplyText from "./use-apply-text";
 
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
@@ -61,17 +62,14 @@ const useReplyTypeButton = (
   );
 
   const loadPostContent = usePostText();
-  const setEditedText = useSiteTypeStore((state) => state.setEditedText);
-  const setMode = useSiteTypeStore((state) => state.setMode);
+  const applyText = useApplyText();
 
-  const handleTwitterReply = async (
+  const handleReply = async (
     replyType: ReplyType,
     onSuperLoading: (loading: boolean) => void
   ) => {
-    const text = document
-      .querySelector('[data-testid="tweetText"]')
-      ?.textContent?.trim();
-
+    const x = await loadPostContent();
+    const text = x?.postText;
     if (!text) {
       console.warn("hypertweet: no tweet text");
       onSuperLoading(false);
@@ -80,83 +78,20 @@ const useReplyTypeButton = (
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const reply = await app.ai.generateReply(
-      "twitter",
+      siteType as "twitter" | "linkedin",
       replyType.profileId,
-      text,
+      text ?? "",
       replyType.prompt
     );
 
-    const res = await loadPostContent();
-    const currentReply = res?.currentReply;
-    if (currentReply && currentReply !== "") {
-      setMode("edit");
-      setEditedText(reply);
-    } else {
-      typeTweet(reply);
-    }
-  };
-
-  const handleLinkedInReply = async (
-    replyType: ReplyType,
-    parent: HTMLElement | null,
-    onSuperLoading: (loading: boolean) => void
-  ) => {
-    const postDetails = extractPostDetails(
-      parent?.closest(`[role="article"]`) as HTMLElement
-    );
-
-    const { text, authorName, authorPosition } = postDetails;
-    const fullText = `${text}\n\n${authorName} - ${authorPosition}`;
-
-    if (!fullText) {
-      console.warn("hypertweet: no LinkedIn post text");
-      onSuperLoading(false);
-      return;
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const reply = await app.ai.generateReply(
-      "linkedin",
-      replyType.profileId,
-      fullText,
-      replyType.prompt
-    );
-
-    const editor = parent
-      ?.closest(`[role="article"]`)
-      ?.querySelector(
-        'div[data-test-ql-editor-contenteditable="true"]'
-      ) as HTMLElement;
-    typeLinkedIn(editor, reply);
-  };
-
-  const handleDebuggingReply = async (
-    replyType: ReplyType,
-    onSuperLoading: (loading: boolean) => void
-  ) => {
-    // For debugging mode, we'll use a mock text
-    const mockText = "This is a mock tweet for debugging purposes.";
-
-    alert(mockText);
+    applyText(reply);
   };
 
   const handleReplyTypeClick = async () => {
     onSuperLoading(true);
 
     try {
-      switch (siteType) {
-        case "twitter":
-          await handleTwitterReply(replyType, onSuperLoading);
-          break;
-        case "linkedin":
-          await handleLinkedInReply(replyType, parent, onSuperLoading);
-          break;
-        case "debugging":
-          await handleDebuggingReply(replyType, onSuperLoading);
-          break;
-        default:
-          console.warn("hypertweet: unknown site type");
-      }
+      await handleReply(replyType, onSuperLoading);
     } catch (error) {
       console.error("hypertweet: error generating reply:", error);
     } finally {

@@ -16,7 +16,11 @@ export class AiContentPrompt {
     private readonly scraping: ScrapingService
   ) {}
 
-  async generateComplex(profileId: string, inTask: ThreadTask) {
+  async generateComplex(
+    profileId: string,
+    inTask: ThreadTask,
+    numberOfVariants: number = 5
+  ) {
     const model = await this.ai.getModel(profileId);
 
     const openAiKey = await this.dataLayer.config.getCredential(
@@ -47,7 +51,7 @@ export class AiContentPrompt {
           content: JSON.stringify({
             twitterThread,
             task,
-            numberOfVariants: 5,
+            numberOfVariants,
           }),
         },
       ],
