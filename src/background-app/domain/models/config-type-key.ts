@@ -1,6 +1,8 @@
 export enum ConfigTypeKey {
   COMPLETION_MODEL = "completionModel",
   SYSTEM_PROMPT = "systemPrompt",
+  SYSTEM_INSTRUCTIONS = "systemInstructions",
+  TWITTER_REPLY_EXAMPLES = "twitterReplyExamples",
   OPENAI_API_KEY = "openAiKey",
   TWITTER_PROFILE = "twitterProfile",
   LINKEDIN_PROFILE = "linkedInProfile",

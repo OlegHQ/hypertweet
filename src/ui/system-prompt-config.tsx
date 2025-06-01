@@ -4,9 +4,38 @@ import { app } from "./app";
 import { Card, CardContent, CardHeader } from "./library/card";
 import { Button } from "./library/button";
 import { Textarea } from "./library/textarea";
-import { motion, AnimatePresence } from "framer-motion";
-import { Edit2, Trash2, Save, Sparkles, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence, Reorder } from "framer-motion";
+import {
+  Edit2,
+  Trash2,
+  Save,
+  Sparkles,
+  AlertTriangle,
+  Plus,
+  GripVertical,
+  MessageSquare,
+  List,
+  Reply,
+} from "lucide-react";
 import { ConfigTypeKey } from "src/background-app/domain";
+import { Input } from "./library/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./library/select";
+
+type SocialMediaType = "twitter" | "linkedin" | "reddit";
+type PostType = "regular" | "thread" | "reply";
+
+interface ReplyExample {
+  id: string;
+  socialMediaType: SocialMediaType;
+  postType: PostType;
+  content: string | string[] | { original: string; reply: string };
+}
 
 export default function SystemPromptConfig() {
   const {
@@ -18,9 +47,25 @@ export default function SystemPromptConfig() {
     setAreKeysFetched,
   } = useGlobalState();
   const [systemPrompt, setSystemPrompt] = React.useState("");
+  const [instructions, setInstructions] = React.useState<string[]>([]);
+  const [newInstruction, setNewInstruction] = React.useState("");
+  const [replyExamples, setReplyExamples] = React.useState<ReplyExample[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
+  const [isEditingInstructions, setIsEditingInstructions] =
+    React.useState(false);
+  const [isEditingExamples, setIsEditingExamples] = React.useState(false);
+
+  // New state for example editor
+  const [newExample, setNewExample] = React.useState<Partial<ReplyExample>>({
+    socialMediaType: "twitter",
+    postType: "regular",
+    content: "",
+  });
+  const [threadPosts, setThreadPosts] = React.useState<string[]>([""]);
+  const [originalMessage, setOriginalMessage] = React.useState("");
+  const [replyMessage, setReplyMessage] = React.useState("");
 
   useEffect(() => {
     if (selectedProfile && !areKeysFetched) {
@@ -55,20 +100,31 @@ export default function SystemPromptConfig() {
 
   useEffect(() => {
     if (selectedProfile) {
-      const loadSystemPrompt = async () => {
+      const loadConfigs = async () => {
         try {
-          const prompt = await app.dataLayer.config.get<string>(
-            selectedProfile.id,
-            ConfigTypeKey.SYSTEM_PROMPT
-          );
-          if (prompt) {
-            setSystemPrompt(prompt);
-          }
+          const [prompt, instructions, examples] = await Promise.all([
+            app.dataLayer.config.get<string>(
+              selectedProfile.id,
+              ConfigTypeKey.SYSTEM_PROMPT
+            ),
+            app.dataLayer.config.get<string[]>(
+              selectedProfile.id,
+              ConfigTypeKey.SYSTEM_INSTRUCTIONS
+            ),
+            app.dataLayer.config.get<ReplyExample[]>(
+              selectedProfile.id,
+              ConfigTypeKey.TWITTER_REPLY_EXAMPLES
+            ),
+          ]);
+
+          if (prompt) setSystemPrompt(prompt);
+          if (instructions) setInstructions(instructions);
+          if (examples) setReplyExamples(examples);
         } catch (error) {
-          console.error("Error loading system prompt:", error);
+          console.error("Error loading configs:", error);
         }
       };
-      loadSystemPrompt();
+      loadConfigs();
     }
   }, [selectedProfile]);
 
@@ -91,6 +147,44 @@ export default function SystemPromptConfig() {
     }
   };
 
+  const handleSaveInstructions = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.SYSTEM_INSTRUCTIONS,
+        instructions
+      );
+      setIsEditingInstructions(false);
+    } catch (error) {
+      setError("Failed to save instructions");
+      console.error("Error saving instructions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSaveExamples = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.TWITTER_REPLY_EXAMPLES,
+        replyExamples
+      );
+      setIsEditingExamples(false);
+    } catch (error) {
+      setError("Failed to save reply examples");
+      console.error("Error saving reply examples:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleDelete = async () => {
     if (!selectedProfile) return;
     setIsLoading(true);
@@ -106,6 +200,46 @@ export default function SystemPromptConfig() {
     } catch (error) {
       setError("Failed to delete system prompt");
       console.error("Error deleting system prompt:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteInstructions = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.SYSTEM_INSTRUCTIONS,
+        null
+      );
+      setInstructions([]);
+      setIsEditingInstructions(false);
+    } catch (error) {
+      setError("Failed to delete instructions");
+      console.error("Error deleting instructions:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteExamples = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.TWITTER_REPLY_EXAMPLES,
+        null
+      );
+      setReplyExamples([]);
+      setIsEditingExamples(false);
+    } catch (error) {
+      setError("Failed to delete reply examples");
+      console.error("Error deleting reply examples:", error);
     } finally {
       setIsLoading(false);
     }
@@ -143,11 +277,634 @@ export default function SystemPromptConfig() {
     }
   };
 
+  const handleAddInstruction = () => {
+    if (newInstruction.trim()) {
+      setInstructions([...instructions, newInstruction.trim()]);
+      setNewInstruction("");
+    }
+  };
+
+  const handleRemoveInstruction = (index: number) => {
+    setInstructions(instructions.filter((_, i) => i !== index));
+  };
+
+  const handleAddExample = () => {
+    if (!newExample.socialMediaType || !newExample.postType) return;
+
+    let content: string | string[] | { original: string; reply: string };
+    switch (newExample.postType) {
+      case "thread":
+        content = threadPosts.filter((post) => post.trim() !== "");
+        break;
+      case "reply":
+        content = { original: originalMessage, reply: replyMessage };
+        break;
+      default:
+        content = newExample.content as string;
+    }
+
+    if (
+      (typeof content === "string" && !content.trim()) ||
+      (Array.isArray(content) && content.length === 0) ||
+      (typeof content === "object" &&
+        !Array.isArray(content) &&
+        (!content.original.trim() || !content.reply.trim()))
+    ) {
+      return;
+    }
+
+    const example: ReplyExample = {
+      id: crypto.randomUUID(),
+      socialMediaType: newExample.socialMediaType as SocialMediaType,
+      postType: newExample.postType as PostType,
+      content,
+    };
+
+    setReplyExamples([...replyExamples, example]);
+    setNewExample({
+      socialMediaType: "twitter",
+      postType: "regular",
+      content: "",
+    });
+    setThreadPosts([""]);
+    setOriginalMessage("");
+    setReplyMessage("");
+  };
+
+  const handleRemoveExample = (id: string) => {
+    setReplyExamples(replyExamples.filter((example) => example.id !== id));
+  };
+
+  const isReplyContent = (
+    content: string | string[] | { original: string; reply: string }
+  ): content is { original: string; reply: string } => {
+    return (
+      typeof content === "object" &&
+      !Array.isArray(content) &&
+      "original" in content &&
+      "reply" in content
+    );
+  };
+
+  const renderExampleContent = (example: ReplyExample) => {
+    switch (example.postType) {
+      case "thread":
+        return (
+          <div className="space-y-2">
+            {(example.content as string[]).map((post, index) => (
+              <div
+                key={index}
+                className="pl-4 border-l-2 border-gray-200 dark:border-gray-700"
+              >
+                {post}
+              </div>
+            ))}
+          </div>
+        );
+      case "reply": {
+        const content = example.content;
+        if (!isReplyContent(content)) {
+          return null;
+        }
+        const { original, reply } = content;
+        return (
+          <div className="space-y-2">
+            <div className="text-gray-500 dark:text-gray-400 italic">
+              Original: {original}
+            </div>
+            <div className="pl-4 border-l-2 border-gray-200 dark:border-gray-700">
+              {reply}
+            </div>
+          </div>
+        );
+      }
+      default:
+        return <div>{example.content as string}</div>;
+    }
+  };
+
+  const renderExamplesEditor = () => (
+    <Card className="shadow-xl">
+      <CardHeader>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          Social Media Reply Examples
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Add example posts and replies to help the AI understand your writing
+          style.
+        </p>
+      </CardHeader>
+
+      <CardContent>
+        <div className="space-y-4">
+          {isEditingExamples ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="space-y-4 p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      Social Media Type
+                    </label>
+                    <Select
+                      value={newExample.socialMediaType}
+                      onValueChange={(value: SocialMediaType) =>
+                        setNewExample({ ...newExample, socialMediaType: value })
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="twitter">Twitter</SelectItem>
+                        <SelectItem value="linkedin">LinkedIn</SelectItem>
+                        <SelectItem value="reddit">Reddit</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="flex-1">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      Post Type
+                    </label>
+                    <Select
+                      value={newExample.postType}
+                      onValueChange={(value: PostType) => {
+                        setNewExample({ ...newExample, postType: value });
+                        if (value === "thread") {
+                          setThreadPosts([""]);
+                        } else if (value === "reply") {
+                          setOriginalMessage("");
+                          setReplyMessage("");
+                        } else {
+                          setNewExample((prev) => ({ ...prev, content: "" }));
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="regular">Regular Post</SelectItem>
+                        <SelectItem value="thread">Thread</SelectItem>
+                        <SelectItem value="reply">Reply</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                {newExample.postType === "regular" && (
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      Post Content
+                    </label>
+                    <Textarea
+                      value={newExample.content as string}
+                      onChange={(e) =>
+                        setNewExample({
+                          ...newExample,
+                          content: e.target.value,
+                        })
+                      }
+                      placeholder="Enter your post content..."
+                      className="min-h-[8rem]"
+                    />
+                  </div>
+                )}
+
+                {newExample.postType === "thread" && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                      Thread Posts
+                    </label>
+                    {threadPosts.map((post, index) => (
+                      <div key={index} className="flex gap-2">
+                        <Textarea
+                          value={post}
+                          onChange={(e) => {
+                            const newPosts = [...threadPosts];
+                            newPosts[index] = e.target.value;
+                            setThreadPosts(newPosts);
+                          }}
+                          placeholder={`Post ${index + 1}...`}
+                          className="min-h-[4rem]"
+                        />
+                        {index > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setThreadPosts(
+                                threadPosts.filter((_, i) => i !== index)
+                              );
+                            }}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                    <Button
+                      variant="outline"
+                      onClick={() => setThreadPosts([...threadPosts, ""])}
+                      className="w-full"
+                    >
+                      Add Post
+                    </Button>
+                  </div>
+                )}
+
+                {newExample.postType === "reply" && (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                        Original Message
+                      </label>
+                      <Textarea
+                        value={originalMessage}
+                        onChange={(e) => setOriginalMessage(e.target.value)}
+                        placeholder="Enter the original message..."
+                        className="min-h-[4rem]"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                        Your Reply
+                      </label>
+                      <Textarea
+                        value={replyMessage}
+                        onChange={(e) => setReplyMessage(e.target.value)}
+                        placeholder="Enter your reply..."
+                        className="min-h-[4rem]"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleAddExample}
+                  className="w-full flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Example
+                </Button>
+              </div>
+
+              <div className="space-y-2">
+                {replyExamples.map((example) => (
+                  <div
+                    key={example.id}
+                    className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          {example.socialMediaType.charAt(0).toUpperCase() +
+                            example.socialMediaType.slice(1)}
+                        </span>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          {example.postType.charAt(0).toUpperCase() +
+                            example.postType.slice(1)}
+                        </span>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveExample(example.id)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    {renderExampleContent(example)}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveExamples}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditingExamples(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
+                {replyExamples.length > 0 ? (
+                  <div className="space-y-4">
+                    {replyExamples.map((example) => (
+                      <div
+                        key={example.id}
+                        className="p-4 border dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800"
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                            {example.socialMediaType.charAt(0).toUpperCase() +
+                              example.socialMediaType.slice(1)}
+                          </span>
+                          <span className="text-gray-500">•</span>
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {example.postType.charAt(0).toUpperCase() +
+                              example.postType.slice(1)}
+                          </span>
+                        </div>
+                        {renderExampleContent(example)}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400">
+                    No examples set
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditingExamples(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit
+                </Button>
+                {replyExamples.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteExamples}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   if (!selectedProfile) return null;
 
   const hasOpenAIKey = selectedProfile
     ? hasProfileKey(selectedProfile.id, ConfigTypeKey.OPENAI_API_KEY)
     : false;
+
+  const renderEditor = (
+    value: string,
+    setValue: (value: string) => void,
+    isEditing: boolean,
+    setIsEditing: (value: boolean) => void,
+    onSave: () => Promise<void>,
+    onDelete: () => Promise<void>,
+    title: string,
+    description: string,
+    placeholder: string
+  ) => (
+    <Card className="shadow-xl">
+      <CardHeader>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          {title}
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">{description}</p>
+      </CardHeader>
+
+      <CardContent>
+        <div className="space-y-4">
+          {isEditing ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <Textarea
+                value={value}
+                onChange={(e) => setValue(e.target.value)}
+                placeholder={placeholder}
+                className="min-h-[8rem]"
+              />
+              <div className="flex gap-2">
+                <Button
+                  onClick={onSave}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? "Saving..." : "Save"}
+                </Button>
+                <Button variant="outline" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
+                {value ? (
+                  <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                    {value}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400">
+                    No content set
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditing(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit
+                </Button>
+                {value && (
+                  <Button
+                    variant="destructive"
+                    onClick={onDelete}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const renderInstructionsEditor = () => (
+    <Card className="shadow-xl">
+      <CardHeader>
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+          System Instructions
+        </h2>
+        <p className="text-gray-600 dark:text-gray-400">
+          Add specific instructions for how the AI should behave and respond.
+        </p>
+      </CardHeader>
+
+      <CardContent>
+        <div className="space-y-4">
+          {isEditingInstructions ? (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Input
+                    value={newInstruction}
+                    onChange={(e) => setNewInstruction(e.target.value)}
+                    placeholder="Enter a new instruction..."
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleAddInstruction();
+                      }
+                    }}
+                  />
+                  <Button
+                    onClick={handleAddInstruction}
+                    disabled={!newInstruction.trim()}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add
+                  </Button>
+                </div>
+
+                <Reorder.Group
+                  axis="y"
+                  values={instructions}
+                  onReorder={setInstructions}
+                  className="space-y-2"
+                >
+                  {instructions.map((instruction, index) => (
+                    <Reorder.Item
+                      key={instruction}
+                      value={instruction}
+                      className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border dark:border-gray-700"
+                    >
+                      <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
+                      <span className="flex-1 text-gray-700 dark:text-gray-300">
+                        {instruction}
+                      </span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleRemoveInstruction(index)}
+                        className="h-6 w-6 p-0"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </Reorder.Item>
+                  ))}
+                </Reorder.Group>
+              </div>
+
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleSaveInstructions}
+                  disabled={isLoading}
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  {isLoading ? "Saving..." : "Save"}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditingInstructions(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
+                {instructions.length > 0 ? (
+                  <div className="space-y-2">
+                    {instructions.map((instruction, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center gap-2 text-gray-700 dark:text-gray-300"
+                      >
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {index + 1}.
+                        </span>
+                        {instruction}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-gray-500 dark:text-gray-400">
+                    No instructions set
+                  </div>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsEditingInstructions(true)}
+                  className="flex items-center gap-2"
+                >
+                  <Edit2 className="h-4 w-4" />
+                  Edit
+                </Button>
+                {instructions.length > 0 && (
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteInstructions}
+                    disabled={isLoading}
+                    className="flex items-center gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
 
   return (
     <motion.div
@@ -155,131 +912,54 @@ export default function SystemPromptConfig() {
       animate={{ opacity: 1, y: 0 }}
       className="space-y-4 mb-6"
     >
-      <Card className="shadow-xl">
-        <CardHeader>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            System Prompt
-          </h2>
-          <p className="text-gray-600 dark:text-gray-400">
-            Personalize your replies and tweets. Keep it concise to minimize
-            costs.
-          </p>
-          {!hasOpenAIKey && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-2 p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg flex items-center gap-2"
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4"
+          >
+            {error}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!hasOpenAIKey && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-3 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 rounded-lg flex items-center gap-2"
+        >
+          <AlertTriangle className="h-4 w-4" />
+          <span>
+            OpenAI API key is not set.{" "}
+            <button
+              onClick={() => setCurrentRoute("/misc")}
+              className="underline hover:text-amber-800 dark:hover:text-amber-300"
             >
-              <AlertTriangle className="h-4 w-4" />
-              <span>
-                OpenAI API key is not set.{" "}
-                <button
-                  onClick={() => setCurrentRoute("/misc")}
-                  className="underline hover:text-amber-800 dark:hover:text-amber-300"
-                >
-                  Set up your API key
-                </button>{" "}
-                to enable prompt generation.
-              </span>
-            </motion.div>
-          )}
-        </CardHeader>
+              Set up your API key
+            </button>{" "}
+            to enable prompt generation.
+          </span>
+        </motion.div>
+      )}
 
-        <CardContent>
-          <AnimatePresence>
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="p-3 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg mb-4"
-              >
-                {error}
-              </motion.div>
-            )}
-          </AnimatePresence>
+      {renderEditor(
+        systemPrompt,
+        setSystemPrompt,
+        isEditing,
+        setIsEditing,
+        handleSave,
+        handleDelete,
+        "System Prompt",
+        "Personalize your replies and tweets. Keep it concise to minimize costs.",
+        "Enter your system prompt here..."
+      )}
 
-          <div className="space-y-4">
-            {isEditing ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                <Textarea
-                  value={systemPrompt}
-                  onChange={(e) => setSystemPrompt(e.target.value)}
-                  placeholder="Enter your system prompt here..."
-                  className="min-h-[8rem]"
-                />
-                <div className="flex gap-2">
-                  <Button
-                    onClick={handleSave}
-                    disabled={isLoading}
-                    className="flex items-center gap-2"
-                  >
-                    <Save className="h-4 w-4" />
-                    {isLoading ? "Saving..." : "Save Prompt"}
-                  </Button>
-                  {hasOpenAIKey && (
-                    <Button
-                      onClick={handleGenerate}
-                      disabled={isLoading}
-                      variant="secondary"
-                      className="flex items-center gap-2"
-                    >
-                      <Sparkles className="h-4 w-4" />
-                      Generate Prompt
-                    </Button>
-                  )}
-                  <Button variant="outline" onClick={() => setIsEditing(false)}>
-                    Cancel
-                  </Button>
-                </div>
-              </motion.div>
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-4"
-              >
-                <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
-                  {systemPrompt ? (
-                    <div className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                      {systemPrompt}
-                    </div>
-                  ) : (
-                    <div className="text-gray-500 dark:text-gray-400">
-                      No system prompt set
-                    </div>
-                  )}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <Edit2 className="h-4 w-4" />
-                    Edit
-                  </Button>
-                  {systemPrompt && (
-                    <Button
-                      variant="destructive"
-                      onClick={handleDelete}
-                      disabled={isLoading}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                      Delete
-                    </Button>
-                  )}
-                </div>
-              </motion.div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+      {renderInstructionsEditor()}
+
+      {renderExamplesEditor()}
     </motion.div>
   );
 }
