@@ -18,9 +18,9 @@ export default function PersonalityConfigPage() {
     <Layout>
       <PageHeader title="Personality Config" backRoute="/" />
       <div className="space-y-4 max-w-4xl mx-auto">
-        <PersonalityTypeSelector />
+        {false && <PersonalityTypeSelector />}
         <SystemPromptConfig />
-        {selectedProfile?.id && (
+        {false && selectedProfile?.id && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
@@ -42,7 +42,7 @@ export default function PersonalityConfigPage() {
               <CardContent>
                 <FormatInstructionBuilder
                   withPreview
-                  selectedProfileId={selectedProfile.id}
+                  selectedProfileId={selectedProfile?.id ?? ""}
                   app={app}
                 />
               </CardContent>

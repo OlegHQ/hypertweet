@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { useGlobalState } from "./state";
 import { app } from "./app";
 import { TwitterProfile } from "./twitter-profile";
-import { LinkedInProfile } from "./linkedin-profile";
 import { ConfigTypeKey } from "src/background-app/domain";
 
 export default function SocialProfilesConfig() {
@@ -33,32 +32,6 @@ export default function SocialProfilesConfig() {
     }
   };
 
-  const handleRefreshLinkedIn = async () => {
-    if (!selectedProfile?.linkedInUrl) return;
-    try {
-      setIsLoading(true);
-
-      const data = await app.scraping.scrapeLinkedInProfile(
-        selectedProfile.linkedInUrl
-      );
-      setPersonalityConfig(selectedProfile.id, "linkedIn", data);
-      await app.dataLayer.config.set(
-        selectedProfile.id,
-        ConfigTypeKey.LINKEDIN_PROFILE,
-        data
-      );
-      setError(null);
-    } catch (error) {
-      console.error("Error refreshing LinkedIn profile:", error);
-      setError("Failed to refresh LinkedIn profile");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const [linkedInUrl, setLinkedInUrl] = React.useState(
-    selectedProfile?.linkedInUrl || ""
-  );
   const [twitterUrl, setTwitterUrl] = React.useState(
     selectedProfile?.twitterUrl || ""
   );
@@ -125,7 +98,6 @@ export default function SocialProfilesConfig() {
   }
 
   const twitterConfig = getPersonalityConfig(selectedProfile.id, "twitter");
-  const linkedInConfig = getPersonalityConfig(selectedProfile.id, "linkedIn");
 
   return (
     <div className="space-y-4">
@@ -134,7 +106,9 @@ export default function SocialProfilesConfig() {
           Social Media Profiles
         </h2>
         <p className="text-gray-600 dark:text-gray-300">
-          Connect your social media profiles to generate prompts that match your personality and writing style. Make sure you're logged in to the platforms you want to use.
+          Connect your social media profiles to generate prompts that match your
+          personality and writing style. Make sure you're logged in to the
+          platforms you want to use.
         </p>
       </div>
 
@@ -175,46 +149,6 @@ export default function SocialProfilesConfig() {
             <button
               className="bg-blue-500 text-white px-4 py-2 rounded"
               onClick={() => handleUrlSave("twitter", twitterUrl)}
-            >
-              Save URL
-            </button>
-          </div>
-        </div>
-      )}
-
-      {linkedInConfig?.isFetched && linkedInConfig.data ? (
-        <LinkedInProfile
-          data={linkedInConfig.data}
-          onRefresh={handleRefreshLinkedIn}
-          profileUrl={selectedProfile.linkedInUrl}
-          onUrlChange={(newUrl) => handleUrlSave("linkedIn", newUrl)}
-          onClear={() => handleClearProfile("linkedIn")}
-        />
-      ) : selectedProfile.linkedInUrl ? (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">LinkedIn profile</h2>
-          <button
-            className="bg-blue-500 w-full block text-white px-4 py-2 rounded"
-            onClick={handleRefreshLinkedIn}
-            disabled={isLoading}
-          >
-            {isLoading ? "Loading..." : "Load linkedin data"}
-          </button>
-        </div>
-      ) : (
-        <div>
-          <h2 className="text-lg font-semibold mb-2">LinkedIn profile</h2>
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Enter LinkedIn profile URL"
-              className="flex-1 px-4 py-2 border rounded"
-              value={linkedInUrl}
-              onChange={(e) => setLinkedInUrl(e.target.value)}
-            />
-            <button
-              className="bg-blue-500 text-white px-4 py-2 rounded"
-              onClick={() => handleUrlSave("linkedIn", linkedInUrl)}
             >
               Save URL
             </button>
