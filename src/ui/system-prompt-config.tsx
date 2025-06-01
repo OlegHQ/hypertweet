@@ -26,6 +26,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./library/select";
+import SystemInstructionsEditor from "./system-instructions-editor";
 
 type SocialMediaType = "twitter" | "linkedin" | "reddit";
 type PostType = "regular" | "thread" | "reply";
@@ -48,13 +49,10 @@ export default function SystemPromptConfig() {
   } = useGlobalState();
   const [systemPrompt, setSystemPrompt] = React.useState("");
   const [instructions, setInstructions] = React.useState<string[]>([]);
-  const [newInstruction, setNewInstruction] = React.useState("");
   const [replyExamples, setReplyExamples] = React.useState<ReplyExample[]>([]);
   const [isLoading, setIsLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [isEditing, setIsEditing] = React.useState(false);
-  const [isEditingInstructions, setIsEditingInstructions] =
-    React.useState(false);
   const [isEditingExamples, setIsEditingExamples] = React.useState(false);
 
   // New state for example editor
@@ -147,25 +145,6 @@ export default function SystemPromptConfig() {
     }
   };
 
-  const handleSaveInstructions = async () => {
-    if (!selectedProfile) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await app.dataLayer.config.set(
-        selectedProfile.id,
-        ConfigTypeKey.SYSTEM_INSTRUCTIONS,
-        instructions
-      );
-      setIsEditingInstructions(false);
-    } catch (error) {
-      setError("Failed to save instructions");
-      console.error("Error saving instructions:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const handleSaveExamples = async () => {
     if (!selectedProfile) return;
     setIsLoading(true);
@@ -180,46 +159,6 @@ export default function SystemPromptConfig() {
     } catch (error) {
       setError("Failed to save reply examples");
       console.error("Error saving reply examples:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!selectedProfile) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await app.dataLayer.config.set(
-        selectedProfile.id,
-        ConfigTypeKey.SYSTEM_PROMPT,
-        null
-      );
-      setSystemPrompt("");
-      setIsEditing(false);
-    } catch (error) {
-      setError("Failed to delete system prompt");
-      console.error("Error deleting system prompt:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteInstructions = async () => {
-    if (!selectedProfile) return;
-    setIsLoading(true);
-    setError(null);
-    try {
-      await app.dataLayer.config.set(
-        selectedProfile.id,
-        ConfigTypeKey.SYSTEM_INSTRUCTIONS,
-        null
-      );
-      setInstructions([]);
-      setIsEditingInstructions(false);
-    } catch (error) {
-      setError("Failed to delete instructions");
-      console.error("Error deleting instructions:", error);
     } finally {
       setIsLoading(false);
     }
@@ -240,6 +179,26 @@ export default function SystemPromptConfig() {
     } catch (error) {
       setError("Failed to delete reply examples");
       console.error("Error deleting reply examples:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!selectedProfile) return;
+    setIsLoading(true);
+    setError(null);
+    try {
+      await app.dataLayer.config.set(
+        selectedProfile.id,
+        ConfigTypeKey.SYSTEM_PROMPT,
+        null
+      );
+      setSystemPrompt("");
+      setIsEditing(false);
+    } catch (error) {
+      setError("Failed to delete system prompt");
+      console.error("Error deleting system prompt:", error);
     } finally {
       setIsLoading(false);
     }
@@ -275,17 +234,6 @@ export default function SystemPromptConfig() {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleAddInstruction = () => {
-    if (newInstruction.trim()) {
-      setInstructions([...instructions, newInstruction.trim()]);
-      setNewInstruction("");
-    }
-  };
-
-  const handleRemoveInstruction = (index: number) => {
-    setInstructions(instructions.filter((_, i) => i !== index));
   };
 
   const handleAddExample = () => {
@@ -763,149 +711,6 @@ export default function SystemPromptConfig() {
     </Card>
   );
 
-  const renderInstructionsEditor = () => (
-    <Card className="shadow-xl">
-      <CardHeader>
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-          System Instructions
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400">
-          Add specific instructions for how the AI should behave and respond.
-        </p>
-      </CardHeader>
-
-      <CardContent>
-        <div className="space-y-4">
-          {isEditingInstructions ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={newInstruction}
-                    onChange={(e) => setNewInstruction(e.target.value)}
-                    placeholder="Enter a new instruction..."
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleAddInstruction();
-                      }
-                    }}
-                  />
-                  <Button
-                    onClick={handleAddInstruction}
-                    disabled={!newInstruction.trim()}
-                    className="flex items-center gap-2"
-                  >
-                    <Plus className="h-4 w-4" />
-                    Add
-                  </Button>
-                </div>
-
-                <Reorder.Group
-                  axis="y"
-                  values={instructions}
-                  onReorder={setInstructions}
-                  className="space-y-2"
-                >
-                  {instructions.map((instruction, index) => (
-                    <Reorder.Item
-                      key={instruction}
-                      value={instruction}
-                      className="flex items-center gap-2 p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg border dark:border-gray-700"
-                    >
-                      <GripVertical className="h-4 w-4 text-gray-400 cursor-grab" />
-                      <span className="flex-1 text-gray-700 dark:text-gray-300">
-                        {instruction}
-                      </span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveInstruction(index)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </Reorder.Item>
-                  ))}
-                </Reorder.Group>
-              </div>
-
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleSaveInstructions}
-                  disabled={isLoading}
-                  className="flex items-center gap-2"
-                >
-                  <Save className="h-4 w-4" />
-                  {isLoading ? "Saving..." : "Save"}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditingInstructions(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-4"
-            >
-              <div className="p-4 border dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50 min-h-[8rem]">
-                {instructions.length > 0 ? (
-                  <div className="space-y-2">
-                    {instructions.map((instruction, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center gap-2 text-gray-700 dark:text-gray-300"
-                      >
-                        <span className="text-gray-500 dark:text-gray-400">
-                          {index + 1}.
-                        </span>
-                        {instruction}
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-gray-500 dark:text-gray-400">
-                    No instructions set
-                  </div>
-                )}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsEditingInstructions(true)}
-                  className="flex items-center gap-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit
-                </Button>
-                {instructions.length > 0 && (
-                  <Button
-                    variant="destructive"
-                    onClick={handleDeleteInstructions}
-                    disabled={isLoading}
-                    className="flex items-center gap-2"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    Delete
-                  </Button>
-                )}
-              </div>
-            </motion.div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -957,7 +762,15 @@ export default function SystemPromptConfig() {
         "Enter your system prompt here..."
       )}
 
-      {renderInstructionsEditor()}
+      {selectedProfile && (
+        <SystemInstructionsEditor
+          selectedProfile={selectedProfile}
+          instructions={instructions}
+          setInstructions={setInstructions}
+          isLoading={isLoading}
+          setError={setError}
+        />
+      )}
 
       {renderExamplesEditor()}
     </motion.div>
