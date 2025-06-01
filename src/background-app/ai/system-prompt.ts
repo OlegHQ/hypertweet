@@ -25,7 +25,8 @@ export async function buildSystemPrompt(
 
   let systemPrompt = `# Identity
 
-${identity}`;
+${identity}
+`;
 
   if (instructions) {
     systemPrompt += `
@@ -35,7 +36,9 @@ ${instructions.map((instruction) => `- ${instruction}`).join("\n")}`;
   }
 
   if (replyExamples) {
-    systemPrompt += `# Examples
+    systemPrompt += `
+    
+# Examples
 
 ${replyExamples.map((example) => `${replyExampleToXML(example)}`).join("\n")}`;
   }

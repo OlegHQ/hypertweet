@@ -15,6 +15,11 @@ import {
   type InstructionOptions,
 } from "./format-instructions";
 import { PERSONALITY_TYPES, type PersonalityType } from "./personality-type";
+import { buildSystemPrompt } from "./system-prompt";
+import type { ChatCompletionMessageParam } from "openai/resources/chat";
+import { tokenManager } from "./token-manager";
+import { toXML } from "jstoxml";
+import { postProcess } from "./post-process";
 
 export type ActionType =
   | "simplify"
@@ -74,15 +79,6 @@ export class AIFacade {
     postText: string,
     prompt: string
   ) {
-    const model = await this.getModel(profileId);
-    const personaSnippet = await this.dataLayer.config.get<string>(
-      profileId,
-      ConfigTypeKey.SYSTEM_PROMPT
-    );
-    const personalityType = await this.dataLayer.config.get<PersonalityType>(
-      profileId,
-      ConfigTypeKey.PERSONALITY_TYPE
-    );
     const openAiKey = await this.dataLayer.config.getCredential(
       profileId,
       ConfigTypeKey.OPENAI_API_KEY
@@ -90,22 +86,39 @@ export class AIFacade {
     if (!openAiKey) {
       throw new Error("Missing required config");
     }
-    const formatInstructions =
-      (await this.dataLayer.config.get<InstructionOptions>(
-        profileId,
-        ConfigTypeKey.FORMAT_INSTRUCTIONS
-      )) ?? defaultFormatInstructionsOptions;
+    const model = await this.getModel(profileId);
 
-    const [reply, request, response] = await generateReply(
-      openAiKey,
+    const xml = {
+      _name: "task",
+      _attrs: {
+        platform: site,
+        description: "Generate a reply to the post",
+      },
+      _content: [
+        { _name: "tone", _content: prompt },
+        { _name: "post", _content: postText },
+      ],
+    };
+
+    const developerTask = toXML(xml, {
+      header: false,
+      indent: "  ",
+    });
+
+    const systemPrompt = await buildSystemPrompt(profileId, this.dataLayer);
+    const messages: ChatCompletionMessageParam[] = [];
+    messages.push({ role: "system", content: systemPrompt });
+    messages.push({ role: "developer", content: developerTask });
+
+    const openai = tokenManager.getClient(openAiKey);
+    const request = {
       model,
-      personaSnippet,
-      personalityType,
-      prompt,
-      await this.buildFormatInstructionsPrompt(formatInstructions),
-      postText,
-      site
-    );
+      messages,
+      max_tokens: 60,
+      temperature: 0.7,
+      stop: ["\n"],
+    };
+    const response = await openai.chat.completions.create(request);
 
     await this.dataLayer.requestLog.save({
       profileId,
@@ -117,7 +130,7 @@ export class AIFacade {
       type: "generate",
     });
 
-    return reply;
+    return postProcess(response.choices[0]?.message?.content ?? "");
   }
 
   async getFormatInstructionOptions(profileId: string) {
