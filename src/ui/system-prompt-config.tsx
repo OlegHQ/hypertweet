@@ -6,7 +6,7 @@ import { ConfigTypeKey } from "src/background-app/domain";
 import SystemInstructionsEditor from "./system-instructions-editor";
 import SystemPromptEditor from "./system-prompt-editor";
 import SystemPromptReplyExamplesEditor from "./system-prompt-reply-examples-editor";
-import type { ReplyExample } from "./system-prompt-reply-examples-editor";
+import type { ReplyExample } from "src/background-app/domain/models/reply-example";
 
 export default function SystemPromptConfig() {
   const {

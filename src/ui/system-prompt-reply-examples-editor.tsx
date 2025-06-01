@@ -13,16 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./library/select";
-
-export type SocialMediaType = "twitter" | "linkedin" | "reddit";
-export type PostType = "regular" | "thread" | "reply";
-
-export interface ReplyExample {
-  id: string;
-  socialMediaType: SocialMediaType;
-  postType: PostType;
-  content: string | string[] | { original: string; reply: string };
-}
+import type {
+  PostType,
+  ReplyExample,
+  SocialMediaType,
+} from "src/background-app/domain/models/reply-example";
 
 interface SystemPromptReplyExamplesEditorProps {
   selectedProfile: { id: string };
@@ -40,6 +35,9 @@ export default function SystemPromptReplyExamplesEditor({
   setError,
 }: SystemPromptReplyExamplesEditorProps) {
   const [isEditing, setIsEditing] = React.useState(false);
+  const [editingExampleId, setEditingExampleId] = React.useState<string | null>(
+    null
+  );
   const [newExample, setNewExample] = React.useState<Partial<ReplyExample>>({
     socialMediaType: "twitter",
     postType: "regular",
@@ -173,6 +171,84 @@ export default function SystemPromptReplyExamplesEditor({
       default:
         return <div>{example.content as string}</div>;
     }
+  };
+
+  const handleStartEditing = (example: ReplyExample) => {
+    setEditingExampleId(example.id);
+    setNewExample({
+      socialMediaType: example.socialMediaType,
+      postType: example.postType,
+      content: example.content,
+    });
+
+    if (example.postType === "thread") {
+      setThreadPosts(example.content as string[]);
+    } else if (example.postType === "reply") {
+      const content = example.content as { original: string; reply: string };
+      setOriginalMessage(content.original);
+      setReplyMessage(content.reply);
+    }
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingExampleId) return;
+
+    let content: string | string[] | { original: string; reply: string };
+    switch (newExample.postType) {
+      case "thread":
+        content = threadPosts.filter((post) => post.trim() !== "");
+        break;
+      case "reply":
+        content = { original: originalMessage, reply: replyMessage };
+        break;
+      default:
+        content = newExample.content as string;
+    }
+
+    if (
+      (typeof content === "string" && !content.trim()) ||
+      (Array.isArray(content) && content.length === 0) ||
+      (typeof content === "object" &&
+        !Array.isArray(content) &&
+        (!content.original.trim() || !content.reply.trim()))
+    ) {
+      return;
+    }
+
+    const updatedExample: ReplyExample = {
+      id: editingExampleId,
+      socialMediaType: newExample.socialMediaType as SocialMediaType,
+      postType: newExample.postType as PostType,
+      content,
+    };
+
+    setReplyExamples(
+      replyExamples.map((example) =>
+        example.id === editingExampleId ? updatedExample : example
+      )
+    );
+
+    setEditingExampleId(null);
+    setNewExample({
+      socialMediaType: "twitter",
+      postType: "regular",
+      content: "",
+    });
+    setThreadPosts([""]);
+    setOriginalMessage("");
+    setReplyMessage("");
+  };
+
+  const handleCancelEdit = () => {
+    setEditingExampleId(null);
+    setNewExample({
+      socialMediaType: "twitter",
+      postType: "regular",
+      content: "",
+    });
+    setThreadPosts([""]);
+    setOriginalMessage("");
+    setReplyMessage("");
   };
 
   return (
@@ -336,13 +412,34 @@ export default function SystemPromptReplyExamplesEditor({
                   </div>
                 )}
 
-                <Button
-                  onClick={handleAddExample}
-                  className="w-full flex items-center justify-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Example
-                </Button>
+                <div className="flex gap-2">
+                  {editingExampleId ? (
+                    <>
+                      <Button
+                        onClick={handleSaveEdit}
+                        className="flex-1 flex items-center justify-center gap-2"
+                      >
+                        <Save className="h-4 w-4" />
+                        Save Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        className="flex-1"
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      onClick={handleAddExample}
+                      className="w-full flex items-center justify-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Example
+                    </Button>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -363,14 +460,24 @@ export default function SystemPromptReplyExamplesEditor({
                             example.postType.slice(1)}
                         </span>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveExample(example.id)}
-                        className="h-6 w-6 p-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleStartEditing(example)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveExample(example.id)}
+                          className="h-6 w-6 p-0"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                     {renderExampleContent(example)}
                   </div>

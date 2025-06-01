@@ -29,6 +29,7 @@
     "fake-indexeddb": "^6.0.1",
     "fflate": "^0.8.2",
     "framer-motion": "^12.10.5",
+    "jstoxml": "^7.0.1",
     "lucide-react": "^0.509.0",
     "openai": "^4.97.0",
     "react": "^19.1.0",
