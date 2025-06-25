@@ -11,6 +11,7 @@ import {
   ChevronUp,
   MessageSquare,
   Hash,
+  History,
 } from "lucide-react";
 import { Button } from "./library/button";
 import { useInView } from "react-intersection-observer";
@@ -163,6 +164,26 @@ function RequestLogCard({
   );
 }
 
+function EmptyState() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="text-center py-12"
+    >
+      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+        <History className="h-8 w-8 text-gray-400" />
+      </div>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        No logs yet
+      </h3>
+      <p className="text-gray-600 dark:text-gray-300 max-w-md mx-auto">
+        AI request history will appear here after you start using the extension to generate replies.
+      </p>
+    </motion.div>
+  );
+}
+
 export default function RequestLogsPage() {
   const [logs, setLogs] = React.useState<RequestLogItem[]>([]);
   const [loading, setLoading] = React.useState(false);
@@ -210,6 +231,8 @@ export default function RequestLogsPage() {
           animate={{ opacity: 1 }}
           className="space-y-4"
         >
+          {logs.length === 0 && !loading && <EmptyState />}
+          
           {logs.map((log) => (
             <RequestLogCard key={log.id} item={log} onDelete={handleDelete} />
           ))}
