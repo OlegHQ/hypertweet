@@ -205,7 +205,7 @@ export function injectTwitterReplyStuff() {
     `;
     document.head.appendChild(style);
 
-    installTailwind();
+    installTailwind({ disablePreflight: false });
     createRoot(wrapper).render(<Panel siteType="twitter" parent={container} />);
   }
 }

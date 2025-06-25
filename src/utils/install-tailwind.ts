@@ -2,10 +2,10 @@ import { install } from "@twind/core";
 import presetAutoprefix from "@twind/preset-autoprefix";
 import presetTailwind from "@twind/preset-tailwind";
 
-export function installTailwind() {
+export function installTailwind({disablePreflight = false}) {
   // Initialize Twind with custom theme
   install({
-    presets: [presetAutoprefix(), presetTailwind()],
+    presets: [presetAutoprefix(), presetTailwind({ disablePreflight })],
     darkMode: "class",
     theme: {
       extend: {

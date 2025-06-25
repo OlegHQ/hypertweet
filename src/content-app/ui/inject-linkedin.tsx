@@ -1,5 +1,6 @@
 import { createRoot } from "react-dom/client";
 import Panel from "./panel";
+import { installTailwind } from "src/utils/install-tailwind";
 
 export function injectLinkedInReplyStuff() {
   // 1. Set up a MutationObserver to watch the whole page
@@ -99,9 +100,9 @@ export function injectLinkedInReplyStuff() {
 
     const wrapper = document.createElement("div");
     wrapper.className = "ai-tone-buttons";
-    // CSS for the wrapper is now handled by the injected stylesheet
 
-    formElement.appendChild(wrapper); // Append as the last child of the form
+    formElement.appendChild(wrapper);
+    installTailwind({ disablePreflight: true });
     createRoot(wrapper).render(
       <Panel siteType="linkedin" parent={formElement} />
     );
