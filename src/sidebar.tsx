@@ -3,14 +3,14 @@ import Router from "./ui/router";
 import { DarkModeDetector } from "./ui/dark-mode-detector";
 import { installTailwind } from "./utils/install-tailwind";
 
-installTailwind();
+installTailwind({});
 
 // Initialize React
 const root = document.getElementById("root");
 if (root) {
-  // Add global styles for html and body
-  const style = document.createElement("style");
-  style.textContent = `
+	// Add global styles for html and body
+	const style = document.createElement("style");
+	style.textContent = `
     html, body {
       background-color: #ffffff;
       color: #0f172a;
@@ -20,12 +20,12 @@ if (root) {
       color: #f8fafc;
     }
   `;
-  document.head.appendChild(style);
+	document.head.appendChild(style);
 
-  createRoot(root).render(
-    <div className="h-full w-full text-sm bg-background dark:bg-background-dark text-foreground dark:text-foreground-dark">
-      <DarkModeDetector />
-      <Router />
-    </div>
-  );
+	createRoot(root).render(
+		<div className="h-full w-full text-sm bg-background dark:bg-background-dark text-foreground dark:text-foreground-dark">
+			<DarkModeDetector />
+			<Router />
+		</div>
+	);
 }
