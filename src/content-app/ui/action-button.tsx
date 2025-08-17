@@ -1,7 +1,7 @@
-import { cn } from "src/ui/library/utils";
 import { Tooltip } from "src/ui/library/tooltip";
 import { Loader2 } from "lucide-react";
 import type { ActionType } from "src/background-app/ai/ai-facade";
+import { actionButtonStyles } from "./styles";
 
 interface ActionButtonProps {
   action: ActionType | "clear";
@@ -23,13 +23,24 @@ export function ActionButton({
       <button
         onClick={() => onClick(action)}
         disabled={!!loadingAction}
-        className={cn(
-          "text-[#1d9bf0] hover:opacity-80 p-2 rounded-full hover:bg-blue-50",
-          loadingAction && "opacity-50 cursor-not-allowed"
-        )}
+        style={{
+          ...actionButtonStyles.base,
+          ...(!!loadingAction ? actionButtonStyles.disabled : {}),
+        }}
+        onMouseEnter={(e) => {
+          if (!loadingAction) {
+            Object.assign(e.currentTarget.style, actionButtonStyles.hover);
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (!loadingAction) {
+            e.currentTarget.style.opacity = "1";
+            e.currentTarget.style.backgroundColor = "transparent";
+          }
+        }}
       >
         {loadingAction === action ? (
-          <Loader2 size={20} className="animate-spin" />
+          <Loader2 size={20} style={{ animation: "spin 1s linear infinite" }} />
         ) : (
           <Icon size={20} />
         )}

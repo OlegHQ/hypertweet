@@ -3,6 +3,7 @@ import type { ReplyType } from "../../background-app/domain";
 import ReplyTypeButton from "./reply-type-button";
 import { motion } from "framer-motion";
 import { bgApp } from "../bg-app";
+import { replyTypesPanelStyles, spacing } from "./styles";
 
 interface ReplyTypesPanelProps {
   mode: "complex" | "simple" | "edit";
@@ -32,9 +33,20 @@ export default function ReplyTypesPanel({ mode }: ReplyTypesPanelProps) {
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className="flex flex-row gap-2"
+      style={{
+        display: "flex",
+        flexDirection: "row",
+        gap: spacing[2],
+      }}
     >
-      <motion.div className="flex-1 flex flex-wrap gap-1 mb-2 px-4">
+      <motion.div style={{
+        flex: 1,
+        display: "flex",
+        flexWrap: "wrap",
+        gap: spacing[1],
+        marginBottom: spacing[2],
+        padding: `0 ${spacing[4]}`,
+      }}>
         {replyTypes.map((replyType, index) => (
           <motion.div
             key={replyType.id}

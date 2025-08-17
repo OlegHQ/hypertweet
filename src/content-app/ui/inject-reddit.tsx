@@ -1,8 +1,8 @@
-import { createRoot, Root } from "react-dom/client";
-import { installTailwind } from "src/utils/install-tailwind";
+import { createRoot, type Root } from "react-dom/client";
+import { injectGlobalStyles } from "./styles";
 import Panel from "./panel";
 
-installTailwind({ disablePreflight: true });
+injectGlobalStyles();
 
 // Store the current root instance to clean up on navigation
 let currentRoot: Root | null = null;
@@ -50,7 +50,7 @@ export function injectRedditPanel() {
 	// Mount React panel
 	currentRoot = createRoot(container);
 	currentRoot.render(
-		<div className="w-full">
+		<div style={{ width: "100%" }}>
 			<Panel siteType="reddit" parent={targetElement as HTMLElement} />
 		</div>
 	);

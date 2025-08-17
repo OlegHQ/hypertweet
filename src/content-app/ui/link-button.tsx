@@ -1,11 +1,12 @@
 import React from "react";
-import { cn } from "src/ui/library/utils";
+import { colors } from "./styles";
 
 export interface LinkButtonProps {
   children: React.ReactNode;
   disabled?: boolean;
   onClick?: () => void;
   className?: string;
+  style?: React.CSSProperties;
   loading?: boolean;
   loadingText?: string;
 }
@@ -15,6 +16,7 @@ export function LinkButton({
   disabled = false,
   onClick,
   className = "",
+  style = {},
   loading = false,
   loadingText = "Loading...",
 }: LinkButtonProps) {
@@ -22,12 +24,29 @@ export function LinkButton({
     <button
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        "text-[#1d9bf0] font-medium underline decoration-2 underline-offset-2",
-        "hover:opacity-80 transition-opacity",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        className
-      )}
+      style={{
+        color: colors.twitter.blue,
+        fontWeight: "500",
+        textDecoration: "underline",
+        textDecorationThickness: "2px",
+        textUnderlineOffset: "2px",
+        transition: "opacity 0.15s",
+        background: "none",
+        border: "none",
+        cursor: disabled ? "not-allowed" : "pointer",
+        opacity: disabled ? 0.5 : 1,
+        ...style,
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.opacity = "0.8";
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.opacity = "1";
+        }
+      }}
     >
       {loading ? loadingText : children}
     </button>

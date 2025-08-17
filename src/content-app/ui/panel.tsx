@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSiteTypeStore, type SiteType } from "./site-type-store";
 import ReplyTypesPanel from "./reply-types-panel";
-import { cn } from "src/ui/library/utils";
+import { panelStyles } from "./styles";
 import ComplexModePanel from "./complex-mode-panel";
 import ModelSelector from "./model-selector";
 import ModeSwitcher from "./model-switcher";
@@ -77,13 +77,12 @@ export default function Panel({
 
   return (
     <div
-      className={cn(
-        "w-full flex flex-col h-full",
-        type === "twitter" ? "pl-[40px]" : null,
-        className
-      )}
+      style={{
+        ...panelStyles.container,
+        ...(type === "twitter" ? panelStyles.containerTwitter : {}),
+      }}
     >
-      <div className="flex items-center justify-start gap-2 px-4 py-2">
+      <div style={panelStyles.header}>
         <ModeSwitcher
           onSettingsClick={() => setIsSettingsOpen(true)}
           hasText={!!currentText}

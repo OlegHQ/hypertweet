@@ -57,7 +57,7 @@ export default function ModelSelector() {
   };
 
   return (
-    <div className="w-[120px]">
+    <div style={{ width: "120px" }}>
       <Select
         value={selectedModel}
         onValueChange={handleModelChange}
@@ -70,7 +70,7 @@ export default function ModelSelector() {
           onMouseLeave={() => {
             document.body.style.overflow = "auto";
           }}
-          className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
+          style={{ height: "28px", fontSize: "12px", border: 0, background: "transparent", padding: "0 8px" }}
         >
           <SelectValue placeholder="Select model" />
         </SelectTrigger>

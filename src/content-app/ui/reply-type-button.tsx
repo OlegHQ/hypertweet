@@ -10,8 +10,8 @@ import { BubbleButton } from "./bubble-button";
 import usePostText from "./use-post-text";
 import { bgApp } from "../bg-app";
 import { ConfigTypeKey } from "src/background-app/domain/models/config-type-key";
-import { cn } from "src/ui/library/utils";
 import useApplyText from "./use-apply-text";
+import { spacing } from "./styles";
 
 interface ReplyTypeButtonProps {
   replyType: ReplyType;
@@ -121,13 +121,13 @@ export default function ReplyTypeButton({
 
   return (
     <ButtonComponent
-      className={cn("pr-3")}
+      style={{ paddingRight: spacing[3] }}
       disabled={disabled}
       onClick={handleReplyTypeClick}
       loading={state.loading}
       loadingText="Generating..."
     >
-      {replyType.icon ? <span className="mr-1">{replyType.icon}</span> : null}
+      {replyType.icon ? <span style={{ marginRight: spacing[1] }}>{replyType.icon}</span> : null}
       {replyType.name}
     </ButtonComponent>
   );

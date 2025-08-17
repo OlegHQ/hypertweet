@@ -82,7 +82,7 @@ export class RedditScraper {
         body,
         comments,
         url: window.location.href,
-        subreddit
+        subreddit: subreddit || ''
       };
     } catch (error) {
       console.error("Error extracting Reddit post:", error);

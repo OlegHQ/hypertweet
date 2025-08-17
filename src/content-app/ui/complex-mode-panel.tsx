@@ -21,9 +21,9 @@ import {
   SelectValue,
 } from "src/ui/library/select";
 import { Tooltip } from "src/ui/library/tooltip";
-import { cn } from "src/ui/library/utils";
 import useApplyText from "./use-apply-text";
 import { ConfigTypeKey } from "src/background-app/domain";
+import { complexPanelStyles, colors, spacing, fontSize, borderRadius } from "./styles";
 
 const tasks = [
   {
@@ -133,25 +133,42 @@ export default function ComplexModePanel() {
     setReplyVariants([]);
   };
 
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
   return (
-    <div className="border-t border-gray-200 dark:border-gray-800 max-w-[600px]">
-      <div className="flex items-start justify-between px-3 py-1.5">
-        <div className="flex-1 min-w-0 mr-2">
-          <div className="relative">
-            <div className="flex items-center gap-0.5 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-              <div className="flex items-center gap-0.5 pr-1 pb-5">
+    <div style={{
+      ...complexPanelStyles.container,
+      ...(isDark ? complexPanelStyles.containerDark : {}),
+    }}>
+      <div style={complexPanelStyles.header}>
+        <div style={complexPanelStyles.buttonContainer}>
+          <div style={complexPanelStyles.buttonScroll}>
+            <div style={complexPanelStyles.buttonWrapper} className="hypertweet-scrollbar">
+              <div style={complexPanelStyles.buttonGroup}>
                 {tasks.map(({ task, icon: Icon, label, tooltip }) => (
                   <Tooltip key={task} content={tooltip}>
                     <button
                       onClick={() => handleCopyThread(task)}
-                      className={cn(
-                        "flex items-center gap-1 px-2 py-1 rounded-full text-sm whitespace-nowrap",
-                        "hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors",
-                        selectedTask === task &&
-                          "bg-[#1d9bf0]/10 text-[#1d9bf0]"
-                      )}
+                      style={{
+                        ...complexPanelStyles.taskButton,
+                        ...(selectedTask === task 
+                          ? (isDark ? complexPanelStyles.taskButtonActiveDark : complexPanelStyles.taskButtonActive)
+                          : {}),
+                      }}
+                      onMouseEnter={(e) => {
+                        if (selectedTask !== task) {
+                          Object.assign(e.currentTarget.style, 
+                            isDark ? complexPanelStyles.taskButtonHoverDark : complexPanelStyles.taskButtonHover
+                          );
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (selectedTask !== task) {
+                          e.currentTarget.style.backgroundColor = "transparent";
+                        }
+                      }}
                     >
-                      <Icon className="h-3.5 w-3.5" />
+                      <Icon style={{ width: "14px", height: "14px" }} />
                       <span>{label}</span>
                     </button>
                   </Tooltip>
@@ -160,13 +177,13 @@ export default function ComplexModePanel() {
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0 pt-1">
+        <div style={complexPanelStyles.variantSelect}>
           <Select
             value={variantCount.toString()}
             onValueChange={(value) => setVariantCount(Number(value))}
             disabled={isLoading}
           >
-            <SelectTrigger className="h-6 w-[60px] text-xs">
+            <SelectTrigger style={{ height: "24px", width: "60px", fontSize: "12px" }}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -180,34 +197,97 @@ export default function ComplexModePanel() {
       </div>
 
       {isLoading && (
-        <div className="flex items-center justify-center py-1.5">
-          <Loader2 className="h-3.5 w-3.5 animate-spin text-[#1d9bf0]" />
+        <div style={complexPanelStyles.loadingContainer}>
+          <Loader2 style={{ 
+            width: "14px", 
+            height: "14px", 
+            color: colors.twitter.blue,
+            animation: "spin 1s linear infinite" 
+          }} />
         </div>
       )}
 
       {replyVariants.length > 0 && !isLoading && (
-        <div className="border-t border-gray-200 dark:border-gray-800">
-          <div className="flex items-center justify-between px-3 py-1.5">
-            <span className="text-xs text-gray-500">Suggestions</span>
+        <div style={{
+          borderTop: `1px solid ${isDark ? colors.gray[800] : colors.gray[200]}`,
+        }}>
+          <div style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            padding: `${spacing[1.5]} ${spacing[3]}`,
+          }}>
+            <span style={{
+              fontSize: fontSize.xs.size,
+              lineHeight: fontSize.xs.lineHeight,
+              color: colors.gray[500],
+            }}>Suggestions</span>
             <button
               onClick={() => setReplyVariants([])}
-              className="text-xs text-[#1d9bf0] hover:underline"
+              style={{
+                fontSize: fontSize.xs.size,
+                lineHeight: fontSize.xs.lineHeight,
+                color: colors.twitter.blue,
+                background: "none",
+                border: "none",
+                cursor: "pointer",
+                textDecoration: "none",
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.textDecoration = "underline";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.textDecoration = "none";
+              }}
             >
               Clear
             </button>
           </div>
-          <div className="space-y-0.5 px-3 pb-1.5">
+          <div style={complexPanelStyles.variantsList}>
             {replyVariants.map((variant, index) => (
               <div
                 key={index}
-                className="group flex items-start justify-between gap-2 rounded-md p-1.5 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                style={{
+                  ...complexPanelStyles.variantItem,
+                  ...(isDark ? complexPanelStyles.variantItemDark : {}),
+                  display: "flex",
+                  alignItems: "flex-start",
+                  justifyContent: "space-between",
+                  gap: spacing[2],
+                }}
+                onMouseEnter={(e) => {
+                  Object.assign(e.currentTarget.style, 
+                    isDark ? complexPanelStyles.variantItemHoverDark : complexPanelStyles.variantItemHover
+                  );
+                  const button = e.currentTarget.querySelector('button') as HTMLElement;
+                  if (button) button.style.opacity = "1";
+                }}
+                onMouseLeave={(e) => {
+                  Object.assign(e.currentTarget.style, 
+                    isDark ? complexPanelStyles.variantItemDark : complexPanelStyles.variantItem
+                  );
+                  const button = e.currentTarget.querySelector('button') as HTMLElement;
+                  if (button) button.style.opacity = "0";
+                }}
               >
-                <div className="flex-1 text-sm text-gray-700 dark:text-gray-300 leading-tight">
+                <div style={{
+                  ...complexPanelStyles.variantText,
+                  ...(isDark ? complexPanelStyles.variantTextDark : {}),
+                  flex: 1,
+                  lineHeight: "1.25",
+                }}>
                   {variant}
                 </div>
                 <Button
                   onClick={() => handleApplyVariant(variant)}
-                  className="h-6 px-2 text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                  style={{
+                    height: "24px",
+                    padding: `0 ${spacing[2]}`,
+                    fontSize: fontSize.xs.size,
+                    lineHeight: fontSize.xs.lineHeight,
+                    opacity: 0,
+                    transition: "opacity 0.15s",
+                  }}
                 >
                   Apply
                 </Button>

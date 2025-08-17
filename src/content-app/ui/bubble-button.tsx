@@ -1,5 +1,5 @@
 import React from "react";
-import { cn } from "src/ui/library/utils";
+import { bubbleButtonStyles, colors } from "./styles";
 
 export interface BubbleButtonProps {
   children: React.ReactNode;
@@ -18,20 +18,28 @@ export function BubbleButton({
   loading = false,
   loadingText = "Loading...",
 }: BubbleButtonProps) {
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  
   return (
     <button
       disabled={disabled}
       onClick={onClick}
-      className={cn(
-        "rounded-full px-2 py-1 text-sm",
-        "border border-gray-200 dark:border-gray-700",
-        "bg-transparent hover:bg-[#1d9bf0]/10",
-        "text-[#1d9bf0] dark:text-[#1d9bf0]",
-        "font-medium transition-colors",
-        "disabled:opacity-50 disabled:cursor-not-allowed",
-        "hover:border-[#1d9bf0]/20",
-        className
-      )}
+      style={{
+        ...bubbleButtonStyles.base,
+        ...(isDark ? bubbleButtonStyles.dark : {}),
+        ...(disabled ? bubbleButtonStyles.disabled : {}),
+      }}
+      onMouseEnter={(e) => {
+        if (!disabled) {
+          Object.assign(e.currentTarget.style, bubbleButtonStyles.hover);
+        }
+      }}
+      onMouseLeave={(e) => {
+        if (!disabled) {
+          e.currentTarget.style.backgroundColor = "transparent";
+          e.currentTarget.style.borderColor = isDark ? (bubbleButtonStyles.dark.borderColor || colors.gray[700]) : colors.gray[200];
+        }
+      }}
     >
       {loading ? loadingText : children}
     </button>

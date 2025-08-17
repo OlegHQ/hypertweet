@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { User } from "lucide-react";
+import { colors, spacing } from "./styles";
 import {
   Select,
   SelectContent,
@@ -62,7 +63,7 @@ export default function PersonalityTypeSelector() {
   };
 
   return (
-    <div className="w-[180px]">
+    <div style={{ width: "180px" }}>
       <div>
         <Select
           value={selectedType}
@@ -76,10 +77,10 @@ export default function PersonalityTypeSelector() {
             onMouseLeave={() => {
               document.body.style.overflow = "auto";
             }}
-            className="h-7 text-xs border-0 bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800 px-2"
+            style={{ height: "28px", fontSize: "12px", border: 0, background: "transparent", padding: "0 8px" }}
           >
-            <div className="flex items-center gap-2">
-              <User className="h-3 w-3 text-[#1d9bf0]" />
+            <div style={{ display: "flex", alignItems: "center", gap: spacing[2] }}>
+              <User style={{ height: "12px", width: "12px", color: colors.twitter.blue }} />
               <SelectValue placeholder="Select type" />
             </div>
           </SelectTrigger>

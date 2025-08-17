@@ -31,10 +31,11 @@ export default function ChatGPTPromptsPage() {
 
   const handleCopyThread = async (task: ThreadTask) => {
     try {
-      const data = (await app.content.getTaskThreadJSON(
+      const rawData = await app.content.getTaskThreadJSON(
         selectedProfile?.id ?? "",
         task
-      )) as ThreadData;
+      );
+      const data = (rawData as unknown) as ThreadData;
       if (!data) {
         setToastMessage(
           "No thread data found. Make sure you're on a thread page."

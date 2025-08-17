@@ -20,7 +20,7 @@ export default function SettingsModal({
       title="Settings"
       showBackdrop={showBackdrop}
     >
-      <div className="w-[350px]">
+      <div style={{ width: "350px" }}>
         {lastUsedProfileId && (
           <FormatInstructionBuilder
             selectedProfileId={lastUsedProfileId}

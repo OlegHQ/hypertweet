@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import Panel from "./panel";
-import { installTailwind } from "src/utils/install-tailwind";
+import { injectGlobalStyles } from "./styles";
 
 export function injectTwitterReplyStuff() {
   // 1. Set up a MutationObserver to watch the whole page
@@ -205,7 +205,7 @@ export function injectTwitterReplyStuff() {
     `;
     document.head.appendChild(style);
 
-    installTailwind({ disablePreflight: false });
+    injectGlobalStyles();
     createRoot(wrapper).render(<Panel siteType="twitter" parent={container} />);
   }
 }

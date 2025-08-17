@@ -1,6 +1,6 @@
 import { createRoot } from "react-dom/client";
 import Panel from "./panel";
-import { installTailwind } from "src/utils/install-tailwind";
+import { injectGlobalStyles, spacing } from "./styles";
 
 export function injectLinkedInReplyStuff() {
   // 1. Set up a MutationObserver to watch the whole page
@@ -100,9 +100,15 @@ export function injectLinkedInReplyStuff() {
 
     const wrapper = document.createElement("div");
     wrapper.className = "ai-tone-buttons";
+    wrapper.style.cssText = `
+      display: flex;
+      justify-content: flex-start;
+      padding-top: ${spacing[2]};
+      gap: ${spacing[2]};
+    `;
 
     formElement.appendChild(wrapper);
-    installTailwind({ disablePreflight: true });
+    injectGlobalStyles();
     createRoot(wrapper).render(
       <Panel siteType="linkedin" parent={formElement} />
     );
