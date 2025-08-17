@@ -24,51 +24,68 @@ import { Tooltip } from "src/ui/library/tooltip";
 import useApplyText from "./use-apply-text";
 import { ConfigTypeKey } from "src/background-app/domain";
 import { complexPanelStyles, colors, spacing, fontSize, borderRadius } from "./styles";
+import { useSiteType } from "./use-site-type";
 
-const tasks = [
-  {
-    task: ThreadTask.BASIC,
-    icon: MessageSquare,
-    label: "Basic",
-    tooltip: "Generate a basic response based on author's persona",
-  },
-  {
-    task: ThreadTask.CLEANUP,
-    icon: Wand2,
-    label: "Clean Up",
-    tooltip: "Clean up and format your current response",
-  },
-  {
-    task: ThreadTask.IMPACTFUL,
-    icon: Sparkles,
-    label: "Impact",
-    tooltip: "Generate an impactful response based on personality",
-  },
-  {
-    task: ThreadTask.STORY,
-    icon: BookOpen,
-    label: "Story",
-    tooltip: "Share a short, relevant story based on the thread",
-  },
-  {
-    task: ThreadTask.PERSPECTIVE,
-    icon: Lightbulb,
-    label: "Perspective",
-    tooltip: "Share a unique perspective or insight",
-  },
-  {
-    task: ThreadTask.METAPHOR,
-    icon: Quote,
-    label: "Metaphor",
-    tooltip: "Write a smart phrase, metaphor, or simile",
-  },
-  {
-    task: ThreadTask.TIP,
-    icon: ThumbsUp,
-    label: "Tip",
-    tooltip: "Share your personal experience with the tip",
-  },
-];
+const getTasksForPlatform = (siteType: string) => {
+  const baseTasks = [
+    {
+      task: ThreadTask.BASIC,
+      icon: MessageSquare,
+      label: "Basic",
+      tooltip: siteType === 'reddit' 
+        ? "Generate a thoughtful comment based on the post and discussion" 
+        : "Generate a basic response based on author's persona",
+    },
+    {
+      task: ThreadTask.CLEANUP,
+      icon: Wand2,
+      label: "Clean Up",
+      tooltip: "Clean up and format your current response",
+    },
+    {
+      task: ThreadTask.IMPACTFUL,
+      icon: Sparkles,
+      label: "Impact",
+      tooltip: siteType === 'reddit'
+        ? "Generate an impactful comment that adds real value to the discussion"
+        : "Generate an impactful response based on personality",
+    },
+    {
+      task: ThreadTask.STORY,
+      icon: BookOpen,
+      label: "Story",
+      tooltip: siteType === 'reddit'
+        ? "Share a relevant personal story or example related to the post"
+        : "Share a short, relevant story based on the thread",
+    },
+    {
+      task: ThreadTask.PERSPECTIVE,
+      icon: Lightbulb,
+      label: "Perspective",
+      tooltip: siteType === 'reddit'
+        ? "Offer a unique perspective or analysis on the topic"
+        : "Share a unique perspective or insight",
+    },
+    {
+      task: ThreadTask.METAPHOR,
+      icon: Quote,
+      label: siteType === 'reddit' ? "Analogy" : "Metaphor",
+      tooltip: siteType === 'reddit'
+        ? "Explain the concept using a clear analogy or metaphor"
+        : "Write a smart phrase, metaphor, or simile",
+    },
+    {
+      task: ThreadTask.TIP,
+      icon: ThumbsUp,
+      label: "Tip",
+      tooltip: siteType === 'reddit'
+        ? "Share practical advice or tips related to the discussion"
+        : "Share your personal experience with the tip",
+    },
+  ];
+  
+  return baseTasks;
+};
 
 function useVariantCount() {
   const lastUsedProfileId = useLastUsedProfileId();
@@ -105,25 +122,89 @@ export default function ComplexModePanel() {
   const [variantCount, setVariantCount] = useVariantCount();
   const [replyVariants, setReplyVariants] = useState<string[]>([]);
   const [selectedTask, setSelectedTask] = useState<ThreadTask | null>(null);
+  const siteType = useSiteType();
+  const tasks = getTasksForPlatform(siteType || 'twitter');
+  
+  // Debug function for Reddit
+  const testRedditExtraction = async () => {
+    if (siteType === 'reddit') {
+      console.log('[Debug] Testing Reddit extraction...');
+      try {
+        // Test the basic extraction
+        const contentApp = (window as any).app || { reddit: { extractPost: () => null, extractRedditThread: () => null } };
+        
+        // Try to access the reddit scraper from the global context
+        const post = await new Promise((resolve) => {
+          setTimeout(() => {
+            try {
+              const titleEl = document.querySelector("h1[slot=title]");
+              const authorEl = document.querySelector("span[slot=authorName]");
+              const bodyEl = document.querySelector('div[property="schema:articleBody"]');
+              
+              const result = {
+                hasTitle: !!titleEl,
+                hasAuthor: !!authorEl,
+                hasBody: !!bodyEl,
+                title: titleEl?.textContent?.trim(),
+                author: authorEl?.textContent?.trim(),
+                body: bodyEl?.textContent?.trim(),
+                commentsFound: document.querySelectorAll('shreddit-comment').length
+              };
+              
+              console.log('[Debug] Direct DOM check:', result);
+              resolve(result);
+            } catch (err) {
+              console.error('[Debug] Error in direct DOM check:', err);
+              resolve(null);
+            }
+          }, 100);
+        });
+        
+        console.log('[Debug] Reddit extraction test complete:', post);
+      } catch (error) {
+        console.error('[Debug] Reddit extraction test failed:', error);
+      }
+    }
+  };
 
   const handleCopyThread = async (task: ThreadTask) => {
+    console.log('[Complex Mode] Starting complex reply generation', {
+      task,
+      profileId: lastUsedProfileId,
+      variantCount,
+      siteType
+    });
+    
     if (!lastUsedProfileId) {
+      console.error('[Complex Mode] No profile ID available');
       return;
     }
 
     setSelectedTask(task);
     setIsLoading(true);
     try {
-      const { replyVariants } = await bgApp.content.generateComplex(
+      console.log('[Complex Mode] Calling generateComplex...');
+      const result = await bgApp.content.generateComplex(
         lastUsedProfileId,
         task,
         variantCount
       );
-      setReplyVariants(replyVariants);
+      console.log('[Complex Mode] generateComplex result:', result);
+      
+      if (result && result.replyVariants) {
+        setReplyVariants(result.replyVariants);
+        console.log('[Complex Mode] Set reply variants:', result.replyVariants);
+      } else {
+        console.warn('[Complex Mode] No reply variants in result:', result);
+        setReplyVariants([]);
+      }
     } catch (error) {
-      console.error("Error generating complex reply:", error);
+      console.error('[Complex Mode] Error generating complex reply:', error);
+      console.error('[Complex Mode] Error stack:', error.stack);
+      setReplyVariants([]);
     } finally {
       setIsLoading(false);
+      console.log('[Complex Mode] Loading complete');
     }
   };
   const applyText = useApplyText();
@@ -145,6 +226,19 @@ export default function ComplexModePanel() {
           <div style={complexPanelStyles.buttonScroll}>
             <div style={complexPanelStyles.buttonWrapper} className="hypertweet-scrollbar">
               <div style={complexPanelStyles.buttonGroup}>
+                {siteType === 'reddit' && (
+                  <button
+                    onClick={testRedditExtraction}
+                    style={{
+                      ...complexPanelStyles.taskButton,
+                      backgroundColor: colors.blue[100],
+                      color: colors.blue[700],
+                      marginRight: spacing[2]
+                    }}
+                  >
+                    Debug
+                  </button>
+                )}
                 {tasks.map(({ task, icon: Icon, label, tooltip }) => (
                   <Tooltip key={task} content={tooltip}>
                     <button
