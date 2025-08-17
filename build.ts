@@ -56,7 +56,7 @@ function writeManifest(outDir: string, chrome: boolean) {
       "clipboardWrite",
       "sidePanel",
     ],
-    host_permissions: ["https://x.com/*", "*://*.linkedin.com/*"],
+    host_permissions: ["https://x.com/*", "*://*.linkedin.com/*", "*://*.reddit.com/*"],
     background: {
       service_worker: "background.js",
       scripts: ["background.js"],
@@ -77,7 +77,7 @@ function writeManifest(outDir: string, chrome: boolean) {
     ],
     content_scripts: [
       {
-        matches: ["https://x.com/*", "*://*.linkedin.com/*"],
+        matches: ["https://x.com/*", "*://*.linkedin.com/*", "*://*.reddit.com/*"],
         js: ["content.js"],
       },
     ],

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-export type SiteType = "twitter" | "linkedin" | "debugging";
+export type SiteType = "twitter" | "linkedin" | "reddit" | "debugging";
 
 interface SiteTypeState {
   siteType: SiteType;

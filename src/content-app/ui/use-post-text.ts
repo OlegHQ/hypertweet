@@ -1,6 +1,8 @@
 import { useCallback } from "react";
 import { useSiteType } from "./use-site-type";
 import { TwitterScraper } from "../twitter/twitter-scraper";
+import { RedditScraper } from "../reddit/reddit-scraper";
+import { LinkedInScraper } from "../linkedin/linkedin-scraper";
 import type { PostContent } from "../types";
 
 export default function usePostText() {
@@ -38,6 +40,43 @@ export default function usePostText() {
       }
       return result;
     }
+
+    if (siteType === "reddit") {
+      const post = new RedditScraper().extractPost();
+      
+      if (!post) {
+        return null;
+      }
+
+      return {
+        authorName: post.author,
+        authorUsername: post.author,
+        postText: `${post.postTitle}\n\n${post.body}`.trim(),
+        replies: post.comments.slice(0, 5).map((comment) => ({
+          authorName: comment.author,
+          authorUsername: comment.author,
+          postText: comment.comment,
+        })),
+        currentReply: null,
+      };
+    }
+
+    if (siteType === "linkedin") {
+      const linkedInPost = await new LinkedInScraper().extractPost();
+      
+      if (!linkedInPost) {
+        return null;
+      }
+
+      return {
+        authorName: linkedInPost.authorName,
+        authorUsername: linkedInPost.authorUsername,
+        postText: linkedInPost.postText,
+        replies: [], // LinkedIn comment extraction would be more complex
+        currentReply: linkedInPost.currentReply,
+      };
+    }
+
     return null;
   }, [siteType]);
   return loadPostContent;

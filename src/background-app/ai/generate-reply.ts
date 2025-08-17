@@ -17,7 +17,7 @@ export async function generateReply(
   prompt: string,
   formatInstructions: string,
   postText: string,
-  siteType: "twitter" | "linkedin"
+  siteType: "twitter" | "linkedin" | "reddit"
 ): Promise<
   [
     string,

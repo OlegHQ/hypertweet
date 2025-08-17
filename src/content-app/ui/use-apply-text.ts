@@ -3,6 +3,7 @@ import { typeTweet } from "../twitter/type-tweet";
 import { useSiteTypeStore } from "./site-type-store";
 import usePostText from "./use-post-text";
 import { typeLinkedIn } from "../linkedin/type-actions";
+import { typeRedditComment } from "../reddit/type-actions";
 
 export default function useApplyText() {
   const loadPostContent = usePostText();
@@ -28,6 +29,8 @@ export default function useApplyText() {
               'div[data-test-ql-editor-contenteditable="true"]'
             ) as HTMLElement;
           typeLinkedIn(editor, reply);
+        } else if (siteType === "reddit") {
+          typeRedditComment(reply);
         } else {
           console.warn("hypertweet: no site type");
           alert("typing: " + reply);

@@ -10,6 +10,33 @@ const linkedInRules = {
 };
 
 export class LinkedInScraper {
+  async extractPost() {
+    // Find the post element - LinkedIn posts are typically in article tags
+    const postElement = document.querySelector('[role="article"]') as HTMLElement;
+    if (!postElement) {
+      return null;
+    }
+
+    // Extract post text
+    const textEl = postElement.querySelector('.update-components-text');
+    const postText = textEl?.textContent?.trim() || "";
+
+    // Extract author info
+    const authorEl = postElement.querySelector('.update-components-actor__title span[aria-hidden="true"]');
+    const authorName = authorEl?.textContent?.trim() || "";
+
+    // Check for existing reply text
+    const commentBox = postElement.querySelector('div[data-test-ql-editor-contenteditable="true"]') as HTMLElement;
+    const currentReply = commentBox?.innerText?.trim() || null;
+
+    return {
+      authorName,
+      authorUsername: authorName, // LinkedIn doesn't have separate usernames
+      postText,
+      currentReply,
+    };
+  }
+
   async scrapeLinkedInProfile() {
     const getTextContent = (selector: string) =>
       document.querySelector(selector)?.textContent?.trim() || "";

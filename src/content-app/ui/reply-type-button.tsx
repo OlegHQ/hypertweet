@@ -78,7 +78,7 @@ const useReplyTypeButton = (
 
     await new Promise((resolve) => setTimeout(resolve, 1000));
     const reply = await app.ai.generateReply(
-      siteType as "twitter" | "linkedin",
+      siteType as "twitter" | "linkedin" | "reddit",
       replyType.profileId,
       text ?? "",
       replyType.prompt

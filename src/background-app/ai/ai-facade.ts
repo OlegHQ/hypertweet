@@ -33,7 +33,7 @@ export class AIFacade {
   constructor(private readonly dataLayer: DataLayer) {}
 
   async editReply(
-    _: "twitter" | "linkedin" | "debugging",
+    _: "twitter" | "linkedin" | "reddit" | "debugging",
     profileId: string,
     postText: string,
     currentReply: string,
@@ -73,7 +73,7 @@ export class AIFacade {
   }
 
   async generateReply(
-    site: "twitter" | "linkedin",
+    site: "twitter" | "linkedin" | "reddit",
     profileId: string,
     postText: string,
     prompt: string

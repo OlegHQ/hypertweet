@@ -1,5 +1,5 @@
 {
-  description = "A development environment with Bun and Fish shell";
+  description = "A development environment with Bun, Node.js 22, TypeScript LSP, and Fish shell";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -15,6 +15,9 @@
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             bun
+            nodejs_22
+            nodePackages.typescript
+            nodePackages.typescript-language-server
           ];
 
           shellHook = ''
@@ -25,3 +28,4 @@
       }
     );
 } 
+
