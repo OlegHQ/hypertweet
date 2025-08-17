@@ -21,12 +21,6 @@ export class AiContentPrompt {
     inTask: ThreadTask,
     numberOfVariants: number = 5
   ) {
-    console.log('[AI Content] Starting generateComplex', {
-      profileId,
-      task: inTask,
-      numberOfVariants
-    });
-    
     const model = await this.ai.getModel(profileId);
     console.log('[AI Content] Using model:', model);
 
@@ -38,11 +32,7 @@ export class AiContentPrompt {
       console.error('[AI Content] Missing OpenAI API key');
       throw new Error("Missing required config");
     }
-    console.log('[AI Content] OpenAI key found');
-
-    console.log('[AI Content] Getting task thread JSON...');
     const res = await this.getTaskThreadJSON(profileId, inTask);
-    console.log('[AI Content] Task thread JSON result:', res);
 
     if (!res) {
       console.error('[AI Content] No thread data available');
@@ -53,20 +43,19 @@ export class AiContentPrompt {
     const thread = (res as any).twitterThread || (res as any).redditThread;
     const platform = (res as any).platform || 'twitter';
     
-    console.log('[AI Content] Extracted data:', {
-      task,
-      platform,
-      hasThread: !!thread,
-      threadType: thread ? Object.keys(thread) : 'none',
-      currentResponse
-    });
+    console.log('[AI Content] Processing thread for platform:', platform);
 
     const rawRequest: ChatCompletionCreateParamsNonStreaming = {
       model,
       messages: [
         {
           role: "system",
-          content: JSON.stringify(rest),
+          content: model === 'gpt-3.5-turbo' ? 
+            JSON.stringify({
+              ...rest,
+              instructions: "You must respond with a valid JSON object containing a 'replyVariants' array of strings. Example: {\"replyVariants\": [\"reply1\", \"reply2\"]}"
+            }) : 
+            JSON.stringify(rest),
         },
         {
           role: "user",
@@ -80,43 +69,35 @@ export class AiContentPrompt {
       ],
       max_tokens: 450,
       temperature: 0.5,
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "reply_variants_response",
-          strict: true,
-          schema: {
-            type: "object",
-            additionalProperties: false,
-            required: ["replyVariants"],
-            properties: {
-              replyVariants: {
-                type: "array",
-                items: { type: "string" },
+      response_format: model === 'gpt-3.5-turbo' ? 
+        { type: "json_object" } : 
+        {
+          type: "json_schema",
+          json_schema: {
+            name: "reply_variants_response",
+            strict: true,
+            schema: {
+              type: "object",
+              additionalProperties: false,
+              required: ["replyVariants"],
+              properties: {
+                replyVariants: {
+                  type: "array",
+                  items: { type: "string" },
+                },
               },
             },
           },
         },
-      },
     };
 
-    console.log('[AI Content] Sending request to OpenAI:', {
-      model,
-      messagesCount: rawRequest.messages.length,
-      maxTokens: rawRequest.max_tokens
-    });
+    console.log('[AI Content] Sending request to OpenAI with model:', rawRequest.model);
     
     const chatResult = await tokenManager
       .getClient(openAiKey)
       .chat.completions.create(rawRequest);
       
-    console.log('[AI Content] OpenAI response:', {
-      choices: chatResult.choices?.length,
-      usage: chatResult.usage
-    });
-
     const reply = chatResult.choices[0]?.message?.content;
-    console.log('[AI Content] Raw reply:', reply);
 
     await this.dataLayer.requestLog.save({
       profileId,

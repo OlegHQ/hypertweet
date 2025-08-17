@@ -124,57 +124,8 @@ export default function ComplexModePanel() {
   const [selectedTask, setSelectedTask] = useState<ThreadTask | null>(null);
   const siteType = useSiteType();
   const tasks = getTasksForPlatform(siteType || 'twitter');
-  
-  // Debug function for Reddit
-  const testRedditExtraction = async () => {
-    if (siteType === 'reddit') {
-      console.log('[Debug] Testing Reddit extraction...');
-      try {
-        // Test the basic extraction
-        const contentApp = (window as any).app || { reddit: { extractPost: () => null, extractRedditThread: () => null } };
-        
-        // Try to access the reddit scraper from the global context
-        const post = await new Promise((resolve) => {
-          setTimeout(() => {
-            try {
-              const titleEl = document.querySelector("h1[slot=title]");
-              const authorEl = document.querySelector("span[slot=authorName]");
-              const bodyEl = document.querySelector('div[property="schema:articleBody"]');
-              
-              const result = {
-                hasTitle: !!titleEl,
-                hasAuthor: !!authorEl,
-                hasBody: !!bodyEl,
-                title: titleEl?.textContent?.trim(),
-                author: authorEl?.textContent?.trim(),
-                body: bodyEl?.textContent?.trim(),
-                commentsFound: document.querySelectorAll('shreddit-comment').length
-              };
-              
-              console.log('[Debug] Direct DOM check:', result);
-              resolve(result);
-            } catch (err) {
-              console.error('[Debug] Error in direct DOM check:', err);
-              resolve(null);
-            }
-          }, 100);
-        });
-        
-        console.log('[Debug] Reddit extraction test complete:', post);
-      } catch (error) {
-        console.error('[Debug] Reddit extraction test failed:', error);
-      }
-    }
-  };
 
   const handleCopyThread = async (task: ThreadTask) => {
-    console.log('[Complex Mode] Starting complex reply generation', {
-      task,
-      profileId: lastUsedProfileId,
-      variantCount,
-      siteType
-    });
-    
     if (!lastUsedProfileId) {
       console.error('[Complex Mode] No profile ID available');
       return;
@@ -183,28 +134,23 @@ export default function ComplexModePanel() {
     setSelectedTask(task);
     setIsLoading(true);
     try {
-      console.log('[Complex Mode] Calling generateComplex...');
       const result = await bgApp.content.generateComplex(
         lastUsedProfileId,
         task,
         variantCount
       );
-      console.log('[Complex Mode] generateComplex result:', result);
       
       if (result && result.replyVariants) {
         setReplyVariants(result.replyVariants);
-        console.log('[Complex Mode] Set reply variants:', result.replyVariants);
       } else {
         console.warn('[Complex Mode] No reply variants in result:', result);
         setReplyVariants([]);
       }
     } catch (error) {
       console.error('[Complex Mode] Error generating complex reply:', error);
-      console.error('[Complex Mode] Error stack:', error.stack);
       setReplyVariants([]);
     } finally {
       setIsLoading(false);
-      console.log('[Complex Mode] Loading complete');
     }
   };
   const applyText = useApplyText();
@@ -226,19 +172,6 @@ export default function ComplexModePanel() {
           <div style={complexPanelStyles.buttonScroll}>
             <div style={complexPanelStyles.buttonWrapper} className="hypertweet-scrollbar">
               <div style={complexPanelStyles.buttonGroup}>
-                {siteType === 'reddit' && (
-                  <button
-                    onClick={testRedditExtraction}
-                    style={{
-                      ...complexPanelStyles.taskButton,
-                      backgroundColor: colors.blue[100],
-                      color: colors.blue[700],
-                      marginRight: spacing[2]
-                    }}
-                  >
-                    Debug
-                  </button>
-                )}
                 {tasks.map(({ task, icon: Icon, label, tooltip }) => (
                   <Tooltip key={task} content={tooltip}>
                     <button
@@ -280,11 +213,19 @@ export default function ComplexModePanel() {
             <SelectTrigger style={{ height: "24px", width: "60px", fontSize: "12px" }}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="2">2</SelectItem>
-              <SelectItem value="3">3</SelectItem>
-              <SelectItem value="4">4</SelectItem>
-              <SelectItem value="5">5</SelectItem>
+            <SelectContent style={{
+              backgroundColor: "white",
+              border: `1px solid ${colors.gray[200]}`,
+              borderRadius: borderRadius.md,
+              boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+              zIndex: 1000,
+              minWidth: "60px",
+              padding: spacing[1]
+            }}>
+              <SelectItem value="2" style={{ padding: `${spacing[1]} ${spacing[2]}`, fontSize: fontSize.xs.size }}>2</SelectItem>
+              <SelectItem value="3" style={{ padding: `${spacing[1]} ${spacing[2]}`, fontSize: fontSize.xs.size }}>3</SelectItem>
+              <SelectItem value="4" style={{ padding: `${spacing[1]} ${spacing[2]}`, fontSize: fontSize.xs.size }}>4</SelectItem>
+              <SelectItem value="5" style={{ padding: `${spacing[1]} ${spacing[2]}`, fontSize: fontSize.xs.size }}>5</SelectItem>
             </SelectContent>
           </Select>
         </div>
