@@ -1,0 +1,54 @@
+# Chrome extension development commands
+
+# Default task
+default:
+    @just --list
+
+# Watch and build Chrome extension
+watch:
+    @echo "🔄 Watching Chrome extension files..."
+    @mkdir -p extension/dist
+    @cp extension/manifest.json extension/dist/
+    esbuild extension/content.ts \
+        --bundle \
+        --outdir=extension/dist \
+        --format=iife \
+        --target=chrome90 \
+        --watch \
+        --sourcemap
+
+# Build Chrome extension for production
+build:
+    @echo "🔨 Building Chrome extension..."
+    @mkdir -p extension/dist
+    @cp extension/manifest.json extension/dist/
+    esbuild extension/content.ts \
+        --bundle \
+        --outdir=extension/dist \
+        --format=iife \
+        --target=chrome90 \
+        --minify
+    @echo "✅ Build complete!"
+
+# Copy manifest to dist
+copy-manifest:
+    @echo "📋 Copying manifest to extension/dist..."
+    @mkdir -p extension/dist
+    @cp extension/manifest.json extension/dist/
+
+# Clean build directory
+clean:
+    @echo "🧹 Cleaning extension/dist directory..."
+    @rm -rf extension/dist
+
+# Full development build
+dev: clean watch
+
+# Full production build
+prod: clean build
+    @echo "🚀 Production build complete!"
+
+# Format code
+format:
+    @echo "💅 Formatting code..."
+    prettier --write "extension/**/*.{ts,js,json}"

@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "version": "2.0.0",
+  "name": "hypertweet",
+  "description": "Simplify social presence",
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "*://*.x.com/*",
+        "*://*.twitter.com/*",
+        "*://*.reddit.com/*",
+        "*://*.linkedin.com/*"
+      ],
+      "js": ["content.js"]
+    }
+  ]
+}
+
