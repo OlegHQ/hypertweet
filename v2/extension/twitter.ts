@@ -41,7 +41,42 @@ export class TwitterScraper extends Scraper {
 			}
 		}
 
+		// Detect active post (where reply form is visible)
+		const replyForm = document.querySelector('[data-testid="tweetTextarea_0"]');
+		if (replyForm && page.posts && page.posts.length > 0) {
+			page.activePost = page.posts[0]; // First post is typically the one being replied to
+		}
+
 		return page;
+	}
+
+	insertReply(text: string): boolean {
+		const editor = document.querySelector(
+			'div[contenteditable="true"][data-testid="tweetTextarea_0"]'
+		) as HTMLElement;
+		
+		if (!editor) {
+			console.warn("Twitter reply editor not found");
+			return false;
+		}
+
+		try {
+			editor.focus();
+			const sel = window.getSelection();
+			const range = document.createRange();
+			range.selectNodeContents(editor);
+			range.collapse(true);
+			sel?.removeAllRanges();
+			sel?.addRange(range);
+
+			document.execCommand("selectAll", false, undefined);
+			document.execCommand("insertText", false, text);
+			
+			return true;
+		} catch (error) {
+			console.error("Failed to insert reply on Twitter:", error);
+			return false;
+		}
 	}
 
 	private extractTweetsFromPage(): {

@@ -30,12 +30,6 @@ build:
         --minify
     @echo "✅ Build complete!"
 
-# Copy manifest to dist
-copy-manifest:
-    @echo "📋 Copying manifest to extension/dist..."
-    @mkdir -p extension/dist
-    @cp extension/manifest.json extension/dist/
-
 # Clean build directory
 clean:
     @echo "🧹 Cleaning extension/dist directory..."
@@ -52,3 +46,4 @@ prod: clean build
 format:
     @echo "💅 Formatting code..."
     prettier --write "extension/**/*.{ts,js,json}"
+

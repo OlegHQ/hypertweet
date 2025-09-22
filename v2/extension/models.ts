@@ -2,6 +2,7 @@ export class Page {
 	baseHost: string;
 	url: string;
 	posts?: Post[];
+	activePost?: Post;
 }
 
 export class User {
