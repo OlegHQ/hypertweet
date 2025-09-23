@@ -22,11 +22,9 @@
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            # Node.js ecosystem
+            # Node.js ecosystem with Bun
             nodejs_22
-            nodePackages.npm
-            nodePackages.yarn
-            nodePackages.pnpm
+            bun
             
             # Build tools
             esbuild
@@ -39,16 +37,18 @@
             # Development utilities
             git
             which
+            just
           ];
 
           shellHook = ''
             echo "🚀 Hypertweet development environment loaded"
             echo "Node: $(node --version)"
-            echo "npm: $(npm --version)"
+            echo "Bun: $(bun --version)"
             echo "esbuild: $(esbuild --version)"
             echo "prettier: $(prettier --version)"
             echo "rustc: $(rustc --version)"
             echo "cargo: $(cargo --version)"
+            echo "just: $(just --version)"
           '';
         };
       });

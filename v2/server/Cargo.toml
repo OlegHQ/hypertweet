@@ -6,9 +6,19 @@ edition = "2024"
 [dependencies]
 axum = "0.8.4"
 tokio = {version="1.47.1",features=["rt-multi-thread", "macros"]} 
-tower-http = "0.6.6"
+tower-http = {version = "0.6.6", features = ["cors"]}
 d1-rs = {git = "https://github.com/nexo-tech/d1-rs.git"}
 serde_json = "1.0.145"
-serde = "1.0.226"
+serde = {version = "1.0.226", features = ["derive"]}
 rusqlite = "0.32.0"
+jsonwebtoken = "9.3.0"
+bcrypt = "0.16.0"
+validator = {version = "0.19.0", features = ["derive"]}
+chrono = {version = "0.4.39", features = ["serde"]}
+uuid = {version = "1.10.0", features = ["v4", "serde"]}
+thiserror = "2.0.6"
+anyhow = "1.0.94"
+
+[dev-dependencies]
+tokio-test = "0.4.4"
 

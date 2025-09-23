@@ -1,9 +1,10 @@
-import { Router } from "./router";
+import { Router } from './router';
 
-const router = new Router()
+const router = new Router();
 
+const page = router.getScraper().readPage();
 
-const page = router.getScraper().readPage()
-
-console.log("here's your page", page)
-
+// Development logging - remove in production
+if (process.env.NODE_ENV === 'development') {
+  console.log("here's your page", page);
+}
