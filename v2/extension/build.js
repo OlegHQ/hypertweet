@@ -11,9 +11,12 @@ const __dirname = dirname(__filename);
 const isWatch = process.argv.includes('--watch');
 const isProduction = !isWatch && !process.argv.includes('--dev');
 
-// Build configuration
-const config = {
-  entryPoints: [join(__dirname, 'content.ts')],
+// Determine what to build
+const buildTarget =
+  process.argv.find(arg => arg.startsWith('--target='))?.split('=')[1] || 'all';
+
+// Common build configuration
+const commonConfig = {
   bundle: true,
   outdir: join(__dirname, 'dist'),
   format: 'iife',
@@ -30,7 +33,33 @@ const config = {
   drop: isProduction ? ['console', 'debugger'] : [],
   legalComments: 'none',
   keepNames: !isProduction,
+  jsx: 'automatic',
+  jsxImportSource: '@emotion/react',
 };
+
+// Build configurations for different targets
+const buildConfigs = [];
+
+if (buildTarget === 'all' || buildTarget === 'content') {
+  buildConfigs.push({
+    ...commonConfig,
+    entryPoints: [join(__dirname, 'content.ts')],
+  });
+}
+
+if (buildTarget === 'all' || buildTarget === 'sidebar') {
+  buildConfigs.push({
+    ...commonConfig,
+    entryPoints: [join(__dirname, 'sidebar.tsx')],
+  });
+}
+
+if (buildTarget === 'all' || buildTarget === 'background') {
+  buildConfigs.push({
+    ...commonConfig,
+    entryPoints: [join(__dirname, 'background.ts')],
+  });
+}
 
 // Plugin to copy manifest and other assets
 const copyAssetsPlugin = {
@@ -50,6 +79,19 @@ const copyAssetsPlugin = {
         const manifestSrc = join(__dirname, 'manifest.json');
         const manifestDest = join(__dirname, 'dist/manifest.json');
         copyFileSync(manifestSrc, manifestDest);
+
+        // Copy sidebar.html if it exists and we're building sidebar
+        if (buildTarget === 'all' || buildTarget === 'sidebar') {
+          try {
+            const sidebarSrc = join(__dirname, 'sidebar.html');
+            const sidebarDest = join(__dirname, 'dist/sidebar.html');
+            copyFileSync(sidebarSrc, sidebarDest);
+          } catch {
+            if (process.env.NODE_ENV === 'development') {
+              console.warn('⚠️  sidebar.html not found, skipping copy');
+            }
+          }
+        }
 
         // Update manifest version if needed
         const manifest = JSON.parse(readFileSync(manifestDest, 'utf8'));
@@ -94,28 +136,33 @@ const errorHandlerPlugin = {
   },
 };
 
-// Add plugins to config
-config.plugins = [copyAssetsPlugin, errorHandlerPlugin];
+// Add plugins to each config
+buildConfigs.forEach(config => {
+  config.plugins = [copyAssetsPlugin, errorHandlerPlugin];
+});
 
 async function build() {
   try {
     console.log(
-      `🔨 Building extension in ${isProduction ? 'production' : 'development'} mode...`
+      `🔨 Building ${buildTarget} in ${isProduction ? 'production' : 'development'} mode...`
     );
 
     if (isWatch) {
       console.log('👀 Watching for changes...');
-      const context = await esbuild.context(config);
-      await context.watch();
+      const contexts = await Promise.all(
+        buildConfigs.map(config => esbuild.context(config))
+      );
+
+      await Promise.all(contexts.map(context => context.watch()));
 
       // Keep the process alive
       process.on('SIGINT', async () => {
         console.log('\n🛑 Stopping watch mode...');
-        await context.dispose();
+        await Promise.all(contexts.map(context => context.dispose()));
         process.exit(0);
       });
     } else {
-      await esbuild.build(config);
+      await Promise.all(buildConfigs.map(config => esbuild.build(config)));
     }
   } catch (error) {
     console.error('❌ Build failed:', error);

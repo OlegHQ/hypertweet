@@ -55,7 +55,7 @@ export class TwitterScraper extends Scraper {
     );
 
     if (!editor) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.warn('Twitter reply editor not found');
       }
       return false;
@@ -75,7 +75,7 @@ export class TwitterScraper extends Scraper {
 
       return true;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.error('Failed to insert reply on Twitter:', error);
       }
       return false;

@@ -5,8 +5,12 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run lint:check && bun run typecheck && bun run build.js",
-    "watch": "bun run lint:check && bun run typecheck && bun run build.js --watch",
+    "build": "bun run lint:check && bun run typecheck && bun run build.js --target=all",
+    "watch": "bun run lint:check && bun run typecheck && bun run build.js --target=all --watch",
+    "build-sidebar": "bun run lint:check && bun run typecheck && bun run build.js --target=sidebar",
+    "watch-sidebar": "bun run lint:check && bun run typecheck && bun run build.js --target=sidebar --watch",
+    "build-all": "bun run lint:check && bun run typecheck && bun run build.js --target=all",
+    "watch-all": "bun run lint:check && bun run typecheck && bun run build.js --target=all --watch",
     "dev": "bun run clean && bun run watch",
     "prod": "bun run clean && bun run build",
     "clean": "rimraf dist",
@@ -16,9 +20,19 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\""
   },
+  "dependencies": {
+    "@emotion/react": "^11.11.4",
+    "@emotion/styled": "^11.11.5",
+    "@hookform/resolvers": "^3.9.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.53.0"
+  },
   "devDependencies": {
     "@types/chrome": "^0.0.270",
     "@types/node": "^22.5.4",
+    "@types/react": "^18.3.5",
+    "@types/react-dom": "^18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",
     "esbuild": "^0.25.10",

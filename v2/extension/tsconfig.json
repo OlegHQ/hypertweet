@@ -31,6 +31,10 @@
     "importHelpers": false,
     "downlevelIteration": false,
 
+    /* JSX */
+    "jsx": "react-jsx",
+    "jsxImportSource": "@emotion/react",
+
     /* Interop Constraints */
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
@@ -39,6 +43,7 @@
     /* Advanced */
     "skipLibCheck": true,
     "verbatimModuleSyntax": false,
+    "types": ["chrome", "node"],
 
     /* Paths */
     "baseUrl": ".",

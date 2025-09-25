@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
   "version": "2.0.0",
-  "name": "hypertweet",
-  "description": "Simplify social presence",
-  "permissions": ["activeTab"],
+  "name": "Hypertweet",
+  "description": "AI-powered contextual replies for social media platforms",
+  "permissions": ["activeTab", "sidePanel", "storage", "identity"],
+  "host_permissions": ["http://localhost:3000/*"],
   "content_scripts": [
     {
       "matches": [
@@ -14,5 +15,18 @@
       ],
       "js": ["content.js"]
     }
-  ]
+  ],
+  "side_panel": {
+    "default_path": "sidebar.html"
+  },
+  "action": {
+    "default_title": "Open Hypertweet Sidebar"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline';"
+  }
 }

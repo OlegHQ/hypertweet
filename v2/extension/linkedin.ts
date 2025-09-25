@@ -43,7 +43,7 @@ export class LinkedInScraper extends Scraper {
   insertReply(text: string): boolean {
     const editor = this.findCommentEditor();
     if (!editor) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.warn('LinkedIn comment editor not found');
       }
       return false;
@@ -54,7 +54,7 @@ export class LinkedInScraper extends Scraper {
 
       const selection = window.getSelection();
       if (!selection) {
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env['NODE_ENV'] === 'development') {
           console.warn('Could not get window selection.');
         }
         return false;
@@ -79,7 +79,7 @@ export class LinkedInScraper extends Scraper {
       // Insert the HTML
       const success = document.execCommand('insertHTML', false, htmlContent);
       if (!success) {
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env['NODE_ENV'] === 'development') {
           console.error('Failed to insert HTML using execCommand');
         }
         return false;
@@ -87,7 +87,7 @@ export class LinkedInScraper extends Scraper {
 
       return true;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.error('Failed to insert reply on LinkedIn:', error);
       }
       return false;

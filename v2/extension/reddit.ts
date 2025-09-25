@@ -59,7 +59,7 @@ export class RedditScraper extends Scraper {
     // Find the Reddit comment composer
     const composer = document.querySelector('shreddit-composer');
     if (!composer) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log('Reddit composer not found');
       }
       return false;
@@ -70,7 +70,7 @@ export class RedditScraper extends Scraper {
       'div[contenteditable="true"][role="textbox"]'
     );
     if (!textbox) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.log('Textbox not found in composer');
       }
       return false;
@@ -135,7 +135,7 @@ export class RedditScraper extends Scraper {
 
       return true;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.error('Failed to insert reply on Reddit:', error);
       }
       return false;
@@ -195,7 +195,7 @@ export class RedditScraper extends Scraper {
   }
 
   private extractPost(): RedditPostData | null {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env['NODE_ENV'] === 'development') {
       console.log('[Reddit Scraper] Extracting post data...');
     }
     try {
@@ -206,7 +206,7 @@ export class RedditScraper extends Scraper {
       );
 
       if (!titleEl || !authorEl) {
-        if (process.env.NODE_ENV === 'development') {
+        if (process.env['NODE_ENV'] === 'development') {
           console.warn('[Reddit Scraper] Required post elements not found');
         }
         return null;
@@ -238,7 +238,7 @@ export class RedditScraper extends Scraper {
 
       return result;
     } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
+      if (process.env['NODE_ENV'] === 'development') {
         console.error('[Reddit Scraper] Error extracting Reddit post:', error);
       }
       return null;
