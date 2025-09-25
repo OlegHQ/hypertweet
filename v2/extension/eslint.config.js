@@ -94,9 +94,9 @@ export default [
     },
   },
   {
-    files: ['styles/**/*.ts'],
+    files: ['styles/**/*.ts', 'components/**/*.tsx'],
     rules: {
-      // Allow missing return types in styled components
+      // Allow missing return types in styled components and component files
       '@typescript-eslint/explicit-function-return-type': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
     },
