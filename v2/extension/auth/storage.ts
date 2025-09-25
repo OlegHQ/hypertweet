@@ -16,7 +16,7 @@ import {
  */
 export namespace AuthStorage {
   const CLEANUP_INTERVAL = 60 * 60 * 1000; // 1 hour in milliseconds
-  let cleanupTimer: number | null = null;
+  let cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
   /**
    * Initialize automatic token cleanup
@@ -30,7 +30,7 @@ export namespace AuthStorage {
     // Set up periodic cleanup
     cleanupTimer = setInterval(() => {
       void cleanupExpiredTokens();
-    }, CLEANUP_INTERVAL) as number;
+    }, CLEANUP_INTERVAL);
   }
 
   /**

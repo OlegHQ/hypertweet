@@ -24,8 +24,11 @@ export default [
         process: 'readonly',
         setInterval: 'readonly',
         clearInterval: 'readonly',
+        setTimeout: 'readonly',
+        clearTimeout: 'readonly',
         atob: 'readonly',
         btoa: 'readonly',
+        fetch: 'readonly',
       },
     },
     plugins: {
