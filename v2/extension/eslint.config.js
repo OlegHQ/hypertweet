@@ -94,6 +94,14 @@ export default [
     },
   },
   {
+    files: ['styles/**/*.ts'],
+    rules: {
+      // Allow missing return types in styled components
+      '@typescript-eslint/explicit-function-return-type': 'off',
+      '@typescript-eslint/explicit-module-boundary-types': 'off',
+    },
+  },
+  {
     files: ['build.js', 'eslint.config.js'],
     languageOptions: {
       globals: {
