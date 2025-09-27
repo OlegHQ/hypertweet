@@ -248,6 +248,133 @@ const CharacterCount = styled.span<{ readonly isNearLimit: boolean }>`
 `;
 
 /**
+ * Helper function to determine validation state from props
+ */
+const getValidationState = (
+  errorMessage?: string,
+  successMessage?: string,
+  validationState: ValidationState = 'default'
+): ValidationState => {
+  if (errorMessage) return 'error';
+  if (successMessage) return 'success';
+  return validationState;
+};
+
+/**
+ * Helper function to get display message priority
+ */
+const getDisplayMessage = (
+  errorMessage?: string,
+  successMessage?: string,
+  helpText?: string
+): string | undefined => errorMessage ?? successMessage ?? helpText;
+
+/**
+ * Helper function to build aria-describedby string
+ */
+const buildAriaDescribedBy = (
+  displayMessage: string | undefined,
+  errorMessage: string | undefined,
+  helpTextId: string,
+  errorId: string,
+  ariaDescribedBy?: string
+): string | undefined => {
+  const descriptions: string[] = [];
+  if (displayMessage) descriptions.push(helpTextId);
+  if (errorMessage) descriptions.push(errorId);
+  if (ariaDescribedBy) descriptions.push(ariaDescribedBy);
+  return descriptions.length > 0 ? descriptions.join(' ') : undefined;
+};
+
+/**
+ * Helper function to call original onChange handler based on input type
+ */
+const callOriginalOnChange = (
+  event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  props: InputProps,
+  rest: Record<string, unknown>
+): void => {
+  if (!('onChange' in rest) || !rest['onChange']) return;
+
+  if (props.type === 'textarea') {
+    (rest['onChange'] as React.ChangeEventHandler<HTMLTextAreaElement>)(
+      event as React.ChangeEvent<HTMLTextAreaElement>
+    );
+  } else {
+    (rest['onChange'] as React.ChangeEventHandler<HTMLInputElement>)(
+      event as React.ChangeEvent<HTMLInputElement>
+    );
+  }
+};
+
+/**
+ * Parameters for renderInputElement helper function
+ */
+interface RenderInputElementParams {
+  readonly props: InputProps;
+  readonly ref: React.ForwardedRef<HTMLInputElement | HTMLTextAreaElement>;
+  readonly inputId: string;
+  readonly actualValidationState: ValidationState;
+  readonly required: boolean;
+  readonly maxLength: number | undefined;
+  readonly ariaDescribedByValue: string | undefined;
+  readonly handleInputChange: (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => void;
+  readonly rest: Record<string, unknown>;
+}
+
+/**
+ * Helper function to render the appropriate input element
+ */
+const renderInputElement = ({
+  props,
+  ref,
+  inputId,
+  actualValidationState,
+  required,
+  maxLength,
+  ariaDescribedByValue,
+  handleInputChange,
+  rest,
+}: RenderInputElementParams): React.ReactElement => {
+  if (props.type === 'textarea') {
+    return (
+      <StyledTextarea
+        ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
+        id={inputId}
+        validationState={actualValidationState}
+        resize={props.resize ?? 'vertical'}
+        rows={props.rows ?? 4}
+        required={required}
+        maxLength={maxLength}
+        aria-describedby={ariaDescribedByValue}
+        aria-invalid={actualValidationState === 'error'}
+        aria-required={required}
+        onChange={handleInputChange}
+        {...(rest as TextareaHTMLAttributes<HTMLTextAreaElement>)}
+      />
+    );
+  }
+
+  return (
+    <StyledInput
+      ref={ref as React.ForwardedRef<HTMLInputElement>}
+      id={inputId}
+      type={props.type ?? 'text'}
+      validationState={actualValidationState}
+      required={required}
+      maxLength={maxLength}
+      aria-describedby={ariaDescribedByValue}
+      aria-invalid={actualValidationState === 'error'}
+      aria-required={required}
+      onChange={handleInputChange}
+      {...(rest as InputHTMLAttributes<HTMLInputElement>)}
+    />
+  );
+};
+
+/**
  * Input component with comprehensive functionality and accessibility
  */
 export const Input = forwardRef<
@@ -278,15 +405,17 @@ export const Input = forwardRef<
   // Track character count for textareas and inputs with maxLength
   const [characterCount, setCharacterCount] = useState(0);
 
-  // Determine the actual validation state based on props
-  const actualValidationState: ValidationState = errorMessage
-    ? 'error'
-    : successMessage
-      ? 'success'
-      : validationState;
-
-  // Get the appropriate message to display
-  const displayMessage = errorMessage ?? successMessage ?? helpText;
+  // Use helper functions to reduce complexity
+  const actualValidationState = getValidationState(
+    errorMessage,
+    successMessage,
+    validationState
+  );
+  const displayMessage = getDisplayMessage(
+    errorMessage,
+    successMessage,
+    helpText
+  );
 
   // Calculate if we're near the character limit (90% of maxLength)
   const isNearLimit = maxLength ? characterCount / maxLength >= 0.9 : false;
@@ -296,31 +425,17 @@ export const Input = forwardRef<
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ): void => {
     setCharacterCount(event.target.value.length);
-
-    // Call the original onChange if provided
-    if ('onChange' in rest && rest.onChange) {
-      if (props.type === 'textarea') {
-        (rest.onChange as React.ChangeEventHandler<HTMLTextAreaElement>)(
-          event as React.ChangeEvent<HTMLTextAreaElement>
-        );
-      } else {
-        (rest.onChange as React.ChangeEventHandler<HTMLInputElement>)(
-          event as React.ChangeEvent<HTMLInputElement>
-        );
-      }
-    }
+    callOriginalOnChange(event, props, rest);
   };
 
-  // Build aria-describedby attribute
-  const buildAriaDescribedBy = (): string | undefined => {
-    const descriptions: string[] = [];
-
-    if (displayMessage) descriptions.push(helpTextId);
-    if (errorMessage) descriptions.push(errorId);
-    if (ariaDescribedBy) descriptions.push(ariaDescribedBy);
-
-    return descriptions.length > 0 ? descriptions.join(' ') : undefined;
-  };
+  // Get aria-describedby value using helper function
+  const ariaDescribedByValue = buildAriaDescribedBy(
+    displayMessage,
+    errorMessage,
+    helpTextId,
+    errorId,
+    ariaDescribedBy
+  );
 
   return (
     <InputContainer fullWidth={fullWidth}>
@@ -334,36 +449,17 @@ export const Input = forwardRef<
       )}
 
       <InputWrapper>
-        {props.type === 'textarea' ? (
-          <StyledTextarea
-            ref={ref as React.ForwardedRef<HTMLTextAreaElement>}
-            id={inputId}
-            validationState={actualValidationState}
-            resize={props.resize ?? 'vertical'}
-            rows={props.rows ?? 4}
-            required={required}
-            maxLength={maxLength}
-            aria-describedby={buildAriaDescribedBy()}
-            aria-invalid={actualValidationState === 'error'}
-            aria-required={required}
-            onChange={handleInputChange}
-            {...(rest as TextareaHTMLAttributes<HTMLTextAreaElement>)}
-          />
-        ) : (
-          <StyledInput
-            ref={ref as React.ForwardedRef<HTMLInputElement>}
-            type={props.type ?? 'text'}
-            id={inputId}
-            validationState={actualValidationState}
-            required={required}
-            maxLength={maxLength}
-            aria-describedby={buildAriaDescribedBy()}
-            aria-invalid={actualValidationState === 'error'}
-            aria-required={required}
-            onChange={handleInputChange}
-            {...(rest as InputHTMLAttributes<HTMLInputElement>)}
-          />
-        )}
+        {renderInputElement({
+          props,
+          ref,
+          inputId,
+          actualValidationState,
+          required,
+          maxLength,
+          ariaDescribedByValue,
+          handleInputChange,
+          rest,
+        })}
       </InputWrapper>
 
       {(Boolean(displayMessage) || (showCharacterCount && maxLength)) && (

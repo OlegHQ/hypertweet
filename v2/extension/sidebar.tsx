@@ -160,7 +160,7 @@ const Sidebar: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuth = async (): Promise<void> => {
       try {
         const token = await chrome.storage.sync.get(['authToken']);
         setIsAuthenticated(!!token['authToken']);
@@ -181,14 +181,14 @@ const Sidebar: React.FC = () => {
     });
   }, []);
 
-  const handleLogin = () => {
+  const handleLogin = (): void => {
     if (process.env['NODE_ENV'] === 'development') {
       console.log('Login clicked');
     }
     setIsAuthenticated(true);
   };
 
-  const handleLogout = () => {
+  const handleLogout = (): void => {
     if (process.env['NODE_ENV'] === 'development') {
       console.log('Logout clicked');
     }
@@ -216,7 +216,7 @@ const Sidebar: React.FC = () => {
 };
 
 // Initialize the sidebar
-const initSidebar = () => {
+const initSidebar = (): void => {
   const rootElement = document.getElementById('root');
   if (rootElement) {
     const root = createRoot(rootElement);

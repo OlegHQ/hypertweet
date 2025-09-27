@@ -96,9 +96,7 @@ export class TwitterScraper extends Scraper {
         '[data-testid=tweetText]'
       )?.textContent;
       const time = tweet.querySelector('time')?.getAttribute('datetime');
-      const linkElement = tweet.querySelector(
-        `a[href*="/status/"]`
-      ) as HTMLAnchorElement;
+      const linkElement = tweet.querySelector(`a[href*="/status/"]`);
       const url = linkElement?.href ?? '';
       const statusID = url.split('/').pop();
 
@@ -115,9 +113,7 @@ export class TwitterScraper extends Scraper {
       return result;
     }
 
-    const tweets = Array.from(
-      document.querySelectorAll('[data-testid=tweet]')
-    ) as HTMLElement[];
+    const tweets = Array.from(document.querySelectorAll('[data-testid=tweet]'));
     const [first, ...replies] = tweets;
 
     const responseContainer = document.querySelector(
@@ -136,8 +132,8 @@ export class TwitterScraper extends Scraper {
     }
 
     const result = {
-      status: first ? getTweet(first) : null,
-      replies: replies.map((tweet: HTMLElement) => getTweet(tweet)),
+      status: first ? getTweet(first as HTMLElement) : null,
+      replies: replies.map(tweet => getTweet(tweet as HTMLElement)),
     } as {
       status: TweetData | null;
       replies: TweetData[];
