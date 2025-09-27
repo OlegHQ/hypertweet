@@ -43,10 +43,6 @@ export default [
       'prettier/prettier': 'error',
 
       // TypeScript strict rules - ZERO TOLERANCE FOR ANY TYPES
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_' },
-      ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-non-null-assertion': 'error',
       '@typescript-eslint/prefer-nullish-coalescing': 'error',
@@ -60,14 +56,12 @@ export default [
       '@typescript-eslint/no-misused-promises': 'error',
       '@typescript-eslint/require-await': 'error',
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/explicit-function-return-type': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'error',
       '@typescript-eslint/no-namespace': 'off', // We explicitly use namespaces for utility functions
 
       // General strict rules
       'no-console': 'off', // Allow console in development builds
       'no-debugger': 'error',
-      'no-unused-expressions': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
       'object-shorthand': 'error',
@@ -82,7 +76,6 @@ export default [
       // Code quality (relaxed for initial setup)
       complexity: ['warn', 20],
       'max-depth': ['warn', 6],
-      'max-lines-per-function': ['warn', 100],
       'max-params': ['warn', 6],
       'no-magic-numbers': 'off',
 

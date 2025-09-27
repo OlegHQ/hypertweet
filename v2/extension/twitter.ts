@@ -97,7 +97,7 @@ export class TwitterScraper extends Scraper {
       )?.textContent;
       const time = tweet.querySelector('time')?.getAttribute('datetime');
       const linkElement = tweet.querySelector(`a[href*="/status/"]`);
-      const url = linkElement?.href ?? '';
+      const url = (linkElement as HTMLLinkElement)?.href ?? '';
       const statusID = url.split('/').pop();
 
       const result: TweetData = {
