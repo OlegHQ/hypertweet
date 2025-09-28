@@ -7,6 +7,10 @@
 
 // Main component exports
 export { BaseKeyboard } from './BaseKeyboard.js';
+export { KeyboardLayout } from './KeyboardLayout.js';
+export { ButtonGrid } from './ButtonGrid.js';
+export { KeyboardButton } from './KeyboardButton.js';
+export { CompactKeyboard } from './CompactKeyboard.js';
 
 // Type definitions and interfaces
 export type {
@@ -30,6 +34,12 @@ export type {
   TonePreset,
   KeyboardMetrics,
 } from './types.js';
+
+// Component-specific props
+export type { KeyboardLayoutProps } from './KeyboardLayout.js';
+export type { ButtonGridProps, GridItem, GridLayout } from './ButtonGrid.js';
+export type { KeyboardButtonProps, ButtonVariant, ButtonContent } from './KeyboardButton.js';
+export type { CompactKeyboardProps } from './CompactKeyboard.js';
 
 // Utility functions and type guards
 export {
