@@ -39,7 +39,7 @@ const containerStyles = (theme: ThemeType) => css`
 /**
  * Content wrapper styles
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const contentStyles = (_theme: ThemeType) => css`
   flex: 1;
   display: flex;

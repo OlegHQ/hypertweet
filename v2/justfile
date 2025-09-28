@@ -60,3 +60,21 @@ typecheck:
 check: lint-check format-check typecheck
     @echo "✅ All checks passed!"
 
+# Sidebar-specific commands
+watch-sidebar:
+    @echo "🔄 Starting sidebar development mode..."
+    cd extension && bun run watch-sidebar
+
+build-sidebar:
+    @echo "🔨 Building sidebar only..."
+    cd extension && bun run build-sidebar
+
+# Build all components
+watch-all:
+    @echo "🔄 Starting full development mode..."
+    cd extension && bun run watch-all
+
+build-all:
+    @echo "🔨 Building all extension components..."
+    cd extension && bun run build-all
+

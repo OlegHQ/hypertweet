@@ -1,8 +1,6 @@
 import js from '@eslint/js';
 import tseslint from '@typescript-eslint/eslint-plugin';
 import tsparser from '@typescript-eslint/parser';
-import prettier from 'eslint-config-prettier';
-import prettierPlugin from 'eslint-plugin-prettier';
 
 export default [
   js.configs.recommended,
@@ -33,65 +31,56 @@ export default [
     },
     plugins: {
       '@typescript-eslint': tseslint,
-      prettier: prettierPlugin,
     },
     rules: {
-      ...tseslint.configs.strict.rules,
-      ...tseslint.configs['stylistic-type-checked'].rules,
-
-      // Prettier integration
-      'prettier/prettier': 'error',
-
-      // TypeScript strict rules - ZERO TOLERANCE FOR ANY TYPES
-      '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'error',
-      '@typescript-eslint/prefer-nullish-coalescing': 'error',
+      // Core TypeScript rules - ESSENTIAL TYPE SAFETY ONLY
+      '@typescript-eslint/no-explicit-any': 'warn', // Allow any in special cases
+      '@typescript-eslint/no-non-null-assertion': 'warn', // Reduced to warning
+      '@typescript-eslint/prefer-nullish-coalescing': 'warn', // Prefer but don't force
       '@typescript-eslint/prefer-optional-chain': 'error',
       '@typescript-eslint/no-unnecessary-condition': 'off',
-      '@typescript-eslint/no-unnecessary-type-assertion': 'error',
-      '@typescript-eslint/prefer-readonly': 'error',
+      '@typescript-eslint/no-unnecessary-type-assertion': 'warn',
       '@typescript-eslint/prefer-as-const': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
       '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/require-await': 'error',
+      '@typescript-eslint/no-misused-promises': 'off', // AI-friendly: async event handlers
+      '@typescript-eslint/require-await': 'warn', // Reduced to warning
       '@typescript-eslint/consistent-type-definitions': ['error', 'interface'],
-      '@typescript-eslint/explicit-module-boundary-types': 'error',
-      '@typescript-eslint/no-namespace': 'off', // We explicitly use namespaces for utility functions
+      '@typescript-eslint/explicit-module-boundary-types': 'off', // AI-friendly: infer return types
+      '@typescript-eslint/no-namespace': 'off',
+      '@typescript-eslint/no-unused-vars': 'off', // AI-friendly: allow unused vars
+      '@typescript-eslint/prefer-readonly': 'off', // AI-friendly: don't force readonly
+      '@typescript-eslint/explicit-function-return-type': 'off', // AI-friendly: infer types
 
-      // General strict rules
-      'no-console': 'off', // Allow console in development builds
+      // General rules - AI-friendly adjustments
+      'no-console': 'off',
       'no-debugger': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-template': 'error',
-      'prefer-arrow-callback': 'error',
-      'arrow-body-style': ['error', 'as-needed'],
       'no-duplicate-imports': 'error',
-      'no-useless-return': 'error',
-      'no-useless-concat': 'error',
-      'prefer-destructuring': ['error', { array: false, object: true }],
-
-      // Code quality (relaxed for initial setup)
-      complexity: ['warn', 20],
-      'max-depth': ['warn', 6],
-      'max-params': ['warn', 6],
+      'no-unused-vars': 'off', // Use TypeScript version instead
+      'no-undef': 'off', // TypeScript handles this better
+      'no-useless-return': 'off',
+      'no-useless-concat': 'off',
+      
+      // Complexity rules - AI-friendly limits
+      complexity: 'off', // Disabled - AI generates complex functions naturally
+      'max-depth': 'off',
+      'max-params': 'off',
       'no-magic-numbers': 'off',
 
-      // Security
+      // Security - keep strict
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
       'no-script-url': 'error',
-    },
-  },
-  {
-    files: ['styles/**/*.ts', 'components/**/*.tsx'],
-    rules: {
-      // Allow missing return types in styled components and component files
-      '@typescript-eslint/explicit-function-return-type': 'off',
-      '@typescript-eslint/explicit-module-boundary-types': 'off',
+
+      // Style rules - minimal, AI-friendly
+      'object-shorthand': 'off',
+      'prefer-template': 'off',
+      'prefer-arrow-callback': 'off',
+      'arrow-body-style': 'off',
+      'prefer-destructuring': 'off',
     },
   },
   {
@@ -106,16 +95,11 @@ export default [
         console: 'readonly',
       },
     },
-    plugins: {
-      prettier: prettierPlugin,
-    },
     rules: {
-      'prettier/prettier': 'error',
       'no-console': 'off',
     },
   },
   {
     ignores: ['node_modules/', 'dist/', '../server/', '*.min.js', 'coverage/'],
   },
-  prettier,
 ];

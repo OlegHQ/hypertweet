@@ -109,7 +109,7 @@ const avatarStyles = (theme: ThemeType) => css`
 /**
  * User info styles
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const userInfoStyles = (_theme: ThemeType) => css`
   display: flex;
   flex-direction: column;

@@ -7,6 +7,7 @@ import React, { useState, useMemo, useCallback, forwardRef } from 'react';
 import { css } from '@emotion/react';
 import { defaultTheme, type ThemeType } from '../../styles/theme';
 import { PageContainer } from '../../components/layout/PageContainer';
+import type { LoadingState, LayoutError } from '../../components/layout/types';
 import { Button } from '../../components/common/Button';
 import { Input } from '../../components/common/Input';
 import { Loading } from '../../components/common/Loading';
@@ -327,7 +328,6 @@ const PlusIcon: React.FC = () => (
   </svg>
 );
 
-
 const EmptyTonesIcon: React.FC = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
     <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
@@ -493,7 +493,9 @@ export const ToneListScreen = forwardRef<HTMLDivElement, ToneListScreenProps>(
         const [field, order] = sortBy.split('-');
         setSearchCriteria(prev => ({
           ...prev,
-          ...(field && { sortBy: field as NonNullable<ToneSearchCriteria['sortBy']> }),
+          ...(field && {
+            sortBy: field as NonNullable<ToneSearchCriteria['sortBy']>,
+          }),
           sortOrder: order as 'asc' | 'desc',
         }));
       },

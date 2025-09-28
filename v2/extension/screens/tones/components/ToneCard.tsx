@@ -216,7 +216,7 @@ const statsStyles = (theme: ThemeType, viewMode: 'grid' | 'list') => css`
 /**
  * Stat item styles
  */
-const statItemStyles = (theme: ThemeType, viewMode: 'grid' | 'list') => css`
+const statItemStyles = (viewMode: 'grid' | 'list') => css`
   text-align: ${viewMode === 'grid' ? 'center' : 'left'};
 `;
 
@@ -494,13 +494,13 @@ export const ToneCard = forwardRef<HTMLDivElement, ToneCardProps>(
 
             {showStats && (
               <div css={statsStyles(theme, viewMode)}>
-                <div css={statItemStyles(theme, viewMode)}>
+                <div css={statItemStyles(viewMode)}>
                   <p css={statValueStyles(theme)}>
                     {formatNumber(tone.stats.totalUses)}
                   </p>
                   <p css={statLabelStyles(theme)}>Uses</p>
                 </div>
-                <div css={statItemStyles(theme, viewMode)}>
+                <div css={statItemStyles(viewMode)}>
                   <p css={statValueStyles(theme)}>
                     {formatPercentage(tone.stats.successRate)}
                   </p>
@@ -572,13 +572,13 @@ export const ToneCard = forwardRef<HTMLDivElement, ToneCardProps>(
 
             {showStats && (
               <div css={statsStyles(theme, viewMode)}>
-                <div css={statItemStyles(theme, viewMode)}>
+                <div css={statItemStyles(viewMode)}>
                   <p css={statValueStyles(theme)}>
                     {formatNumber(tone.stats.totalUses)}
                   </p>
                   <p css={statLabelStyles(theme)}>Uses</p>
                 </div>
-                <div css={statItemStyles(theme, viewMode)}>
+                <div css={statItemStyles(viewMode)}>
                   <p css={statValueStyles(theme)}>
                     {formatPercentage(tone.stats.successRate)}
                   </p>

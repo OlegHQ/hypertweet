@@ -433,7 +433,10 @@ export const TonePreview = forwardRef<HTMLDivElement, TonePreviewProps>(
 
         // Simulate API call delay
         const timer = setTimeout(() => {
-          const sample = sampleTexts[selectedPlatform] ?? sampleTexts['generic'];
+          const sample =
+            sampleTexts[selectedPlatform] ??
+            sampleTexts['generic'] ??
+            'Default sample text for tone preview.';
           const generated = generatePreviewText(tone, sample);
           const generatedMetrics = generateMetrics(tone);
 
@@ -444,6 +447,8 @@ export const TonePreview = forwardRef<HTMLDivElement, TonePreviewProps>(
 
         return () => clearTimeout(timer);
       }
+      // Return undefined explicitly when not isOpen
+      return undefined;
     }, [tone, selectedPlatform, isOpen]);
 
     // Handle escape key

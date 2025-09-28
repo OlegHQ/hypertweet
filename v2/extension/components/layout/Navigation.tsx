@@ -11,7 +11,7 @@ import type { NavigationProps, NavigationItem } from './types';
 /**
  * Navigation container styles
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const navigationStyles = (_theme: ThemeType) => css`
   display: flex;
   flex-direction: column;
@@ -76,7 +76,7 @@ const getNavigationItemStyles = (
 /**
  * Navigation icon styles
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const navigationIconStyles = (_theme: ThemeType, _collapsed: boolean) => css`
   flex-shrink: 0;
   width: 20px;

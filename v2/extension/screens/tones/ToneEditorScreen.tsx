@@ -216,7 +216,7 @@ const tagStyles = (theme: ThemeType) => css`
 /**
  * Tag remove button styles
  */
-const tagRemoveStyles = (_theme: ThemeType) => css`
+const tagRemoveStyles = () => css`
   background: none;
   border: none;
   cursor: pointer;
@@ -356,19 +356,19 @@ const validateForm = (data: ToneFormData): ToneValidationResult => {
   }
 
   if (!data.content.trim()) {
-    errors.content = 'Content is required';
+    errors['content'] = 'Content is required';
   } else if (data.content.length > 2000) {
-    errors.content = 'Content must be 2000 characters or less';
+    errors['content'] = 'Content must be 2000 characters or less';
   }
 
   // Warnings
   if (data.content.length < 50) {
-    warnings.content =
+    warnings['content'] =
       'Consider adding more detail to improve tone effectiveness';
   }
 
   if (data.tags.length === 0) {
-    warnings.tags = 'Tags help with organization and discovery';
+    warnings['tags'] = 'Tags help with organization and discovery';
   }
 
   return {
@@ -470,6 +470,8 @@ const useEditorState = (
 
       return () => clearTimeout(timer);
     }
+    // Return undefined explicitly when condition is false
+    return undefined;
   }, [formData, isDirty, validation.isValid, onSave]);
 
   const updateField = useCallback(
@@ -613,7 +615,7 @@ export const ToneEditorScreen = forwardRef<
         title={pageTitle}
         description={pageDescription}
         loading={loading}
-        {...(error && { error })}
+        {...(error && { error: { message: error } })}
         {...(className && { className })}
         maxWidth="xl"
         padding="lg"
@@ -630,12 +632,15 @@ export const ToneEditorScreen = forwardRef<
                   Name <span css={requiredStyles(defaultTheme)}>*</span>
                 </label>
                 <Input
+                  type="text"
                   id="tone-name"
                   value={formData.name}
                   onChange={e => updateField('name', e.target.value)}
                   placeholder="Enter tone name..."
                   disabled={isLoading}
-                  errorMessage={validation.errors['name']}
+                  {...(validation.errors['name'] && {
+                    errorMessage: validation.errors['name'],
+                  })}
                 />
                 <div
                   css={characterCountStyles(
@@ -670,7 +675,7 @@ export const ToneEditorScreen = forwardRef<
                 )}
                 <div
                   css={characterCountStyles(
-                    theme,
+                    defaultTheme,
                     formData.description.length > 200
                   )}
                 >
@@ -717,19 +722,19 @@ export const ToneEditorScreen = forwardRef<
                   disabled={isLoading}
                   rows={8}
                 />
-                {validation.errors.content && (
+                {validation.errors['content'] && (
                   <Alert status="error" variant="subtle" size="sm">
-                    {validation.errors.content}
+                    {validation.errors['content']}
                   </Alert>
                 )}
-                {validation.warnings.content && (
-                  <Alert variant="warning" size="sm">
-                    {validation.warnings.content}
+                {validation.warnings['content'] && (
+                  <Alert status="warning" variant="subtle" size="sm">
+                    {validation.warnings['content']}
                   </Alert>
                 )}
                 <div
                   css={characterCountStyles(
-                    theme,
+                    defaultTheme,
                     formData.content.length > 2000
                   )}
                 >
@@ -758,7 +763,7 @@ export const ToneEditorScreen = forwardRef<
                       {tag}
                       <button
                         type="button"
-                        css={tagRemoveStyles(defaultTheme)}
+                        css={tagRemoveStyles()}
                         onClick={() => removeTag(tag)}
                         aria-label={`Remove ${tag} tag`}
                       >
@@ -768,6 +773,7 @@ export const ToneEditorScreen = forwardRef<
                   ))}
                 </div>
                 <Input
+                  type="text"
                   id="tone-tags"
                   value={newTag}
                   onChange={e => setNewTag(e.target.value)}
@@ -775,9 +781,9 @@ export const ToneEditorScreen = forwardRef<
                   placeholder="Add tags (press Enter or comma to add)..."
                   disabled={isLoading}
                 />
-                {validation.warnings.tags && (
-                  <Alert variant="info" size="sm">
-                    {validation.warnings.tags}
+                {validation.warnings['tags'] && (
+                  <Alert status="info" variant="subtle" size="sm">
+                    {validation.warnings['tags']}
                   </Alert>
                 )}
                 <div css={helperTextStyles(defaultTheme)}>
@@ -878,7 +884,7 @@ export const ToneEditorScreen = forwardRef<
               variant="secondary"
               onClick={handlePreview}
               disabled={!formData.content.trim() || isLoading}
-              style={{ width: '100%', marginBottom: theme.spacing[4] }}
+              style={{ width: '100%', marginBottom: defaultTheme.spacing[4] }}
             >
               Advanced Preview
             </Button>
@@ -886,8 +892,8 @@ export const ToneEditorScreen = forwardRef<
             {formData.content && (
               <div
                 style={{
-                  fontSize: theme.typography.fontSize.xs,
-                  color: theme.colors.text.tertiary,
+                  fontSize: defaultTheme.typography.fontSize.xs,
+                  color: defaultTheme.colors.text.tertiary,
                 }}
               >
                 <p>

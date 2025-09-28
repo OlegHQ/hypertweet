@@ -79,7 +79,7 @@ const pageDescriptionStyles = (theme: ThemeType) => css`
 /**
  * Page content styles
  */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+ 
 const pageContentStyles = (_theme: ThemeType) => css`
   position: relative;
   width: 100%;
