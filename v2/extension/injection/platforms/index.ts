@@ -60,6 +60,35 @@ import {
   type LinkedInPositionResult,
 } from './LinkedInDOM.js';
 
+// Reddit Platform
+import {
+  injectRedditKeyboard,
+  shutdownRedditInjection
+} from './RedditInjector.js';
+
+import {
+  REDDIT_COMMENT_SELECTORS,
+  REDDIT_POST_SELECTORS,
+  REDDIT_OLD_COMMENT_SELECTORS,
+  REDDIT_OLD_POST_SELECTORS,
+  REDDIT_MESSAGE_SELECTORS,
+  REDDIT_REPLY_SELECTORS,
+  REDDIT_FORM_SELECTORS,
+  REDDIT_TOOLBAR_SELECTORS,
+  REDDIT_NAVIGATION_SELECTORS,
+  REDDIT_THREAD_SELECTORS,
+  REDDIT_SUBREDDIT_SELECTORS,
+  RedditSelectorValidator,
+} from './RedditSelectors.js';
+
+import {
+  RedditDOM,
+  type RedditTheme,
+  type RedditComposeContext,
+  type RedditPositionStrategy,
+  type RedditPositionResult,
+} from './RedditDOM.js';
+
 // Re-export all Twitter functionality
 export { 
   injectTwitterKeyboard, 
@@ -115,6 +144,35 @@ export {
   type LinkedInPositionResult,
 };
 
+// Re-export all Reddit functionality
+export {
+  injectRedditKeyboard,
+  shutdownRedditInjection
+};
+
+export {
+  REDDIT_COMMENT_SELECTORS,
+  REDDIT_POST_SELECTORS,
+  REDDIT_OLD_COMMENT_SELECTORS,
+  REDDIT_OLD_POST_SELECTORS,
+  REDDIT_MESSAGE_SELECTORS,
+  REDDIT_REPLY_SELECTORS,
+  REDDIT_FORM_SELECTORS,
+  REDDIT_TOOLBAR_SELECTORS,
+  REDDIT_NAVIGATION_SELECTORS,
+  REDDIT_THREAD_SELECTORS,
+  REDDIT_SUBREDDIT_SELECTORS,
+  RedditSelectorValidator,
+};
+
+export {
+  RedditDOM,
+  type RedditTheme,
+  type RedditComposeContext,
+  type RedditPositionStrategy,
+  type RedditPositionResult,
+};
+
 // Platform injection registry
 export const PLATFORM_INJECTORS = {
   twitter: {
@@ -139,8 +197,19 @@ export const PLATFORM_INJECTORS = {
       company: LINKEDIN_COMPANY_SELECTORS,
     },
   },
-  // Reddit injector would be added here when implemented
-  // reddit: { ... },
+  reddit: {
+    inject: injectRedditKeyboard,
+    shutdown: shutdownRedditInjection,
+    name: 'Reddit',
+    selectors: {
+      comment: REDDIT_COMMENT_SELECTORS,
+      post: REDDIT_POST_SELECTORS,
+      oldComment: REDDIT_OLD_COMMENT_SELECTORS,
+      oldPost: REDDIT_OLD_POST_SELECTORS,
+      message: REDDIT_MESSAGE_SELECTORS,
+      reply: REDDIT_REPLY_SELECTORS,
+    },
+  },
 } as const;
 
 export type PlatformInjectorKey = keyof typeof PLATFORM_INJECTORS;
