@@ -4,7 +4,7 @@
  */
 
 import React, { forwardRef } from 'react';
-import { css } from '@emotion/react';
+import { css, type SerializedStyles } from '@emotion/react';
 import { defaultTheme, type ThemeType } from '../../../styles/theme';
 import { Card } from '../../../components/common/Card';
 

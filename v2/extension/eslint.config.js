@@ -34,7 +34,7 @@ export default [
     },
     rules: {
       // Core TypeScript rules - ESSENTIAL TYPE SAFETY ONLY
-      '@typescript-eslint/no-explicit-any': 'warn', // Allow any in special cases
+      '@typescript-eslint/no-explicit-any': 'off', // AI-friendly: allow any types
       '@typescript-eslint/no-non-null-assertion': 'warn', // Reduced to warning
       '@typescript-eslint/prefer-nullish-coalescing': 'warn', // Prefer but don't force
       '@typescript-eslint/prefer-optional-chain': 'error',

@@ -576,7 +576,7 @@ export const BillingScreen = forwardRef<HTMLDivElement, BillingScreenProps>(
               {availablePlans.map(plan => (
                 <div 
                   key={plan.id} 
-                  css={planCardStyles(theme, plan.recommended || false, plan.id === currentPlan)}
+                  css={planCardStyles(theme, plan.recommended ?? false, plan.id === currentPlan)}
                 >
                   <h3 style={{ 
                     margin: 0,

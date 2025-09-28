@@ -451,8 +451,8 @@ export const SettingsScreen = forwardRef<HTMLDivElement, SettingsScreenProps>(
             </label>
             <select
               css={selectStyles(theme)}
-              value={localPreferences.defaultToneId || ''}
-              onChange={e => handlePreferenceChange('defaultToneId', e.target.value || undefined)}
+              value={localPreferences.defaultToneId ?? ''}
+              onChange={e => handlePreferenceChange('defaultToneId', e.target.value ?? undefined)}
             >
               <option value="">No default tone</option>
               {availableTones.map(tone => (

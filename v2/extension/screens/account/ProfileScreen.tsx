@@ -421,7 +421,7 @@ export const ProfileScreen = forwardRef<HTMLDivElement, ProfileScreenProps>(
           >
             <div style={{ display: 'flex', flexDirection: 'column', gap: theme.spacing[3] }}>
               <ProfileEditForm 
-                initialData={{ name: user.name, email: user.email, bio: user.bio || '' }}
+                initialData={{ name: user.name, email: user.email, bio: user.bio ?? '' }}
                 onProfileUpdateSuccess={(data) => {
                   void handleSaveProfile(data);
                 }}
