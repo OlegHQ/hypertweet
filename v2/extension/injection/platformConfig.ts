@@ -26,7 +26,7 @@ import {
 /**
  * Default selector configuration factory
  */
-const createSelectorConfig = (
+export const createSelectorConfig = (
   primary: string,
   fallbacks: readonly string[] = [],
   options: Partial<SelectorConfig> = {}
