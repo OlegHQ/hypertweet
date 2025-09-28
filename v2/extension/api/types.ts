@@ -203,3 +203,12 @@ export type APIClientEventListener = (
   metadata: RequestMetadata,
   data?: unknown
 ) => void;
+
+/**
+ * Tone API types
+ */
+export type {
+  Tone,
+  ToneFormData,
+  ToneSearchCriteria,
+} from '@/screens/tones/types';
