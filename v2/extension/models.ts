@@ -63,3 +63,19 @@ export class Post {
     Object.assign(this, options);
   }
 }
+
+export interface UserProfile {
+  readonly name?: string;
+  readonly bio?: string;
+  readonly location?: string;
+  readonly website?: string;
+}
+
+export interface UserSettings {
+  readonly defaultTone?: string;
+  readonly theme?: 'light' | 'dark';
+  readonly notifications?: {
+    readonly onNewReplies?: boolean;
+    readonly onNewFollowers?: boolean;
+  };
+}

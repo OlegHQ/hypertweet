@@ -3,6 +3,8 @@ import React from 'react';
 import { MemoryRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/store/auth';
 import { UIProvider } from '@/store/ui';
+import { UserProvider } from '@/store/user';
+import { TonesProvider } from '@/store/tones';
 import { ProtectedRoute } from './ProtectedRoute';
 import { RoutePath } from './types';
 
@@ -23,48 +25,52 @@ export const AppRouter: React.FC = () => {
     <MemoryRouter>
       <UIProvider>
         <AuthProvider>
-          <Routes>
-            {/* Public routes */}
-            <Route path={RoutePath.Login} element={<LoginScreen />} />
-            <Route path={RoutePath.Register} element={<RegisterScreen />} />
+          <UserProvider>
+            <TonesProvider>
+              <Routes>
+                {/* Public routes */}
+                <Route path={RoutePath.Login} element={<LoginScreen />} />
+                <Route path={RoutePath.Register} element={<RegisterScreen />} />
 
-            {/* Protected routes */}
-            <Route
-              path={RoutePath.Dashboard}
-              element={<ProtectedRoute path={RoutePath.Dashboard} element={<DashboardScreen />} />}
-            />
-            <Route
-              path={RoutePath.Tones}
-              element={<ProtectedRoute path={RoutePath.Tones} element={<ToneListScreen />} />}
-            />
-            <Route
-              path={RoutePath.ToneEditor}
-              element={<ProtectedRoute path={RoutePath.ToneEditor} element={<ToneEditorPage />} />}
-            />
-            <Route
-              path={RoutePath.Account}
-              element={<Navigate to={RoutePath.Profile} replace />}
-            />
-            <Route
-              path={RoutePath.Profile}
-              element={<ProtectedRoute path={RoutePath.Profile} element={<ProfileScreen />} />}
-            />
-            <Route
-              path={RoutePath.Security}
-              element={<ProtectedRoute path={RoutePath.Security} element={<SecurityScreen />} />}
-            />
-            <Route
-              path={RoutePath.Settings}
-              element={<ProtectedRoute path={RoutePath.Settings} element={<SettingsScreen />} />}
-            />
-            <Route
-              path={RoutePath.Billing}
-              element={<ProtectedRoute path={RoutePath.Billing} element={<BillingScreen />} />}
-            />
+                {/* Protected routes */}
+                <Route
+                  path={RoutePath.Dashboard}
+                  element={<ProtectedRoute path={RoutePath.Dashboard} element={<DashboardScreen />} />}
+                />
+                <Route
+                  path={RoutePath.Tones}
+                  element={<ProtectedRoute path={RoutePath.Tones} element={<ToneListScreen />} />}
+                />
+                <Route
+                  path={RoutePath.ToneEditor}
+                  element={<ProtectedRoute path={RoutePath.ToneEditor} element={<ToneEditorPage />} />}
+                />
+                <Route
+                  path={RoutePath.Account}
+                  element={<Navigate to={RoutePath.Profile} replace />}
+                />
+                <Route
+                  path={RoutePath.Profile}
+                  element={<ProtectedRoute path={RoutePath.Profile} element={<ProfileScreen />} />}
+                />
+                <Route
+                  path={RoutePath.Security}
+                  element={<ProtectedRoute path={RoutePath.Security} element={<SecurityScreen />} />}
+                />
+                <Route
+                  path={RoutePath.Settings}
+                  element={<ProtectedRoute path={RoutePath.Settings} element={<SettingsScreen />} />}
+                />
+                <Route
+                  path={RoutePath.Billing}
+                  element={<ProtectedRoute path={RoutePath.Billing} element={<BillingScreen />} />}
+                />
 
-            {/* Not found route */}
-            <Route path='*' element={<div>Not Found</div>} />
-          </Routes>
+                {/* Not found route */}
+                <Route path='*' element={<div>Not Found</div>} />
+              </Routes>
+            </TonesProvider>
+          </UserProvider>
         </AuthProvider>
       </UIProvider>
     </MemoryRouter>

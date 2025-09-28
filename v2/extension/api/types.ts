@@ -212,3 +212,19 @@ export type {
   ToneFormData,
   ToneSearchCriteria,
 } from '@/screens/tones/types';
+
+/**
+ * User API types
+ */
+export type { UserProfile, UserSettings } from '@/models';
+
+export interface ChangePasswordRequest {
+  readonly oldPassword: string;
+  readonly newPassword: string;
+}
+
+export interface UsageStats {
+  readonly tonesCreated: number;
+  readonly repliesGenerated: number;
+  readonly successRate: number;
+}
