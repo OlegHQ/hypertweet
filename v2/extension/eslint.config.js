@@ -62,7 +62,7 @@ export default [
       'no-undef': 'off', // TypeScript handles this better
       'no-useless-return': 'off',
       'no-useless-concat': 'off',
-      
+
       // Complexity rules - AI-friendly limits
       complexity: 'off', // Disabled - AI generates complex functions naturally
       'max-depth': 'off',
