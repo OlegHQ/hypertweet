@@ -206,12 +206,26 @@ export interface PlatformDetectionError {
     | 'INVALID_URL'
     | 'DETECTION_TIMEOUT'
     | 'NETWORK_ERROR'
-    | 'CONFIGURATION_ERROR';
+    | 'CONFIGURATION_ERROR'
+    | 'DOM_CREATION_FAILED'
+    | 'SELECTOR_NOT_FOUND'
+    | 'SELECTOR_VALIDATION_FAILED'
+    | 'POSITIONING_FAILED'
+    | 'NOT_INITIALIZED'
+    | 'INJECTION_LIMIT_EXCEEDED'
+    | 'INJECTION_FAILED'
+    | 'INJECTION_RETRY_FAILED'
+    | 'TARGET_NOT_FOUND'
+    | 'COLLISION_DETECTED'
+    | 'OBSERVER_LIMIT_EXCEEDED'
+    | 'OBSERVER_CREATION_FAILED'
+    | 'INVALID_CONFIG';
   readonly message: string;
   readonly url: string;
   readonly timestamp: number;
   readonly platform?: Platform;
   readonly cause?: Error;
+  readonly context?: Record<string, unknown>;
 }
 
 /**
@@ -365,17 +379,24 @@ export const platformToSiteType = (platform: Platform): SiteType => {
 export const createPlatformDetectionError = (
   code: PlatformDetectionError['code'],
   message: string,
-  url: string = window.location.href,
+  context?: Record<string, unknown> | string,
   platform?: Platform,
   cause?: Error
-): PlatformDetectionError => ({
-  code,
-  message,
-  url,
-  timestamp: Date.now(),
-  platform,
-  cause,
-});
+): PlatformDetectionError => {
+  // Handle backward compatibility - if context is a string, treat it as URL
+  const url = typeof context === 'string' ? context : window.location.href;
+  const contextData = typeof context === 'object' ? context : undefined;
+  
+  return {
+    code,
+    message,
+    url,
+    timestamp: Date.now(),
+    platform,
+    cause,
+    context: contextData,
+  };
+};
 
 /**
  * Validate URL pattern structure
