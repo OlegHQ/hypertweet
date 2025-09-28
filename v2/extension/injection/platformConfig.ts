@@ -23,6 +23,9 @@ import {
   isPlatform,
 } from './types.js';
 
+// Re-export SelectorConfig for platform-specific files
+export type { SelectorConfig };
+
 /**
  * Default selector configuration factory
  */
