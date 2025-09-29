@@ -107,7 +107,10 @@ export type QuickAction =
   | 'clear'
   | 'settings'
   | 'help'
-  | 'toggle';
+  | 'toggle'
+  | 'undo'
+  | 'redo'
+  | 'select-all';
 
 /**
  * Quick action handler function signature
