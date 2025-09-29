@@ -229,8 +229,8 @@ export namespace TwitterDOM {
   ): boolean {
     try {
       // Find modal content area
-      const modalContent = modalElement.querySelector('[role="dialog"] > div') ||
-                          modalElement.querySelector('.modal-content') ||
+      const modalContent = modalElement.querySelector('[role="dialog"] > div') ??
+                          modalElement.querySelector('.modal-content') ??
                           modalElement.firstElementChild;
       
       if (!modalContent) {
@@ -404,8 +404,8 @@ export namespace TwitterDOM {
   
   function findToolbarElement(composeElement: HTMLElement): HTMLElement | null {
     // Look for toolbar in compose area
-    const toolbar = composeElement.closest('div')?.querySelector('[data-testid="toolBar"]') ||
-                   composeElement.parentElement?.querySelector('[data-testid="tweetButtonInline"]') ||
+    const toolbar = composeElement.closest('div')?.querySelector('[data-testid="toolBar"]') ??
+                   composeElement.parentElement?.querySelector('[data-testid="tweetButtonInline"]') ??
                    composeElement.parentElement?.querySelector('[role="group"]');
     
     return toolbar as HTMLElement | null;
@@ -420,7 +420,7 @@ export namespace TwitterDOM {
       case 'quote':
         return composeElement.closest('[data-testid="quote-tweet"]');
       default:
-        return composeElement.closest('[data-testid="tweet-compose"]') ||
+        return composeElement.closest('[data-testid="tweet-compose"]') ??
                composeElement.closest('[data-testid="primaryColumn"]');
     }
   }

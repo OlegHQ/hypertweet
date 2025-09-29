@@ -11,6 +11,10 @@ export { KeyboardLayout } from './KeyboardLayout.js';
 export { ButtonGrid } from './ButtonGrid.js';
 export { KeyboardButton } from './KeyboardButton.js';
 export { CompactKeyboard } from './CompactKeyboard.js';
+export { ToneSelector } from './ToneSelector.js';
+export { QuickActions } from './QuickActions.js';
+export { TonePresets } from './TonePresets.js';
+export { AdvancedKeyboard } from './AdvancedKeyboard.js';
 
 // Type definitions and interfaces
 export type {
@@ -40,6 +44,10 @@ export type { KeyboardLayoutProps } from './KeyboardLayout.js';
 export type { ButtonGridProps, GridItem, GridLayout } from './ButtonGrid.js';
 export type { KeyboardButtonProps, ButtonVariant, ButtonContent } from './KeyboardButton.js';
 export type { CompactKeyboardProps } from './CompactKeyboard.js';
+export type { ToneSelectorProps, ToneCategory, ToneFilterConfig, CustomTone } from './ToneSelector.js';
+export type { QuickActionsProps, QuickActionDef, ActionState, ActionResult } from './QuickActions.js';
+export type { TonePresetsProps, PresetAction, ToneCollection, ToneUsageStats } from './TonePresets.js';
+export type { AdvancedKeyboardProps, AdvancedKeyboardMode } from './AdvancedKeyboard.js';
 
 // Utility functions and type guards
 export {

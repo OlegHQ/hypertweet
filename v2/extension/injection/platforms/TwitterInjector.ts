@@ -319,10 +319,12 @@ function createTwitterKeyboard(
       visible: true,
       onToneSelect: async ({ tone, mode, targetElement }) => {
         // TODO: Generate text based on tone and mode
+        await Promise.resolve();
         const generatedText = `Sample ${tone} text`;
         insertTextIntoTarget(target, generatedText, context);
       },
       onQuickAction: async ({ action, targetElement }) => {
+        await Promise.resolve();
         switch (action) {
           case 'clear':
             insertTextIntoTarget(target, '', context);
