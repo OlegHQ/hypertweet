@@ -15,6 +15,43 @@ export { ToneSelector } from './ToneSelector.js';
 export { QuickActions } from './QuickActions.js';
 export { TonePresets } from './TonePresets.js';
 export { AdvancedKeyboard } from './AdvancedKeyboard.js';
+export { AnimatedKeyboard, useKeyboardAnimation, useKeyboardTheme } from './AnimatedKeyboard.js';
+
+// Animation and state management exports
+export {
+  AnimationManager,
+  animationManager,
+  ANIMATION_PRESETS,
+  KEYBOARD_KEYFRAMES,
+  BUTTON_KEYFRAMES,
+  LOADING_KEYFRAMES,
+  ANIMATION_CLASSES,
+  getAllKeyframes,
+  generateReducedMotionCSS,
+  attachAnimationHandlers,
+  createPlatformAnimationConfig,
+} from './animations.js';
+
+export {
+  VisualStateManager,
+  createKeyboardStateManager,
+  createButtonStateManager,
+  KEYBOARD_STATE_CONFIGS,
+  BUTTON_STATE_CONFIGS,
+  PLATFORM_STATE_CONFIGS,
+  StateUtils,
+} from './states.js';
+
+export {
+  ThemeManager,
+  themeManager,
+  THEMES,
+  TWITTER_THEME,
+  LINKEDIN_THEME,
+  REDDIT_THEME,
+  ThemeDetection,
+  createComponentStyles,
+} from './themes.js';
 
 // Type definitions and interfaces
 export type {
@@ -48,6 +85,47 @@ export type { ToneSelectorProps, ToneCategory, ToneFilterConfig, CustomTone } fr
 export type { QuickActionsProps, QuickActionDef, ActionState, ActionResult } from './QuickActions.js';
 export type { TonePresetsProps, PresetAction, ToneCollection, ToneUsageStats } from './TonePresets.js';
 export type { AdvancedKeyboardProps, AdvancedKeyboardMode } from './AdvancedKeyboard.js';
+export type { AnimatedKeyboardProps, AnimatedKeyboardConfig, AnimationMetrics } from './AnimatedKeyboard.js';
+
+// Animation, state, and theme types
+export type {
+  AnimationTiming,
+  AnimationDirection,
+  AnimationState as AnimationStateType,
+  KeyboardAnimationType,
+  ButtonAnimationType,
+  LoadingAnimationType,
+  AnimationConfig,
+  KeyboardAnimationConfig,
+  ButtonAnimationConfig,
+  LoadingAnimationConfig,
+  AnimationEventHandlers,
+} from './animations.js';
+
+export type {
+  BaseVisualState,
+  KeyboardState as KeyboardVisualState,
+  ButtonState,
+  InputState,
+  DropdownState,
+  ThemeState,
+  StateTransition,
+  VisualStateConfig,
+  PlatformStateConfig,
+  StateManager,
+} from './states.js';
+
+export type {
+  ColorPalette,
+  Typography,
+  Spacing,
+  BorderRadius,
+  Shadows,
+  ZIndex,
+  ThemeMode,
+  ComponentTheme,
+  Theme,
+} from './themes.js';
 
 // Utility functions and type guards
 export {
