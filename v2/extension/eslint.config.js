@@ -22,6 +22,8 @@ export default [
         chrome: 'readonly',
         browser: 'readonly',
         process: 'readonly',
+        fetch: 'readonly',
+        React: 'readonly',
       },
     },
     plugins: {
@@ -101,6 +103,35 @@ export default [
     rules: {
       'prettier/prettier': 'error',
       'no-console': 'off',
+    },
+  },
+  {
+    files: ['*.raw.js'],
+    languageOptions: {
+      globals: {
+        window: 'readonly',
+        document: 'readonly',
+        console: 'readonly',
+        MutationObserver: 'readonly',
+        InputEvent: 'readonly',
+        Promise: 'readonly',
+        Array: 'readonly',
+        Date: 'readonly',
+      },
+    },
+    plugins: {
+      prettier: prettierPlugin,
+    },
+    rules: {
+      'prettier/prettier': 'error',
+      'no-console': 'off',
+      'prefer-const': 'off',
+      'no-var': 'off',
+      'prefer-template': 'off',
+      'prefer-arrow-callback': 'off',
+      'arrow-body-style': 'off',
+      'object-shorthand': 'off',
+      'prefer-destructuring': 'off',
     },
   },
   {

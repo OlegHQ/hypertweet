@@ -1,0 +1,47 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- 1. Shared -->
+    <Compile Include="src/Shared/Errors.fs" />
+    <Compile Include="src/Shared/Config.fs" />
+    <Compile Include="src/Shared/Prelude.fs" />
+
+    <!-- 2. Domain -->
+    <Compile Include="src/Domain/User.fs" />
+    <Compile Include="src/Domain/Tone.fs" />
+
+    <!-- 3. Data (shared repositories) -->
+    <Compile Include="src/Data/UserRepository.fs" />
+
+    <!-- 4. Infrastructure -->
+    <Compile Include="src/Infrastructure/Database.fs" />
+    <Compile Include="src/Infrastructure/Jwt.fs" />
+
+    <!-- 5. Features -->
+    <Compile Include="src/Features/Auth/Types.fs" />
+    <Compile Include="src/Features/Auth/Service.fs" />
+    <Compile Include="src/Features/Auth/Handlers.fs" />
+    <Compile Include="src/Features/Tones/Types.fs" />
+    <Compile Include="src/Features/Tones/Repository.fs" />
+    <Compile Include="src/Features/Tones/Service.fs" />
+    <Compile Include="src/Features/Tones/Handlers.fs" />
+
+    <!-- 6. Entry -->
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
+    <PackageReference Include="MongoDB.Driver.Core" Version="2.28.0" />
+    <PackageReference Include="Giraffe" Version="7.0.2" />
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>

@@ -1,65 +1,50 @@
-export class Page {
-  public readonly baseHost: string;
-  public readonly url: string;
-  public posts?: Post[];
-  public activePost?: Post;
-
-  constructor(
-    baseHost: string,
-    url: string,
-    posts?: Post[],
-    activePost?: Post
-  ) {
-    this.baseHost = baseHost;
-    this.url = url;
-    if (posts !== undefined) this.posts = posts;
-    if (activePost !== undefined) this.activePost = activePost;
-  }
+// Interfaces for page data - used by both raw JS and TypeScript
+export interface User {
+  userName?: string;
+  email?: string;
+  name?: string;
+  isVerified?: boolean;
+  bio?: string;
+  location?: string;
+  website?: string;
+  joinDate?: string;
+  following?: number;
+  followers?: number;
 }
 
-export class User {
-  public userName?: string;
-  public email?: string;
-  public name?: string;
-  public isVerified?: boolean;
-  public bio?: string;
-  public location?: string;
-  public website?: string;
-  public joinDate?: string;
-  public following?: number;
-  public followers?: number;
-
-  constructor(data: Partial<User> = {}) {
-    Object.assign(this, data);
-  }
+export interface Post {
+  author: User;
+  text: string;
+  replies?: Post[];
+  time?: string;
+  statusID?: string;
+  url?: string;
+  upvotes?: number;
+  commentCount?: number;
+  isTopLevel?: boolean;
 }
 
-export class Post {
-  public readonly author: User;
-  public readonly text: string;
-  public replies?: Post[];
-  public time?: string;
-  public statusID?: string;
-  public url?: string;
-  public upvotes?: number;
-  public commentCount?: number;
-  public isTopLevel?: boolean;
+export interface Page {
+  site: string;
+  url: string;
+  posts: Post[];
+  activePost?: Post;
+}
 
-  constructor(
-    author: User,
-    text: string,
-    options: {
-      replies?: Post[];
-      time?: string;
-      statusID?: string;
-      url?: string;
-      upvotes?: number;
-      commentCount?: number;
-      isTopLevel?: boolean;
-    } = {}
-  ) {
-    this.author = author;
-    this.text = text;
-    Object.assign(this, options);
+export type ReplyFormRenderedCallback = (container: HTMLElement) => void;
+
+// Raw API interface - all platform scrapers implement this
+export interface RawScraperAPI {
+  readPage(): Promise<Page>;
+  insertReply(text: string): boolean;
+  onReplyFormRendered(callback: ReplyFormRenderedCallback): void;
+}
+
+// Global window augmentation for raw APIs
+declare global {
+  interface Window {
+    __twitter?: RawScraperAPI;
+    __reddit?: RawScraperAPI;
+    __linkedin?: RawScraperAPI;
   }
 }

@@ -3,7 +3,7 @@
   "version": "2.0.0",
   "name": "hypertweet",
   "description": "Simplify social presence",
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
       "matches": [

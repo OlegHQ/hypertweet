@@ -1,90 +1,381 @@
-# CLAUDE.md
+# F# Web API Architecture Guide
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Minimal boilerplate F# web API with clean architecture.
 
-## Development Commands
+## Commands
 
-### Build & Run
+- `dotnet build` - Build
+- `dotnet run` - Run server
 
-- `cargo run` - Build and run the development server on port 3000
-- `cargo build` - Build the project in debug mode
-- `cargo build --release` - Build optimized release version
-- `cargo check` - Check code without building
+## Architecture
 
-### Testing
+```
+src/
+  Shared/                    # Foundation (no deps)
+    Errors.fs                # DomainError discriminated union
+    Config.fs                # AppConfig record + loader
+    Prelude.fs               # Computation expressions, helpers
 
-- `cargo test` - Run all tests
-- `cargo test <test_name>` - Run specific test by name
+  Domain/                    # Pure entities (depends on: Shared)
+    <Entity>.fs              # Domain types with single-case DUs
 
-### Code Quality
+  Data/                      # Shared repositories (depends on: Shared, Domain)
+    <Entity>Repository.fs    # ONLY for entities used by multiple features
 
-- `cargo fmt` - Format code using rustfmt
-- `cargo clippy` - Run Clippy linter for code suggestions
+  Infrastructure/            # External services (depends on: Shared, Domain)
+    Database.fs              # Database connection
+    Jwt.fs                   # Token generation (if needed)
 
-## Development Policies
+  Features/                  # Vertical slices (depends on: all above)
+    <Feature>/
+      Types.fs               # DTOs, commands, deps record
+      [Repository.fs]        # ONLY for feature-specific entities
+      Service.fs             # Business logic
+      Handlers.fs            # HTTP handlers
 
-All code must adhere to these strict requirements:
+Program.fs                   # Composition root
+```
 
-1. **No Placeholders**: Everything must be fully implemented - no TODOs, placeholder comments, or incomplete functionality
-2. **Tests Must Pass**: All tests must pass before considering any feature complete
-3. **Zero Warnings**: Code must compile with no warnings whatsoever
-4. **Type Safety**: No string literals or unsafe practices - use proper types, enums, and robust error handling
-5. **Production-Level Error Handling**: All errors must be properly handled with appropriate error types and user-friendly messages
+## Dependency Flow
 
-## Architecture Overview
+```
+              Shared
+                |
+              Domain
+              /    \
+           Data    Infrastructure
+             \      /
+           Features/*
+                |
+           Program.fs
+```
 
-This is a Rust web server for a browser extension system that generates AI-powered contextual responses. The server provides user authentication and tone management for an extension that helps users generate intelligent replies on social platforms.
+**Key principle:** Features are siblings - they never import each other.
 
-**System Purpose**: Backend API for a browser extension that offers multiple response generation modes (insightful, metaphor, etc.) and editing capabilities for improving drafts and grammar cleanup.
+## Repository Placement
 
-The codebase uses Axum framework with SQLite database persistence and follows a modular structure with clear separation of concerns.
+**Shared entities** (used by multiple features) → `Data/<Entity>Repository.fs`
+**Feature-specific entities** → `Features/<Feature>/Repository.fs`
 
-### Core Components
+Example:
+- User (used by Auth, Tones, future features) → `Data/UserRepository.fs`
+- Tone (only used by Tones feature) → `Features/Tones/Repository.fs`
 
-1. **Web Server** (`src/main.rs`)
-   - Axum-based HTTP server listening on port 3000 (0.0.0.0:3000)
-   - Single route handler currently returning "hey" at root path
-   - Uses Tokio async runtime with multi-threading support
+## Style Guide
 
-2. **Database Layer** (`src/database.rs`)
-   - Uses d1-rs ORM for database operations with SQLite backend
-   - Auto-migration system via `AutoSchemaClient`
-   - Database file: `db.sqlite3` in project root
-   - Initializes with `init_db()` function
+### Minimize type annotations
+F# infers types. Only annotate when:
+- Compiler complains
+- Disambiguating overlapping record fields
 
-3. **Data Models** (`src/models.rs`)
-   - Entity definitions using d1-rs derive macros
-   - `User` model with id, email, and password fields
-   - Serde serialization/deserialization support
+```fsharp
+// Good - let inference work
+let create deps cmd = asyncResult { ... }
 
-4. **Authentication** (`auth.rs`)
-   - JWT-based authentication system for user login/registration
-   - Email-based user registration and authentication
-   - Account management and user CRUD operations
-   - Tone management system for AI response generation modes
+// Only when needed for disambiguation
+let entity: MyEntity = { Id = ...; Field = cmd.Field; ... }
+```
 
-### Database Architecture
+### Single-case DUs for type safety
+```fsharp
+type EntityId = EntityId of string
+type EmailAddress = EmailAddress of string
+```
 
-The application uses SQLite with d1-rs ORM which provides:
+### Pattern match to unwrap DUs
+```fsharp
+// Inline destructuring - no wrapper modules needed
+let (EntityId id) = entity.Id
 
-- Entity-based modeling with derive macros
-- Automatic schema migrations
-- Type-safe database operations
-- Support for both local SQLite and Cloudflare D1 databases
+// In function parameters
+let findById db (EntityId id) = ...
+```
 
-### Key Dependencies
+### Use computation expressions
+```fsharp
+// asyncResult for async + Result
+let myService deps cmd = asyncResult {
+    let! data = deps.GetData cmd.Id
+    do! deps.Save data
+}
 
-- **axum** (0.8.4) - Web application framework
-- **tokio** (1.47.1) - Async runtime with multi-threading
-- **tower-http** (0.6.6) - HTTP middleware and utilities
-- **d1-rs** - ORM for SQLite/D1 database operations
-- **serde/serde_json** - Serialization framework
-- **rusqlite** (0.32.0) - SQLite database driver
+// result for sync validation
+let validate req = result {
+    do! if String.IsNullOrWhiteSpace req.Field then Error (ValidationError("field", "required")) else Ok ()
+    return { Field = req.Field; ... }
+}
+```
 
-### Development Notes
+### Generic handler pattern
+```fsharp
+let private handler<'Req, 'Cmd, 'Resp> validate service onSuccess : HttpHandler =
+    fun next ctx -> task {
+        let! req = ctx.BindJsonAsync<'Req>()
+        match validate req with
+        | Error e -> return! toHttp e next ctx
+        | Ok cmd ->
+            match! service cmd |> Async.StartAsTask with
+            | Ok r -> return! onSuccess r next ctx
+            | Error e -> return! toHttp e next ctx
+    }
 
-- Server runs on all interfaces (0.0.0.0) port 3000
-- Database file is created automatically in project root
-- Uses Rust 2024 edition
-- System designed to support browser extension with AI-powered response generation
-- Flow: Extension sends request type → Server API → AI-generated response back to extension
+// Usage - one line per endpoint
+let create deps = handler validateCreate (Service.create deps) (fun () -> created ...)
+let get deps = handler validateGet (Service.get deps) (fun r -> ok r)
+```
+
+### Repository pattern with tryDb
+```fsharp
+let private tryDb f = async {
+    try return! f () |> Async.map Ok
+    with ex -> return Error (InternalError ex.Message)
+}
+
+let findById db (EntityId id) =
+    tryDb (fun () -> async {
+        let! r = collection(db).Find(...).FirstOrDefaultAsync() |> Async.AwaitTask
+        return r |> nullable |> Option.map toDomain
+    })
+```
+
+## Adding a New Feature
+
+### If entity is feature-specific (most common):
+
+1. **Domain type** in `src/Domain/<Entity>.fs`:
+   ```fsharp
+   type EntityId = EntityId of string
+   type Entity = { Id: EntityId; Field: string; CreatedAt: DateTime }
+
+   module Entity =
+       let newId () = EntityId (Guid.NewGuid().ToString())
+   ```
+
+2. **Feature folder** `src/Features/<Feature>/`:
+
+   **Types.fs** - DTOs and dependency record:
+   ```fsharp
+   [<CLIMutable>]
+   type CreateRequest = { Field: string }
+
+   type CreateCommand = { Field: string }
+
+   type FeatureDeps = {
+       Insert: Entity -> AsyncResult<unit, DomainError>
+       FindById: EntityId -> AsyncResult<Entity option, DomainError>
+   }
+   ```
+
+   **Repository.fs** - Database access (in Features folder):
+   ```fsharp
+   [<CLIMutable>]
+   type EntityDocument = { [<BsonId>] Id: string; Field: string }
+
+   module Repository =
+       let insert db entity = tryDb (fun () -> async { ... })
+       let findById db (EntityId id) = tryDb (fun () -> async { ... })
+   ```
+
+   **Service.fs** - Business logic:
+   ```fsharp
+   module Service =
+       let create deps cmd = asyncResult {
+           let entity = { Id = Entity.newId (); Field = cmd.Field; CreatedAt = DateTime.UtcNow }
+           do! deps.Insert entity
+       }
+   ```
+
+   **Handlers.fs** - HTTP handlers:
+   ```fsharp
+   module Handlers =
+       let private validate req = result {
+           do! if String.IsNullOrWhiteSpace req.Field then Error (ValidationError("field", "required")) else Ok ()
+           return { Field = req.Field }
+       }
+
+       let create deps = handler validate (Service.create deps) (fun () -> created {| message = "Created" |})
+   ```
+
+3. **Add to .fsproj** (order matters!):
+   ```xml
+   <Compile Include="src/Domain/<Entity>.fs" />
+   <Compile Include="src/Features/<Feature>/Types.fs" />
+   <Compile Include="src/Features/<Feature>/Repository.fs" />
+   <Compile Include="src/Features/<Feature>/Service.fs" />
+   <Compile Include="src/Features/<Feature>/Handlers.fs" />
+   ```
+
+4. **Wire in Program.fs**:
+   ```fsharp
+   module FeatureRepo = MyApp.Features.Feature.Repository
+
+   let featureDeps = {
+       Insert = FeatureRepo.insert db
+       FindById = FeatureRepo.findById db
+   }
+
+   let routes = choose [
+       POST >=> route "/entities" >=> FeatureHandlers.create featureDeps
+   ]
+   ```
+
+### If entity is shared (used by multiple features):
+
+Put repository in `Data/` layer instead of `Features/<Feature>/`:
+
+```fsharp
+// src/Data/UserRepository.fs
+namespace MyApp.Data
+
+module UserRepository =
+    let findById db (UserId id) = ...
+    let findByEmail db (Email email) = ...
+    let insert db user = ...
+    let update db user = ...
+```
+
+Then multiple features can use it via their deps:
+
+```fsharp
+// Auth feature uses UserRepository
+let authDeps = {
+    FindUserByEmail = UserRepository.findByEmail db
+    InsertUser = UserRepository.insert db
+}
+
+// Tones feature also uses UserRepository
+let toneDeps = {
+    GetUser = UserRepository.findById db
+    UpdateUser = UserRepository.update db
+}
+```
+
+## File Order in .fsproj
+
+F# compiles top-to-bottom. Dependencies must come before dependents:
+
+```xml
+<!-- 1. Shared -->
+<Compile Include="src/Shared/Errors.fs" />
+<Compile Include="src/Shared/Config.fs" />
+<Compile Include="src/Shared/Prelude.fs" />
+
+<!-- 2. Domain -->
+<Compile Include="src/Domain/User.fs" />
+<Compile Include="src/Domain/Tone.fs" />
+
+<!-- 3. Data (shared repositories) -->
+<Compile Include="src/Data/UserRepository.fs" />
+
+<!-- 4. Infrastructure -->
+<Compile Include="src/Infrastructure/Database.fs" />
+<Compile Include="src/Infrastructure/Jwt.fs" />
+
+<!-- 5. Features -->
+<Compile Include="src/Features/Auth/Types.fs" />
+<Compile Include="src/Features/Auth/Service.fs" />
+<Compile Include="src/Features/Auth/Handlers.fs" />
+<Compile Include="src/Features/Tones/Types.fs" />
+<Compile Include="src/Features/Tones/Repository.fs" />
+<Compile Include="src/Features/Tones/Service.fs" />
+<Compile Include="src/Features/Tones/Handlers.fs" />
+
+<!-- 6. Entry -->
+<Compile Include="Program.fs" />
+```
+
+## Core Components
+
+### Shared/Errors.fs
+```fsharp
+type DomainError =
+    | ValidationError of field: string * message: string
+    | NotFound of entity: string
+    | Conflict of message: string
+    | Unauthorized
+    | InternalError of message: string
+```
+
+### Shared/Prelude.fs
+```fsharp
+type AsyncResult<'T, 'E> = Async<Result<'T, 'E>>
+
+module AsyncResult =
+    let retn x = async { return Ok x }
+    let error e = async { return Error e }
+    let bind f ar = async { match! ar with Ok x -> return! f x | Error e -> return Error e }
+
+type AsyncResultBuilder() =
+    member _.Return x = async { return Ok x }
+    member _.ReturnFrom x = x
+    member _.Bind(ar, f) = AsyncResult.bind f ar
+    member _.Zero() = async { return Ok () }
+
+type ResultBuilder() =
+    member _.Return x = Ok x
+    member _.ReturnFrom x = x
+    member _.Bind(r, f) = Result.bind f r
+    member _.Zero() = Ok ()
+
+[<AutoOpen>]
+module Builders =
+    let asyncResult = AsyncResultBuilder()
+    let result = ResultBuilder()
+    let isNull x = obj.ReferenceEquals(x, null)
+    let nullable x = if isNull x then None else Some x
+
+module Async =
+    let map f a = async { let! x = a in return f x }
+```
+
+## Key Patterns
+
+### Dependency injection via records
+Pass dependencies as function records, not interfaces:
+```fsharp
+type Deps = {
+    GetData: Id -> AsyncResult<Data option, DomainError>
+    Save: Data -> AsyncResult<unit, DomainError>
+}
+```
+
+### Railway-oriented programming
+Chain operations with `asyncResult {}`. Errors short-circuit:
+```fsharp
+let process deps cmd = asyncResult {
+    let! existing = deps.Find cmd.Id          // Error? Stop here
+    do! deps.Validate existing                 // Error? Stop here
+    do! deps.Save { existing with ... }        // Error? Stop here
+    return existing.Id                         // Success path
+}
+```
+
+### Validation in handlers
+Keep domain pure. Validate at HTTP boundary:
+```fsharp
+let validate req = result {
+    do! if condition then Error (ValidationError(...)) else Ok ()
+    return command
+}
+```
+
+### Error mapping to HTTP
+```fsharp
+let toHttp = function
+    | ValidationError (f, m) -> badRequest {| error = m; field = f |}
+    | NotFound e -> notFound {| error = $"{e} not found" |}
+    | Conflict m -> conflict {| error = m |}
+    | Unauthorized -> unauthorized ...
+    | InternalError _ -> internalError {| error = "Internal error" |}
+```
+
+## Environment Variables
+
+Configure via environment for different deployments:
+```fsharp
+let loadConfig () = {
+    DatabaseUri = Environment.GetEnvironmentVariable "DATABASE_URI" |? "default"
+    JwtSecret = Environment.GetEnvironmentVariable "JWT_SECRET" |? "dev-secret"
+    // ...
+}
+```

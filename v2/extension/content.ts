@@ -1,10 +1,38 @@
+import React from 'react';
+import { createRoot, Root } from 'react-dom/client';
+import { CacheProvider } from '@emotion/react';
 import { Router } from './router';
+import { Keyboard } from './Keyboard';
+import { emotionCache } from './ui/emotion';
+import type { InsertTextCallback } from './base';
 
 const router = new Router();
+const socialPage = router.getSocialPage();
+const roots = new Map<HTMLElement, Root>();
 
-const page = router.getScraper().readPage();
+socialPage.onReplyFormRendered((container, insertText) => {
+  renderKeyboard(container, insertText);
+});
 
-// Development logging - remove in production
-if (process.env.NODE_ENV === 'development') {
-  console.log("here's your page", page);
+function renderKeyboard(
+  container: HTMLElement,
+  insertText: InsertTextCallback
+): void {
+  const existingRoot = roots.get(container);
+  if (existingRoot) {
+    return;
+  }
+  const root = createRoot(container);
+  root.render(
+    React.createElement(
+      CacheProvider,
+      { value: emotionCache },
+      React.createElement(Keyboard, { insertText })
+    )
+  );
+  roots.set(container, root);
 }
+
+void socialPage.readPage().then(p => {
+  console.log("here's your page", p);
+});

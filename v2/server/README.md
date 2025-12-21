@@ -1,20 +1,43 @@
-# Plan
+# HyperTweet Server
 
-This is readme for server of the whole app.
+F# web API backend for the HyperTweet browser extension.
 
-## Extension
+## Prerequisites
 
-Form:
+- .NET 8.0 SDK
+- MongoDB (local or remote)
 
-1. mode generate answer (insightful, metaphor, ...)
-2. edit mode, make full answer based on draft, improve etc (multiple buttons),
-   cleanup grammar
+## Quick Start
 
-Flow -> send request type -> page -> API
-<- get reponse from server
+```bash
+# Run the server (development)
+dotnet run
 
-## Server
+# Build only
+dotnet build
 
-1. user and login system/register by email
-2. generate tone manager add remove (CRUD for those)
-3. create answer based on operation
+# Build for production
+dotnet build --configuration Release
+```
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MONGODB_URI` | `mongodb://localhost:27017` | MongoDB connection string |
+| `JWT_SECRET` | `super-secret-key-change-in-production` | JWT signing secret |
+
+## Example with custom config
+
+```bash
+MONGODB_URI="mongodb://user:pass@host:27017" JWT_SECRET="my-secret" dotnet run
+```
+
+## API Endpoints
+
+The server runs on `http://localhost:5000` by default.
+
+- `POST /auth/register` - Register new user
+- `POST /auth/login` - Login and get JWT token
+- `GET /tones` - List user tones (requires auth)
+- `POST /tones` - Create tone (requires auth)

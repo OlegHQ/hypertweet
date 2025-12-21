@@ -1,7 +1,7 @@
-import { Scraper } from './base';
-import { TwitterScraper } from './twitter';
-import { RedditScraper } from './reddit';
-import { LinkedInScraper } from './linkedin';
+import { SocialPage } from './base';
+import { TwitterSocialPage } from './twitter';
+import { RedditSocialPage } from './reddit';
+import { LinkedInSocialPage } from './linkedin';
 
 export enum SiteType {
   Twitter,
@@ -10,16 +10,16 @@ export enum SiteType {
 }
 
 export class Router {
-  public getScraper(): Scraper {
+  public getSocialPage(): SocialPage {
     const siteType = this.getSiteType();
 
     switch (siteType) {
       case SiteType.Twitter:
-        return new TwitterScraper();
+        return new TwitterSocialPage();
       case SiteType.Reddit:
-        return new RedditScraper();
+        return new RedditSocialPage();
       case SiteType.LinkedIn:
-        return new LinkedInScraper();
+        return new LinkedInSocialPage();
       default:
         throw new Error(`Unsupported site: ${siteType}`);
     }

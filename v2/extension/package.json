@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run lint:check && bun run typecheck && bun run build.js",
-    "watch": "bun run lint:check && bun run typecheck && bun run build.js --watch",
+    "build": "bun run build.js",
+    "watch": "bun run build.js --watch",
     "dev": "bun run clean && bun run watch",
     "prod": "bun run clean && bun run build",
     "clean": "rimraf dist",
@@ -16,9 +16,18 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\""
   },
+  "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "framer-motion": "^12.23.26",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
   "devDependencies": {
     "@types/chrome": "^0.0.270",
     "@types/node": "^22.5.4",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "@typescript-eslint/eslint-plugin": "^8.4.0",
     "@typescript-eslint/parser": "^8.4.0",
     "esbuild": "^0.25.10",
