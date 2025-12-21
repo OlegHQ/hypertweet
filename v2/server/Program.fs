@@ -1,6 +1,7 @@
 module Program
 
 open System.Text
+open System.Text.Json
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.Extensions.DependencyInjection
@@ -62,6 +63,10 @@ let main args =
 
     let builder = WebApplication.CreateBuilder args
 
+    builder.Services.AddCors(fun options ->
+        options.AddDefaultPolicy(fun policy -> policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() |> ignore))
+    |> ignore
+
     // Configure JWT authentication
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -78,11 +83,15 @@ let main args =
                 ))
     |> ignore
 
+    // Configure JSON serializer with case-insensitive property matching
+    let jsonOptions = JsonSerializerOptions(PropertyNameCaseInsensitive = true)
     builder.Services.AddGiraffe() |> ignore
+    builder.Services.AddSingleton<Json.ISerializer>(Json.Serializer(jsonOptions)) |> ignore
 
     let app = builder.Build()
+    app.UseCors() |> ignore
     app.UseAuthentication() |> ignore
     app.UseGiraffe routes
-    app.Run "http://localhost:5000"
+    app.Run "http://0.0.0.0:5001"
     0
 

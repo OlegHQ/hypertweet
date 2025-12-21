@@ -4,7 +4,7 @@ import { useAuth } from './ui/hooks/useAuth';
 import { Button } from './ui/components/Button';
 import { Card } from './ui/components/Card';
 import { Modal } from './ui/components/Modal';
-import { LoginForm } from './ui/components/LoginForm';
+import { AuthForm } from './ui/components/AuthForm';
 import { injectGlobalStyles } from './ui/styles';
 
 interface KeyboardProps {
@@ -57,7 +57,7 @@ export function Keyboard({ insertText }: KeyboardProps): React.ReactElement {
           </Button>
         </Card>
         <Modal isOpen={showLogin} onClose={() => setShowLogin(false)}>
-          <LoginForm
+          <AuthForm
             onSuccess={handleLoginSuccess}
             onClose={() => setShowLogin(false)}
           />

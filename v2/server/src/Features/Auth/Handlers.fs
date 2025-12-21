@@ -1,6 +1,7 @@
 namespace HypertweetServer.Features.Auth
 
 open System
+open Microsoft.Extensions.Logging
 open Giraffe
 open HypertweetServer.Domain
 open HypertweetServer.Shared
@@ -34,13 +35,15 @@ module Validate =
         validators |> List.fold (fun acc v -> Result.bind v acc) (Ok value)
 
 module Handlers =
-    let private toHttp =
+    let private toHttp (logger: ILogger) =
         function
         | ValidationError(field, msg) -> RequestErrors.badRequest (json {| error = msg; field = field |})
         | NotFound entity -> RequestErrors.notFound (json {| error = $"{entity} not found" |})
         | Conflict msg -> RequestErrors.conflict (json {| error = msg |})
         | Unauthorized -> RequestErrors.unauthorized "Bearer" "HyperTweet" (json {| error = "Invalid credentials" |})
-        | InternalError _ -> ServerErrors.internalError (json {| error = "Internal server error" |})
+        | InternalError msg ->
+            logger.LogError("Internal error: {Error}", msg)
+            ServerErrors.internalError (json {| error = "Internal server error" |})
 
     let private handler<'Req, 'Cmd, 'Resp>
         (validate: 'Req -> Result<'Cmd, DomainError>)
@@ -49,14 +52,15 @@ module Handlers =
         : HttpHandler =
         fun next ctx ->
             task {
+                let logger = ctx.GetLogger("Auth")
                 let! req = ctx.BindJsonAsync<'Req>()
 
                 match validate req with
-                | Error e -> return! toHttp e next ctx
+                | Error e -> return! toHttp logger e next ctx
                 | Ok cmd ->
                     match! service cmd |> Async.StartAsTask with
                     | Ok r -> return! onSuccess r next ctx
-                    | Error e -> return! toHttp e next ctx
+                    | Error e -> return! toHttp logger e next ctx
             }
 
     let private validateRegister (req: RegisterRequest) =

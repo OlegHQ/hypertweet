@@ -13,7 +13,7 @@ const isProduction = !isWatch && !process.argv.includes('--dev');
 
 // Build configuration
 const config = {
-  entryPoints: [join(__dirname, 'content.ts')],
+  entryPoints: [join(__dirname, 'content.ts'), join(__dirname, 'background.ts')],
   bundle: true,
   outdir: join(__dirname, 'dist'),
   format: 'iife',

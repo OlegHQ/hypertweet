@@ -12,7 +12,7 @@ type UserDocument =
     { [<BsonId>]
       Id: string
       Email: string
-      DisabledToneIds: string list
+      DisabledToneIds: ResizeArray<string>
       PasswordHash: string
       CreatedAt: DateTime }
 
@@ -34,14 +34,14 @@ module UserRepository =
 
         { Id = id
           Email = e
-          DisabledToneIds = user.DisabledToneIds
+          DisabledToneIds = ResizeArray(user.DisabledToneIds)
           PasswordHash = h
           CreatedAt = user.CreatedAt }
 
     let private toDomain (doc: UserDocument) : User =
         { Id = UserId doc.Id
           Email = Email doc.Email
-          DisabledToneIds = doc.DisabledToneIds
+          DisabledToneIds = doc.DisabledToneIds |> Seq.toList
           RefreshToken = None
           RefreshTokenExpiry = None
           PasswordHash = PasswordHash doc.PasswordHash
