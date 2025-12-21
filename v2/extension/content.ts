@@ -1,9 +1,11 @@
 import React from 'react';
 import { createRoot, Root } from 'react-dom/client';
 import { CacheProvider } from '@emotion/react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { Router } from './router';
 import { Keyboard } from './Keyboard';
 import { emotionCache } from './ui/emotion';
+import { queryClient } from './ui/query';
 import type { InsertTextCallback } from './base';
 
 const router = new Router();
@@ -25,9 +27,13 @@ function renderKeyboard(
   const root = createRoot(container);
   root.render(
     React.createElement(
-      CacheProvider,
-      { value: emotionCache },
-      React.createElement(Keyboard, { insertText })
+      QueryClientProvider,
+      { client: queryClient },
+      React.createElement(
+        CacheProvider,
+        { value: emotionCache },
+        React.createElement(Keyboard, { insertText })
+      )
     )
   );
   roots.set(container, root);

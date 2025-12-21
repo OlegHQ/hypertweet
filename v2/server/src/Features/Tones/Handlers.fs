@@ -65,16 +65,7 @@ module Handlers =
 
                 match! Service.list deps userId |> Async.StartAsTask with
                 | Ok tones ->
-                    let response =
-                        tones
-                        |> List.map (fun t ->
-                            let (ToneId id) = t.Id
-                            {| id = id
-                               title = t.Title
-                               instruction = t.Instruction
-                               isDefault = t.UserId.IsNone |})
-
-                    return! json response next ctx
+                    return! json (tones |> List.map ToneResponse.fromDomain) next ctx
                 | Error e -> return! toHttp logger e next ctx
             }
 

@@ -27,6 +27,7 @@
     <Compile Include="src/Features/Auth/Service.fs" />
     <Compile Include="src/Features/Auth/Handlers.fs" />
     <Compile Include="src/Features/Tones/Types.fs" />
+    <Compile Include="src/Features/Tones/Helpers.fs" />
     <Compile Include="src/Features/Tones/Repository.fs" />
     <Compile Include="src/Features/Tones/Service.fs" />
     <Compile Include="src/Features/Tones/Handlers.fs" />
@@ -45,3 +46,4 @@
   </ItemGroup>
 
 </Project>
+

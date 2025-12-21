@@ -11,7 +11,7 @@ module Service =
             | None -> return! AsyncResult.error (NotFound "User")
             | Some user ->
                 let! userTones = deps.FindTonesByUser userId
-                let! defaults = deps.FindDefaultTones ()
+                let defaults = Helpers.getDefaultTones ()
 
                 let enabledDefaults =
                     defaults
@@ -40,35 +40,39 @@ module Service =
         asyncResult {
             match! deps.FindToneById cmd.ToneId with
             | None -> return! AsyncResult.error (NotFound "Tone")
-            | Some tone when tone.UserId <> Some userId ->
-                return! AsyncResult.error Unauthorized
+            | Some tone when tone.UserId <> Some userId -> return! AsyncResult.error Unauthorized
             | Some tone ->
-                let updated = { tone with Title = cmd.Title; Instruction = cmd.Instruction }
+                let updated =
+                    { tone with
+                        Title = cmd.Title
+                        Instruction = cmd.Instruction }
+
                 do! deps.UpdateTone updated
         }
 
     let delete deps userId toneId =
         asyncResult {
-            match! deps.FindToneById toneId with
-            | None -> return! AsyncResult.error (NotFound "Tone")
-            | Some tone when tone.UserId <> Some userId ->
-                return! AsyncResult.error Unauthorized
-            | Some tone when tone.UserId.IsNone ->
-                return! AsyncResult.error (ValidationError("toneId", "Cannot delete default tone"))
-            | Some _ -> do! deps.DeleteTone toneId
+            // Check hardcoded defaults first
+            match Helpers.findDefaultById toneId with
+            | Some _ -> return! AsyncResult.error (ValidationError("toneId", "Cannot delete default tone"))
+            | None ->
+                match! deps.FindToneById toneId with
+                | None -> return! AsyncResult.error (NotFound "Tone")
+                | Some tone when tone.UserId <> Some userId -> return! AsyncResult.error Unauthorized
+                | Some _ -> do! deps.DeleteTone toneId
         }
 
     let toggleDefault deps userId toneId enabled =
         asyncResult {
-            match! deps.FindToneById toneId with
-            | None -> return! AsyncResult.error (NotFound "Tone")
-            | Some tone when tone.UserId.IsSome ->
-                return! AsyncResult.error (ValidationError("toneId", "Not a default tone"))
+            // Check hardcoded defaults - only default tones can be toggled
+            match Helpers.findDefaultById toneId with
+            | None -> return! AsyncResult.error (ValidationError("toneId", "Not a default tone"))
             | Some _ ->
                 match! deps.GetUser userId with
                 | None -> return! AsyncResult.error (NotFound "User")
                 | Some user ->
                     let (ToneId id) = toneId
+
                     let newDisabled =
                         if enabled then
                             user.DisabledToneIds |> List.filter ((<>) id)
@@ -77,5 +81,9 @@ module Service =
                         else
                             id :: user.DisabledToneIds
 
-                    do! deps.UpdateUser { user with DisabledToneIds = newDisabled }
+                    do!
+                        deps.UpdateUser
+                            { user with
+                                DisabledToneIds = newDisabled }
         }
+

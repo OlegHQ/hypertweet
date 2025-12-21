@@ -64,30 +64,26 @@ module Repository =
                 return r |> Seq.toList |> List.map toDomain
             })
 
-    let findDefaults (db: IMongoDatabase) () =
-        tryDb (fun () ->
-            async {
-                let! r =
-                    collection(db).Find(BsonDocument("UserId", BsonNull.Value)).ToListAsync()
-                    |> Async.AwaitTask
-
-                return r |> Seq.toList |> List.map toDomain
-            })
-
     let insert (db: IMongoDatabase) tone =
         tryDb (fun () -> async { do! collection(db).InsertOneAsync(toDoc tone) |> Async.AwaitTask })
 
     let update (db: IMongoDatabase) (tone: Tone) =
         let (ToneId id) = tone.Id
+
         tryDb (fun () ->
             async {
                 let filter = BsonDocument("_id", id)
-                do! collection(db).ReplaceOneAsync(filter, toDoc tone) |> Async.AwaitTask |> Async.Ignore
+
+                do!
+                    collection(db).ReplaceOneAsync(filter, toDoc tone)
+                    |> Async.AwaitTask
+                    |> Async.Ignore
             })
 
     let delete (db: IMongoDatabase) (ToneId id) =
         tryDb (fun () ->
             async {
                 let filter = BsonDocument("_id", id)
-                do! collection(db).DeleteOneAsync(filter) |> Async.AwaitTask |> Async.Ignore
+                do! collection(db).DeleteOneAsync filter |> Async.AwaitTask |> Async.Ignore
             })
+

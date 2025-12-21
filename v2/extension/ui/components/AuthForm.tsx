@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import { Button } from './Button';
 import { Input } from './Input';
 import { api } from '../../apiProxy';
 
+interface TokenRes { AccessToken: string; RefreshToken: string; ExpiresIn: number }
 interface AuthFormProps {
-  onSuccess: (token: string) => void | Promise<void>;
+  onSuccess: (token: string) => void;
   onClose: () => void;
 }
 
@@ -15,29 +17,35 @@ export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElem
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+
+  const loginMutation = useMutation({
+    mutationFn: async () => {
+      const result = await api.login({ Email: email, Password: password }) as TokenRes;
+      await api.saveTokens(result);
+      return result;
+    },
+    onSuccess: res => onSuccess(res.AccessToken),
+    onError: () => setError('Invalid email or password'),
+  });
+
+  const registerMutation = useMutation({
+    mutationFn: async () => {
+      await api.register({ Email: email, Password: password });
+      const result = await api.login({ Email: email, Password: password }) as TokenRes;
+      await api.saveTokens(result);
+      return result;
+    },
+    onSuccess: res => onSuccess(res.AccessToken),
+    onError: () => setError('Registration failed. Email may already exist.'),
+  });
+
+  const isLoading = loginMutation.isPending || registerMutation.isPending;
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
     setError('');
-    setIsLoading(true);
-
-    if (mode === 'login') {
-      void api.login({ Email: email, Password: password })
-        .then(result => {
-          void onSuccess(result.AccessToken);
-        })
-        .catch(() => setError('Invalid email or password'))
-        .finally(() => setIsLoading(false));
-    } else {
-      void api.register({ Email: email, Password: password })
-        .then(() => api.login({ Email: email, Password: password }))
-        .then(result => {
-          void onSuccess(result.AccessToken);
-        })
-        .catch(() => setError('Registration failed. Email may already exist.'))
-        .finally(() => setIsLoading(false));
-    }
+    if (mode === 'login') loginMutation.mutate();
+    else registerMutation.mutate();
   };
 
   const toggleMode = () => {

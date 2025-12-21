@@ -39,7 +39,6 @@ let main args =
           UpdateUser = UserRepository.update db
           FindToneById = TonesRepo.findById db
           FindTonesByUser = TonesRepo.findByUser db
-          FindDefaultTones = TonesRepo.findDefaults db
           InsertTone = TonesRepo.insert db
           UpdateTone = TonesRepo.update db
           DeleteTone = TonesRepo.delete db }

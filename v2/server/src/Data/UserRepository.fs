@@ -8,12 +8,16 @@ open HypertweetServer.Domain
 open HypertweetServer.Shared
 
 [<CLIMutable>]
+[<BsonIgnoreExtraElements>]
 type UserDocument =
     { [<BsonId>]
       Id: string
       Email: string
       DisabledToneIds: ResizeArray<string>
       PasswordHash: string
+      [<BsonIgnoreIfNull>]
+      RefreshToken: string
+      RefreshTokenExpiry: Nullable<DateTime>
       CreatedAt: DateTime }
 
 module UserRepository =
@@ -36,14 +40,16 @@ module UserRepository =
           Email = e
           DisabledToneIds = ResizeArray(user.DisabledToneIds)
           PasswordHash = h
+          RefreshToken = user.RefreshToken |> Option.toObj
+          RefreshTokenExpiry = user.RefreshTokenExpiry |> Option.toNullable
           CreatedAt = user.CreatedAt }
 
     let private toDomain (doc: UserDocument) : User =
         { Id = UserId doc.Id
           Email = Email doc.Email
           DisabledToneIds = doc.DisabledToneIds |> Seq.toList
-          RefreshToken = None
-          RefreshTokenExpiry = None
+          RefreshToken = doc.RefreshToken |> Option.ofObj
+          RefreshTokenExpiry = doc.RefreshTokenExpiry |> Option.ofNullable
           PasswordHash = PasswordHash doc.PasswordHash
           CreatedAt = doc.CreatedAt }
 

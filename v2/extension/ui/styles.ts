@@ -163,6 +163,81 @@ export function injectGlobalStyles(): void {
       font-size: ${tokens.font.size.sm} !important;
       color: ${tokens.colors.mutedForeground} !important;
     }
+
+    /* Keyboard header */
+    .ht-keyboard-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      margin-bottom: ${tokens.spacing[3]} !important;
+    }
+    .ht-keyboard-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      color: ${tokens.colors.foreground} !important;
+    }
+    .ht-keyboard-actions {
+      display: flex !important;
+      gap: ${tokens.spacing[1]} !important;
+    }
+
+    /* Icon button */
+    .ht-icon-btn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 28px !important;
+      height: 28px !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: ${tokens.radius.md} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      cursor: pointer !important;
+      transition: all ${tokens.transition.fast} !important;
+    }
+    .ht-icon-btn:hover {
+      background: ${tokens.colors.muted} !important;
+      color: ${tokens.colors.foreground} !important;
+    }
+
+    /* Tones grid */
+    .ht-tones-grid {
+      display: grid !important;
+      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)) !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-tone-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      padding: ${tokens.spacing[2]} ${tokens.spacing[3]} !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: ${tokens.colors.foreground} !important;
+      background: ${tokens.colors.muted} !important;
+      border: 1px solid ${tokens.colors.border} !important;
+      border-radius: ${tokens.radius.md} !important;
+      cursor: pointer !important;
+      transition: all ${tokens.transition.fast} !important;
+      white-space: nowrap !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+    }
+    .ht-tone-btn:hover {
+      background: ${tokens.colors.cardHover} !important;
+      border-color: ${tokens.colors.ring} !important;
+    }
+    .ht-tones-loading,
+    .ht-tones-empty {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      text-align: center !important;
+      padding: ${tokens.spacing[4]} !important;
+    }
   `;
   document.head.appendChild(style);
 }

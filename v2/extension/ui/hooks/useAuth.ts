@@ -1,53 +1,38 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { api } from '../../apiProxy';
 
-interface AuthState {
-  token: string | null;
-  isLoading: boolean;
-}
+const TOKEN_KEY = 'hypertweet.token';
 
-interface UseAuthReturn extends AuthState {
-  login: (token: string) => Promise<void>;
-  logout: () => Promise<void>;
-}
+export function useAuth() {
+	const queryClient = useQueryClient();
+	const [token, setToken] = useState<string | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
-const STORAGE_KEY = 'hypertweet.token';
+	useEffect(() => {
+		void chrome.storage.local.get(TOKEN_KEY).then((r: Record<string, unknown>) => {
+			setToken((r[TOKEN_KEY] as string) || null);
+			setIsLoading(false);
+		});
 
-export function useAuth(): UseAuthReturn {
-  const [state, setState] = useState<AuthState>({
-    token: null,
-    isLoading: true,
-  });
+		const listener = (changes: Record<string, chrome.storage.StorageChange>) => {
+			if (TOKEN_KEY in changes) {
+				setToken((changes[TOKEN_KEY]?.newValue as string) || null);
+			}
+		};
+		chrome.storage.local.onChanged.addListener(listener);
+		return () => chrome.storage.local.onChanged.removeListener(listener);
+	}, []);
 
-  useEffect(() => {
-    void chrome.storage.local
-      .get(STORAGE_KEY)
-      .then((result: Record<string, unknown>) => {
-        const token = result[STORAGE_KEY] as string | undefined;
-        setState({ token: token ?? null, isLoading: false });
-      });
+	const login = useCallback((newToken: string) => setToken(newToken), []);
 
-    const listener = (
-      changes: Record<string, chrome.storage.StorageChange>
-    ) => {
-      if (STORAGE_KEY in changes) {
-        const newToken = changes[STORAGE_KEY]?.newValue as string | undefined;
-        setState(prev => ({ ...prev, token: newToken ?? null }));
-      }
-    };
+	const logoutMutation = useMutation({
+		mutationFn: () => api.clearTokens() as Promise<void>,
+		onSuccess: () => {
+			setToken(null);
+			queryClient.clear();
+		},
+	});
 
-    chrome.storage.local.onChanged.addListener(listener);
-    return () => chrome.storage.local.onChanged.removeListener(listener);
-  }, []);
-
-  const login = useCallback(async (token: string): Promise<void> => {
-    await chrome.storage.local.set({ [STORAGE_KEY]: token });
-    setState(prev => ({ ...prev, token }));
-  }, []);
-
-  const logout = useCallback(async (): Promise<void> => {
-    await chrome.storage.local.remove(STORAGE_KEY);
-    setState(prev => ({ ...prev, token: null }));
-  }, []);
-
-  return { ...state, login, logout };
+	return { token, isLoading, login, logout: logoutMutation.mutate };
 }
