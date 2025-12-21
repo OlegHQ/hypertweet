@@ -10,6 +10,7 @@
     <Compile Include="src/Shared/Errors.fs" />
     <Compile Include="src/Shared/Config.fs" />
     <Compile Include="src/Shared/Prelude.fs" />
+    <Compile Include="src/Shared/Helpers.fs" />
 
     <!-- 2. Domain -->
     <Compile Include="src/Domain/User.fs" />
@@ -21,6 +22,7 @@
     <!-- 4. Infrastructure -->
     <Compile Include="src/Infrastructure/Database.fs" />
     <Compile Include="src/Infrastructure/Jwt.fs" />
+    <Compile Include="src/Shared/Http.fs" />
 
     <!-- 5. Features -->
     <Compile Include="src/Features/Auth/Types.fs" />
@@ -31,6 +33,7 @@
     <Compile Include="src/Features/Tones/Repository.fs" />
     <Compile Include="src/Features/Tones/Service.fs" />
     <Compile Include="src/Features/Tones/Handlers.fs" />
+    <Compile Include="src/Features/Profiles/Handlers.fs" />
 
     <!-- 6. Entry -->
     <Compile Include="Program.fs" />

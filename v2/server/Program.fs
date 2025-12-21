@@ -53,7 +53,8 @@ let main args =
               // Protected routes (require JWT)
               requiresAuthentication (challenge JwtBearerDefaults.AuthenticationScheme)
               >=> choose
-                      [ GET >=> route "/tones" >=> TonesHandlers.list toneDeps
+                      [ POST >=> route "/profile/password" >=> TonesHandlers.list toneDeps
+                        GET >=> route "/tones" >=> TonesHandlers.list toneDeps
                         POST >=> route "/tones" >=> TonesHandlers.create toneDeps
                         PUT >=> routef "/tones/%s" (fun id -> TonesHandlers.update toneDeps id)
                         DELETE >=> routef "/tones/%s" (fun id -> TonesHandlers.delete toneDeps id)
@@ -85,7 +86,9 @@ let main args =
     // Configure JSON serializer with case-insensitive property matching
     let jsonOptions = JsonSerializerOptions(PropertyNameCaseInsensitive = true)
     builder.Services.AddGiraffe() |> ignore
-    builder.Services.AddSingleton<Json.ISerializer>(Json.Serializer(jsonOptions)) |> ignore
+
+    builder.Services.AddSingleton<Json.ISerializer>(Json.Serializer jsonOptions)
+    |> ignore
 
     let app = builder.Build()
     app.UseCors() |> ignore

@@ -1,4 +1,4 @@
-const BASE_URL = 'http://olegs-macbook-air:5001';
+const BASE_URL = 'http://olegs-mac-mini:5001';
 const TOKEN_KEY = 'hypertweet.token';
 const REFRESH_KEY = 'hypertweet.refresh';
 const EXPIRES_KEY = 'hypertweet.expires';
