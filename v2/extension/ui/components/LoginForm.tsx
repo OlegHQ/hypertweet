@@ -22,9 +22,9 @@ export function LoginForm({
     setError('');
     setIsLoading(true);
 
-    void apiLogin({ Login: login, Password: password })
+    void apiLogin({ Email: login, Password: password })
       .then(result => {
-        void onSuccess(result.token);
+        void onSuccess(result.AccessToken);
       })
       .catch(() => {
         setError('Invalid email or password');

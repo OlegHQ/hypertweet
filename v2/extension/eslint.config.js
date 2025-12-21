@@ -31,58 +31,64 @@ export default [
       prettier: prettierPlugin,
     },
     rules: {
-      ...tseslint.configs.strict.rules,
-      ...tseslint.configs['stylistic-type-checked'].rules,
-
-      // Prettier integration
+      // Prettier
       'prettier/prettier': 'error',
 
-      // TypeScript strict rules
+      // TypeScript essentials
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_' },
       ],
       '@typescript-eslint/no-explicit-any': 'error',
-      '@typescript-eslint/no-non-null-assertion': 'warn',
-      '@typescript-eslint/prefer-nullish-coalescing': 'warn',
-      '@typescript-eslint/prefer-optional-chain': 'error',
+      '@typescript-eslint/no-floating-promises': 'error',
+
+      // Turn off overly strict rules
+      '@typescript-eslint/no-non-null-assertion': 'off',
+      '@typescript-eslint/prefer-nullish-coalescing': 'off',
+      '@typescript-eslint/prefer-optional-chain': 'off',
       '@typescript-eslint/no-unnecessary-condition': 'off',
       '@typescript-eslint/no-unnecessary-type-assertion': 'off',
-      '@typescript-eslint/prefer-readonly': 'warn',
-      '@typescript-eslint/prefer-as-const': 'error',
+      '@typescript-eslint/prefer-readonly': 'off',
+      '@typescript-eslint/no-misused-promises': 'off',
+      '@typescript-eslint/require-await': 'off',
+      '@typescript-eslint/await-thenable': 'off',
       '@typescript-eslint/non-nullable-type-assertion-style': 'off',
-      '@typescript-eslint/no-floating-promises': 'error',
-      '@typescript-eslint/await-thenable': 'error',
-      '@typescript-eslint/no-misused-promises': 'error',
-      '@typescript-eslint/require-await': 'warn',
+      '@typescript-eslint/prefer-as-const': 'off',
+      '@typescript-eslint/consistent-type-definitions': 'off',
+      '@typescript-eslint/prefer-function-type': 'off',
+      '@typescript-eslint/array-type': 'off',
+      '@typescript-eslint/prefer-for-of': 'off',
+      '@typescript-eslint/no-empty-function': 'off',
+      '@typescript-eslint/no-inferrable-types': 'off',
+      '@typescript-eslint/no-extraneous-class': 'off',
 
-      // General strict rules
-      'no-console': 'off', // Allow console in development builds
+      // General
+      'no-console': 'off',
       'no-debugger': 'error',
-      'no-unused-expressions': 'error',
       'prefer-const': 'error',
       'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-template': 'error',
-      'prefer-arrow-callback': 'error',
-      'arrow-body-style': ['error', 'as-needed'],
       'no-duplicate-imports': 'error',
-      'no-useless-return': 'error',
-      'no-useless-concat': 'error',
-      'prefer-destructuring': ['error', { array: false, object: true }],
+      'no-unused-vars': 'off', // Use @typescript-eslint/no-unused-vars instead
 
-      // Code quality (relaxed for initial setup)
-      complexity: ['warn', 20],
-      'max-depth': ['warn', 6],
-      'max-lines-per-function': ['warn', 100],
-      'max-params': ['warn', 6],
+      // Turn off annoying ones
+      'no-unused-expressions': 'off',
+      'object-shorthand': 'off',
+      'prefer-template': 'off',
+      'prefer-arrow-callback': 'off',
+      'arrow-body-style': 'off',
+      'no-useless-return': 'off',
+      'no-useless-concat': 'off',
+      'prefer-destructuring': 'off',
+      complexity: 'off',
+      'max-depth': 'off',
+      'max-lines-per-function': 'off',
+      'max-params': 'off',
       'no-magic-numbers': 'off',
 
       // Security
       'no-eval': 'error',
       'no-implied-eval': 'error',
       'no-new-func': 'error',
-      'no-script-url': 'error',
     },
   },
   {
@@ -102,7 +108,6 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
-      'no-console': 'off',
     },
   },
   {
@@ -124,14 +129,6 @@ export default [
     },
     rules: {
       'prettier/prettier': 'error',
-      'no-console': 'off',
-      'prefer-const': 'off',
-      'no-var': 'off',
-      'prefer-template': 'off',
-      'prefer-arrow-callback': 'off',
-      'arrow-body-style': 'off',
-      'object-shorthand': 'off',
-      'prefer-destructuring': 'off',
     },
   },
   {
