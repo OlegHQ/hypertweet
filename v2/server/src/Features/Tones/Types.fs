@@ -12,7 +12,11 @@ type UpdateToneRequest = { Title: string; Instruction: string }
 
 // Commands (validated input)
 type CreateToneCommand = { Title: string; Instruction: string }
-type UpdateToneCommand = { ToneId: ToneId; Title: string; Instruction: string }
+
+type UpdateToneCommand =
+    { ToneId: string
+      Title: string
+      Instruction: string }
 
 // Response DTO
 type ToneResponse =
@@ -23,7 +27,8 @@ type ToneResponse =
 
 module ToneResponse =
     let fromDomain (tone: Tone) =
-        let (ToneId id) = tone.Id
+        let id = tone.Id
+
         { Id = id
           Title = tone.Title
           Instruction = tone.Instruction
@@ -31,10 +36,10 @@ module ToneResponse =
 
 // Dependencies record
 type ToneDeps =
-    { GetUser: UserId -> AsyncResult<User option, DomainError>
+    { GetUser: string -> AsyncResult<User option, DomainError>
       UpdateUser: User -> AsyncResult<unit, DomainError>
-      FindToneById: ToneId -> AsyncResult<Tone option, DomainError>
-      FindTonesByUser: UserId -> AsyncResult<Tone list, DomainError>
+      FindToneById: string -> AsyncResult<Tone option, DomainError>
+      FindTonesByUser: string -> AsyncResult<Tone list, DomainError>
       InsertTone: Tone -> AsyncResult<unit, DomainError>
       UpdateTone: Tone -> AsyncResult<unit, DomainError>
-      DeleteTone: ToneId -> AsyncResult<unit, DomainError> }
+      DeleteTone: string -> AsyncResult<unit, DomainError> }

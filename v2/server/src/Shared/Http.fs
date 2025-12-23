@@ -1,10 +1,7 @@
 namespace HypertweetServer.Shared
 
-open System.Security.Claims
-open Microsoft.AspNetCore.Http
 open Giraffe
 open Microsoft.Extensions.Logging
-open HypertweetServer.Domain
 
 module Http =
     let toHttp (logger: ILogger) =
@@ -16,10 +13,6 @@ module Http =
         | InternalError msg ->
             logger.LogError("Internal error: {Error}", msg)
             ServerErrors.internalError (json {| error = "Internal server error" |})
-
-    let getUserId (ctx: HttpContext) =
-        let claim = ctx.User.FindFirst(ClaimTypes.NameIdentifier)
-        UserId claim.Value
 
     let handler<'Req, 'Cmd, 'Resp>
         loggerName

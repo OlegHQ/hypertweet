@@ -15,13 +15,12 @@ module Jwt =
         Convert.ToBase64String(RandomNumberGenerator.GetBytes 64)
 
     let generateToken config (user: User) =
-        let (UserId id) = user.Id
-        let (Email email) = user.Email
         let key = SymmetricSecurityKey(Encoding.UTF8.GetBytes config.JwtSecret)
         let creds = SigningCredentials(key, SecurityAlgorithms.HmacSha256)
 
         let claims =
-            [| Claim(ClaimTypes.NameIdentifier, id); Claim(ClaimTypes.Email, email) |]
+            [| Claim(ClaimTypes.NameIdentifier, user.Id)
+               Claim(ClaimTypes.Email, user.Email) |]
 
         let token =
             JwtSecurityToken(
@@ -33,4 +32,3 @@ module Jwt =
             )
 
         JwtSecurityTokenHandler().WriteToken token
-

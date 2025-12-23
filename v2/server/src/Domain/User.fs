@@ -1,20 +1,17 @@
 namespace HypertweetServer.Domain
 
 open System
+open MongoDB.Bson.Serialization.Attributes
 
-type UserId = UserId of string
-type Email = Email of string
-type PasswordHash = PasswordHash of string
-
+[<CLIMutable; BsonIgnoreExtraElements>]
 type User =
-    { Id: UserId
-      Email: Email
-      PasswordHash: PasswordHash
+    { [<BsonId>] Id: string
+      Email: string
+      PasswordHash: string
       DisabledToneIds: string list
       RefreshToken: string option
       RefreshTokenExpiry: DateTime option
       CreatedAt: DateTime }
 
 module User =
-    let newId () = UserId(Guid.NewGuid().ToString())
-
+    let newId () = Guid.NewGuid().ToString()

@@ -15,9 +15,7 @@ module Service =
 
                 let enabledDefaults =
                     defaults
-                    |> List.filter (fun tone ->
-                        let (ToneId id) = tone.Id
-                        not (List.contains id user.DisabledToneIds))
+                    |> List.filter (fun tone -> not (List.contains tone.Id user.DisabledToneIds))
 
                 return userTones @ enabledDefaults
         }
@@ -32,7 +30,7 @@ module Service =
                   CreatedAt = DateTime.UtcNow }
 
             do! deps.InsertTone tone
-            let (ToneId id) = tone.Id
+            let id = tone.Id
             return id
         }
 
@@ -71,19 +69,14 @@ module Service =
                 match! deps.GetUser userId with
                 | None -> return! AsyncResult.error (NotFound "User")
                 | Some user ->
-                    let (ToneId id) = toneId
 
                     let newDisabled =
                         if enabled then
-                            user.DisabledToneIds |> List.filter ((<>) id)
-                        else if List.contains id user.DisabledToneIds then
+                            user.DisabledToneIds |> List.filter ((<>) toneId)
+                        elif List.contains toneId user.DisabledToneIds then
                             user.DisabledToneIds
                         else
-                            id :: user.DisabledToneIds
+                            toneId :: user.DisabledToneIds
 
-                    do!
-                        deps.UpdateUser
-                            { user with
-                                DisabledToneIds = newDisabled }
+                    do! deps.UpdateUser { user with DisabledToneIds = newDisabled }
         }
-

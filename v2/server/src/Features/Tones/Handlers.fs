@@ -1,29 +1,37 @@
 namespace HypertweetServer.Features.Tones
 
 open Giraffe
-open HypertweetServer.Domain
 open HypertweetServer.Shared
 
 module Handlers =
+    open FsToolkit.ErrorHandling
+
     let private validateCreate (req: CreateToneRequest) =
         result {
             let! title = req.Title |> Validate.notEmpty "title"
             let! instruction = req.Instruction |> Validate.notEmpty "instruction"
-            return { CreateToneCommand.Title = title; Instruction = instruction }
+
+            return
+                { CreateToneCommand.Title = title
+                  Instruction = instruction }
         }
 
     let private validateUpdate (req: UpdateToneRequest) =
         result {
             let! title = req.Title |> Validate.notEmpty "title"
             let! instruction = req.Instruction |> Validate.notEmpty "instruction"
-            return { UpdateToneCommand.ToneId = ToneId ""; Title = title; Instruction = instruction }
+
+            return
+                { UpdateToneCommand.ToneId = ""
+                  Title = title
+                  Instruction = instruction }
         }
 
     let private run service onSuccess : HttpHandler =
         fun next ctx ->
             task {
                 let logger = ctx.GetLogger "Tones"
-                let userId = Http.getUserId ctx
+                let userId = HttpCtx.getUserId ctx
 
                 match! service userId |> Async.StartAsTask with
                 | Ok r -> return! onSuccess r next ctx
@@ -34,7 +42,7 @@ module Handlers =
         fun next ctx ->
             task {
                 let logger = ctx.GetLogger "Tones"
-                let userId = Http.getUserId ctx
+                let userId = HttpCtx.getUserId ctx
                 let! req = ctx.BindJsonAsync<_>()
 
                 match validate req with
@@ -53,17 +61,32 @@ module Handlers =
 
     let update deps (toneId: string) =
         runWithBody
-            (validateUpdate >> Result.map (fun cmd -> { cmd with ToneId = ToneId toneId }))
+            (validateUpdate >> Result.map (fun cmd -> { cmd with ToneId = toneId }))
             (Service.update deps)
             (fun () -> Successful.ok (json {| message = "Updated" |}))
 
     let delete deps (toneId: string) =
-        run (fun userId -> Service.delete deps userId (ToneId toneId)) (fun () -> Successful.ok (json {| message = "Deleted" |}))
+        run (fun userId -> Service.delete deps userId toneId) (fun () -> Successful.ok (json {| message = "Deleted" |}))
 
     let toggleDefault deps (toneId: string) : HttpHandler =
         fun next ctx ->
-            let enabled = ctx.Request.Query.ContainsKey("enable")
+            let enabled = ctx.Request.Query.ContainsKey "enable"
+
             run
-                (fun userId -> Service.toggleDefault deps userId (ToneId toneId) enabled)
+                (fun userId -> Service.toggleDefault deps userId toneId enabled)
                 (fun () -> Successful.ok (json {| message = if enabled then "Enabled" else "Disabled" |}))
-                next ctx
+                next
+                ctx
+
+    let deleteMe db next ctx =
+        taskResult {
+            let userId = HttpCtx.getUserId ctx
+
+            do!
+                Db.collection db "users"
+                |> Db.deleteOne (Bson.make () |> Bson.field "_id" userId)
+                |> AsyncResult.map ignore
+
+            return! json {| Message = "Ok" |} next ctx
+        }
+        |> HttpCtx.errHandle next ctx

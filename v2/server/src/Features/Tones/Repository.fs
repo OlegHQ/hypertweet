@@ -28,23 +28,25 @@ module Repository =
     let private collection (db: IMongoDatabase) = db.GetCollection<ToneDocument> "tones"
 
     let private toDoc (tone: Tone) =
-        let (ToneId id) = tone.Id
-        let userIdStr = tone.UserId |> Option.map (fun (UserId uid) -> uid) |> Option.toObj
+        let userIdStr =
+            match tone.UserId with
+            | Some x -> x
+            | _ -> ""
 
-        { Id = id
+        { Id = tone.Id
           UserId = userIdStr
           Title = tone.Title
           Instruction = tone.Instruction
           CreatedAt = tone.CreatedAt }
 
     let private toDomain (doc: ToneDocument) : Tone =
-        { Id = ToneId doc.Id
-          UserId = if isNull doc.UserId then None else Some(UserId doc.UserId)
+        { Id = doc.Id
+          UserId = if isNull doc.UserId then None else Some doc.UserId
           Title = doc.Title
           Instruction = doc.Instruction
           CreatedAt = doc.CreatedAt }
 
-    let findById (db: IMongoDatabase) (ToneId id) =
+    let findById (db: IMongoDatabase) (id: string) =
         tryDb (fun () ->
             async {
                 let! r =
@@ -54,7 +56,7 @@ module Repository =
                 return r |> nullable |> Option.map toDomain
             })
 
-    let findByUser (db: IMongoDatabase) (UserId userId) =
+    let findByUser (db: IMongoDatabase) (userId: string) =
         tryDb (fun () ->
             async {
                 let! r =
@@ -68,11 +70,10 @@ module Repository =
         tryDb (fun () -> async { do! collection(db).InsertOneAsync(toDoc tone) |> Async.AwaitTask })
 
     let update (db: IMongoDatabase) (tone: Tone) =
-        let (ToneId id) = tone.Id
 
         tryDb (fun () ->
             async {
-                let filter = BsonDocument("_id", id)
+                let filter = BsonDocument("_id", tone.Id)
 
                 do!
                     collection(db).ReplaceOneAsync(filter, toDoc tone)
@@ -80,10 +81,9 @@ module Repository =
                     |> Async.Ignore
             })
 
-    let delete (db: IMongoDatabase) (ToneId id) =
+    let delete (db: IMongoDatabase) (id: string) =
         tryDb (fun () ->
             async {
                 let filter = BsonDocument("_id", id)
                 do! collection(db).DeleteOneAsync filter |> Async.AwaitTask |> Async.Ignore
             })
-
