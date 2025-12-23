@@ -10,12 +10,21 @@ type UpdateProfileInput =
     { NewPassword: string option
       ModelName: string option }
 
-module Handlers =
-    let private models =
-        [ "xiaomi/mimo-v2-flash:free"; "tngtech/deepseek-r1t-chimera:free" ]
+module ModelConfig =
+    let allModels = [ "xiaomi/mimo-v2-flash:free"; "tngtech/deepseek-r1t-chimera:free" ]
 
+    let defaultModel = "xiaomi/mimo-v2-flash:free"
+
+
+module Handlers =
     let listModels next ctx =
-        json (List.map (fun x -> { ModelName = x }) models) next ctx
+        let allModels = List.map (fun x -> { ModelName = x }) ModelConfig.allModels
+
+        json
+            {| DefaultModel = ModelConfig.defaultModel
+               AllModels = allModels |}
+            next
+            ctx
 
     let deleteMe db next ctx =
         taskResult {
@@ -37,7 +46,8 @@ module Handlers =
 
             do!
                 match modelName with
-                | Some x when not (List.contains x models) -> Error(ValidationError("ModelName", "Model is invalid"))
+                | Some x when not (List.contains x ModelConfig.allModels) ->
+                    Error(ValidationError("ModelName", "Model is invalid"))
                 | _ -> Ok()
 
             do!
@@ -77,3 +87,4 @@ module Handlers =
             return! json {| Message = "Ok" |} next ctx
         }
         |> HttpCtx.errHandle next ctx
+

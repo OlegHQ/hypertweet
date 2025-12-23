@@ -5,6 +5,30 @@ open HypertweetServer.Domain
 open HypertweetServer.Shared
 
 module Service =
+    open FsToolkit.ErrorHandling
+
+    let makeResolvedTones user userTones =
+        let defaults = Helpers.getDefaultTones ()
+
+        let enabledDefaults =
+            defaults
+            |> List.filter (fun tone -> not (List.contains tone.Id user.DisabledToneIds))
+
+        userTones @ enabledDefaults
+
+
+    let resolveTones db userId =
+        taskResult {
+            let! user = Db.collection db "users" |> Db.findOne (Bson.make () |> Bson.field "_id" userId)
+            let! user = user |> Result.requireSome (NotFound "User")
+
+            let! userTones = DataAccess.userTones db userId
+
+            return makeResolvedTones user userTones
+        }
+
+
+
     let list deps userId =
         asyncResult {
             match! deps.GetUser userId with
@@ -78,5 +102,9 @@ module Service =
                         else
                             toneId :: user.DisabledToneIds
 
-                    do! deps.UpdateUser { user with DisabledToneIds = newDisabled }
+                    do!
+                        deps.UpdateUser
+                            { user with
+                                DisabledToneIds = newDisabled }
         }
+

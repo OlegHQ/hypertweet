@@ -26,6 +26,7 @@
     <Compile Include="src/Infrastructure/Jwt.fs" />
     <Compile Include="src/Shared/Http.fs" />
 
+    <Compile Include="src/Domain/Data.fs" />
     <!-- 5. Features -->
     <Compile Include="src/Features/Auth/Types.fs" />
     <Compile Include="src/Features/Auth/Handlers.fs" />
@@ -57,6 +58,7 @@
   </ItemGroup>
 
 </Project>
+
 
 
 

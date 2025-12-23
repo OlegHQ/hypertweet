@@ -38,11 +38,8 @@ module Handlers =
     let inline handler validate service onSuccess =
         Http.handler "Auth" validate service onSuccess
 
-    let userCol db = Db.collection<User> db "users"
-
-    let userByKey db key value =
-        userCol db |> Db.findOne (Bson.make () |> Bson.field key value)
-
+    let userByKey = DataAccess.userByKey
+    let userCol = DataAccess.userCol
     let userByEmail db = userByKey db "Email"
     let userByRefreshToken db = userByKey db "RefreshToken"
 

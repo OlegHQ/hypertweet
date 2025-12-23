@@ -53,6 +53,27 @@ module Db =
                 return result |> nullable
             })
 
+    module ListParams =
+        type t = { Limit: int option; Skip: int option }
+        let make () = { Limit = None; Skip = None }
+        let limit l p = { p with Limit = Some l }
+        let skip s p = { p with Skip = Some s }
+
+    let findMany<'T> (filter: BsonDocument) (opts: ListParams.t option) (col: IMongoCollection<'T>) =
+        tryDb (fun () ->
+            async {
+                let mutable cursor = col.Find filter
+
+                match opts with
+                | Some p ->
+                    p.Skip |> Option.iter (fun s -> cursor <- cursor.Skip s)
+                    p.Limit |> Option.iter (fun l -> cursor <- cursor.Limit l)
+                | None -> ()
+
+                let! result = cursor.ToListAsync() |> Async.AwaitTask
+                return result |> Seq.toList
+            })
+
     let updateOne (filter: BsonDocument) (doc: BsonDocument) (col: IMongoCollection<'T>) =
         tryDb (fun () -> col.UpdateOneAsync(filter, doc) |> Async.AwaitTask)
 
@@ -66,3 +87,4 @@ module Db =
 
     let insertOne<'T> (doc: 'T) (col: IMongoCollection<'T>) =
         tryDb (fun () -> col.InsertOneAsync doc |> Async.AwaitTask)
+
