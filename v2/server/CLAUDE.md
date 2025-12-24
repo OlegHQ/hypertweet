@@ -1,6 +1,6 @@
 # F# Web API Architecture Guide
 
-Minimal boilerplate F# web API with clean architecture.
+Minimal boilerplate F# web API. No unnecessary abstraction layers.
 
 ## Commands
 
@@ -14,279 +14,275 @@ src/
   Shared/                    # Foundation (no deps)
     Errors.fs                # DomainError discriminated union
     Config.fs                # AppConfig record + loader
-    Prelude.fs               # Computation expressions, helpers
+    Http.fs                  # HTTP helpers, error handling
+    Db.fs                    # Database helpers
+    Validate.fs              # Validation combinators
 
   Domain/                    # Pure entities (depends on: Shared)
-    <Entity>.fs              # Domain types with single-case DUs
-
-  Data/                      # Shared repositories (depends on: Shared, Domain)
-    <Entity>Repository.fs    # ONLY for entities used by multiple features
+    Models.fs                # Domain types
+    DataAccess.fs            # Collection accessors, common queries
 
   Infrastructure/            # External services (depends on: Shared, Domain)
-    Database.fs              # Database connection
-    Jwt.fs                   # Token generation (if needed)
+    Jwt.fs                   # Token generation
 
   Features/                  # Vertical slices (depends on: all above)
     <Feature>/
-      Types.fs               # DTOs, commands, deps record
-      [Repository.fs]        # ONLY for feature-specific entities
-      Service.fs             # Business logic
-      Handlers.fs            # HTTP handlers
+      [Types.fs]             # Optional: DTOs and commands (can go in Handlers.fs)
+      Handlers.fs            # Everything: validation, logic, DB ops, types if simple
 
-Program.fs                   # Composition root
+Program.fs                   # Composition root, routes
 ```
 
-## Dependency Flow
+**Key principle:** No Service layer. No Repository layer. Handlers do everything.
 
-```
-              Shared
-                |
-              Domain
-              /    \
-           Data    Infrastructure
-             \      /
-           Features/*
-                |
-           Program.fs
-```
+## Golden Standard: Auth/Handlers.fs
 
-**Key principle:** Features are siblings - they never import each other.
-
-## Repository Placement
-
-**Shared entities** (used by multiple features) → `Data/<Entity>Repository.fs`
-**Feature-specific entities** → `Features/<Feature>/Repository.fs`
-
-Example:
-- User (used by Auth, Tones, future features) → `Data/UserRepository.fs`
-- Tone (only used by Tones feature) → `Features/Tones/Repository.fs`
-
-## Style Guide
-
-### Minimize type annotations
-F# infers types. Only annotate when:
-- Compiler complains
-- Disambiguating overlapping record fields
+This is the pattern to follow. All logic lives in the handler:
 
 ```fsharp
-// Good - let inference work
-let create deps cmd = asyncResult { ... }
+module Handlers =
+    // Validation - private, returns Result
+    let private validateLogin (req: LoginRequest) =
+        result {
+            let! email = req.Email |> Validate.email "email"
+            let! password = req.Password |> Validate.notEmpty "password"
+            return { Email = email; Password = password }
+        }
 
-// Only when needed for disambiguation
-let entity: MyEntity = { Id = ...; Field = cmd.Field; ... }
+    // Data access helpers - reuse DataAccess or define inline
+    let userByEmail db = DataAccess.userByKey db "Email"
+
+    // Small helper functions - defined right here, not in separate files
+    let createTokenResult config user =
+        let accessToken = Jwt.generateToken config user
+        let refreshToken = Jwt.generateRefreshToken ()
+        { AccessToken = accessToken
+          RefreshToken = refreshToken
+          ExpiresIn = config.JwtExpiryDays * 24 * 60 * 60 }
+
+    // Handler - uses taskResult, does EVERYTHING inline
+    let login config db next ctx =
+        taskResult {
+            let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
+
+            let! user =
+                userByEmail db req.Email
+                |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+
+            let result = createTokenResult config user
+
+            let expiry = System.DateTime.UtcNow.AddDays 30.0
+            do! updateRefreshToken user.Id result.RefreshToken expiry db
+
+            return! json result next ctx
+        }
+        |> HttpCtx.errHandle next ctx
 ```
 
-### Single-case DUs for type safety
-```fsharp
-type EntityId = EntityId of string
-type EmailAddress = EmailAddress of string
-```
+## What NOT to Do
 
-### Pattern match to unwrap DUs
-```fsharp
-// Inline destructuring - no wrapper modules needed
-let (EntityId id) = entity.Id
+**Don't create:**
+- `Service.fs` files - put logic in handlers
+- `Repository.fs` files - use `Db` module directly
+- Dependency injection records - pass `db` and `config` as parameters
+- Abstractions for things used once
 
-// In function parameters
-let findById db (EntityId id) = ...
-```
-
-### Use computation expressions
+**Don't:**
 ```fsharp
-// asyncResult for async + Result
-let myService deps cmd = asyncResult {
-    let! data = deps.GetData cmd.Id
-    do! deps.Save data
+// BAD: Unnecessary abstraction
+type AuthDeps = {
+    FindUserByEmail: string -> AsyncResult<User option, DomainError>
+    InsertUser: User -> AsyncResult<unit, DomainError>
 }
 
-// result for sync validation
-let validate req = result {
-    do! if String.IsNullOrWhiteSpace req.Field then Error (ValidationError("field", "required")) else Ok ()
-    return { Field = req.Field; ... }
-}
-```
-
-### Generic handler pattern
-```fsharp
-let private handler<'Req, 'Cmd, 'Resp> validate service onSuccess : HttpHandler =
-    fun next ctx -> task {
-        let! req = ctx.BindJsonAsync<'Req>()
-        match validate req with
-        | Error e -> return! toHttp e next ctx
-        | Ok cmd ->
-            match! service cmd |> Async.StartAsTask with
-            | Ok r -> return! onSuccess r next ctx
-            | Error e -> return! toHttp e next ctx
+module Service =
+    let login deps cmd = asyncResult {
+        let! user = deps.FindUserByEmail cmd.Email
+        // ...
     }
 
-// Usage - one line per endpoint
-let create deps = handler validateCreate (Service.create deps) (fun () -> created ...)
-let get deps = handler validateGet (Service.get deps) (fun r -> ok r)
+module Handlers =
+    let login deps = handler validateLogin (Service.login deps) (fun r -> json r)
 ```
 
-### Repository pattern with tryDb
+**Do:**
 ```fsharp
-let private tryDb f = async {
-    try return! f () |> Async.map Ok
-    with ex -> return Error (InternalError ex.Message)
-}
-
-let findById db (EntityId id) =
-    tryDb (fun () -> async {
-        let! r = collection(db).Find(...).FirstOrDefaultAsync() |> Async.AwaitTask
-        return r |> nullable |> Option.map toDomain
-    })
+// GOOD: Direct, no indirection
+let login config db next ctx =
+    taskResult {
+        let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
+        let! user = userByEmail db req.Email |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+        // ... all logic right here
+        return! json result next ctx
+    }
+    |> HttpCtx.errHandle next ctx
 ```
 
 ## Adding a New Feature
 
-### If entity is feature-specific (most common):
-
-1. **Domain type** in `src/Domain/<Entity>.fs`:
+1. **Types.fs** (optional) - Only if types are complex or reused:
    ```fsharp
-   type EntityId = EntityId of string
-   type Entity = { Id: EntityId; Field: string; CreatedAt: DateTime }
+   namespace MyApp.Features.Thing
 
-   module Entity =
-       let newId () = EntityId (Guid.NewGuid().ToString())
-   ```
-
-2. **Feature folder** `src/Features/<Feature>/`:
-
-   **Types.fs** - DTOs and dependency record:
-   ```fsharp
    [<CLIMutable>]
-   type CreateRequest = { Field: string }
+   type CreateRequest = { Name: string; Value: int }
 
-   type CreateCommand = { Field: string }
+   type CreateCommand = { Name: string; Value: int }
 
-   type FeatureDeps = {
-       Insert: Entity -> AsyncResult<unit, DomainError>
-       FindById: EntityId -> AsyncResult<Entity option, DomainError>
-   }
+   type ThingResponse = { Id: string; Name: string }
    ```
 
-   **Repository.fs** - Database access (in Features folder):
+2. **Handlers.fs** - Everything else:
    ```fsharp
-   [<CLIMutable>]
-   type EntityDocument = { [<BsonId>] Id: string; Field: string }
+   namespace MyApp.Features.Thing
 
-   module Repository =
-       let insert db entity = tryDb (fun () -> async { ... })
-       let findById db (EntityId id) = tryDb (fun () -> async { ... })
-   ```
+   open Giraffe
+   open FsToolkit.ErrorHandling
+   open MyApp.Shared
+   open MyApp.Domain
 
-   **Service.fs** - Business logic:
-   ```fsharp
-   module Service =
-       let create deps cmd = asyncResult {
-           let entity = { Id = Entity.newId (); Field = cmd.Field; CreatedAt = DateTime.UtcNow }
-           do! deps.Insert entity
-       }
-   ```
-
-   **Handlers.fs** - HTTP handlers:
-   ```fsharp
    module Handlers =
-       let private validate req = result {
-           do! if String.IsNullOrWhiteSpace req.Field then Error (ValidationError("field", "required")) else Ok ()
-           return { Field = req.Field }
-       }
+       // Validation
+       let private validateCreate (req: CreateRequest) =
+           result {
+               let! name = req.Name |> Validate.notEmpty "name"
+               let! value = req.Value |> Validate.positive "value"
+               return { CreateCommand.Name = name; Value = value }
+           }
 
-       let create deps = handler validate (Service.create deps) (fun () -> created {| message = "Created" |})
+       // Data access helpers (if needed beyond DataAccess module)
+       let thingCol db = Db.collection<Thing> db "things"
+
+       // Handlers - all logic inline
+       let create db next ctx =
+           taskResult {
+               let! req = HttpCtx.bindJson<CreateRequest> ctx |> Task.map validateCreate
+
+               let thing = {
+                   Id = newId ()
+                   Name = req.Name
+                   Value = req.Value
+                   CreatedAt = System.DateTime.UtcNow
+               }
+
+               do! thingCol db |> Db.insertOne thing
+               return! json { Id = thing.Id; Name = thing.Name } next ctx
+           }
+           |> HttpCtx.errHandle next ctx
+
+       let get db id next ctx =
+           taskResult {
+               let! thing =
+                   thingCol db
+                   |> Db.findOne (Bson.make () |> Bson.field "_id" id)
+                   |> Async.map (Result.bind (Result.requireSome (NotFound "Thing")))
+
+               return! json thing next ctx
+           }
+           |> HttpCtx.errHandle next ctx
    ```
 
-3. **Add to .fsproj** (order matters!):
-   ```xml
-   <Compile Include="src/Domain/<Entity>.fs" />
-   <Compile Include="src/Features/<Feature>/Types.fs" />
-   <Compile Include="src/Features/<Feature>/Repository.fs" />
-   <Compile Include="src/Features/<Feature>/Service.fs" />
-   <Compile Include="src/Features/<Feature>/Handlers.fs" />
-   ```
-
-4. **Wire in Program.fs**:
+3. **Wire in Program.fs**:
    ```fsharp
-   module FeatureRepo = MyApp.Features.Feature.Repository
-
-   let featureDeps = {
-       Insert = FeatureRepo.insert db
-       FindById = FeatureRepo.findById db
-   }
-
    let routes = choose [
-       POST >=> route "/entities" >=> FeatureHandlers.create featureDeps
+       POST >=> route "/things" >=> ThingHandlers.create db
+       GET >=> routef "/things/%s" (ThingHandlers.get db)
    ]
    ```
 
-### If entity is shared (used by multiple features):
+4. **Add to .fsproj**:
+   ```xml
+   <!-- Types.fs only if needed -->
+   <Compile Include="src/Features/Thing/Handlers.fs" />
+   ```
 
-Put repository in `Data/` layer instead of `Features/<Feature>/`:
+## Style Guide
 
+### Use taskResult from FsToolkit.ErrorHandling
 ```fsharp
-// src/Data/UserRepository.fs
-namespace MyApp.Data
-
-module UserRepository =
-    let findById db (UserId id) = ...
-    let findByEmail db (Email email) = ...
-    let insert db user = ...
-    let update db user = ...
+let handler db next ctx =
+    taskResult {
+        let! req = HttpCtx.bindJson<Request> ctx |> Task.map validate
+        let! data = someAsyncOp db |> Async.map someResultTransform
+        do! anotherOp data
+        return! json response next ctx
+    }
+    |> HttpCtx.errHandle next ctx
 ```
 
-Then multiple features can use it via their deps:
-
+### Validation with combinators
 ```fsharp
-// Auth feature uses UserRepository
-let authDeps = {
-    FindUserByEmail = UserRepository.findByEmail db
-    InsertUser = UserRepository.insert db
-}
+let private validate (req: Request) =
+    result {
+        let! email = req.Email |> Validate.email "email"
+        let! password = req.Password |> Validate.chain [
+            Validate.notEmpty "password"
+            Validate.minLength "password" 8
+        ]
+        return { Email = email; Password = password }
+    }
+```
 
-// Tones feature also uses UserRepository
-let toneDeps = {
-    GetUser = UserRepository.findById db
-    UpdateUser = UserRepository.update db
-}
+### Result helpers for Option handling
+```fsharp
+// Convert Option to Result with error
+let! user = findUser db id |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+
+// Check something doesn't exist
+let! existing = findByEmail db email
+do! existing |> Result.requireNone (Conflict "Already exists")
+```
+
+### DataAccess for shared queries
+```fsharp
+// Domain/DataAccess.fs - collection accessors and common queries
+module DataAccess =
+    let userCol db = Db.collection<User> db "users"
+    let userByKey db key value = userCol db |> Db.findOne (Bson.make () |> Bson.field key value)
+    let user db id = userByKey db "_id" id
+```
+
+### Handler-local helpers for feature-specific logic
+```fsharp
+// In Handlers.fs - not in a separate file
+let userByEmail db = DataAccess.userByKey db "Email"
+
+let createTokenResult config user =
+    { AccessToken = Jwt.generateToken config user
+      RefreshToken = Jwt.generateRefreshToken ()
+      ExpiresIn = config.JwtExpiryDays * 24 * 60 * 60 }
 ```
 
 ## File Order in .fsproj
 
-F# compiles top-to-bottom. Dependencies must come before dependents:
+F# compiles top-to-bottom:
 
 ```xml
 <!-- 1. Shared -->
 <Compile Include="src/Shared/Errors.fs" />
 <Compile Include="src/Shared/Config.fs" />
-<Compile Include="src/Shared/Prelude.fs" />
+<Compile Include="src/Shared/Db.fs" />
+<Compile Include="src/Shared/Http.fs" />
+<Compile Include="src/Shared/Validate.fs" />
 
 <!-- 2. Domain -->
-<Compile Include="src/Domain/User.fs" />
-<Compile Include="src/Domain/Tone.fs" />
+<Compile Include="src/Domain/Models.fs" />
+<Compile Include="src/Domain/DataAccess.fs" />
 
-<!-- 3. Data (shared repositories) -->
-<Compile Include="src/Data/UserRepository.fs" />
-
-<!-- 4. Infrastructure -->
-<Compile Include="src/Infrastructure/Database.fs" />
+<!-- 3. Infrastructure -->
 <Compile Include="src/Infrastructure/Jwt.fs" />
 
-<!-- 5. Features -->
+<!-- 4. Features (Types.fs before Handlers.fs if present) -->
 <Compile Include="src/Features/Auth/Types.fs" />
-<Compile Include="src/Features/Auth/Service.fs" />
 <Compile Include="src/Features/Auth/Handlers.fs" />
-<Compile Include="src/Features/Tones/Types.fs" />
-<Compile Include="src/Features/Tones/Repository.fs" />
-<Compile Include="src/Features/Tones/Service.fs" />
-<Compile Include="src/Features/Tones/Handlers.fs" />
+<Compile Include="src/Features/Thing/Handlers.fs" />
 
-<!-- 6. Entry -->
+<!-- 5. Entry -->
 <Compile Include="Program.fs" />
 ```
 
-## Core Components
+## Core Errors
 
-### Shared/Errors.fs
 ```fsharp
 type DomainError =
     | ValidationError of field: string * message: string
@@ -296,86 +292,11 @@ type DomainError =
     | InternalError of message: string
 ```
 
-### Shared/Prelude.fs
-```fsharp
-type AsyncResult<'T, 'E> = Async<Result<'T, 'E>>
+## Summary
 
-module AsyncResult =
-    let retn x = async { return Ok x }
-    let error e = async { return Error e }
-    let bind f ar = async { match! ar with Ok x -> return! f x | Error e -> return Error e }
-
-type AsyncResultBuilder() =
-    member _.Return x = async { return Ok x }
-    member _.ReturnFrom x = x
-    member _.Bind(ar, f) = AsyncResult.bind f ar
-    member _.Zero() = async { return Ok () }
-
-type ResultBuilder() =
-    member _.Return x = Ok x
-    member _.ReturnFrom x = x
-    member _.Bind(r, f) = Result.bind f r
-    member _.Zero() = Ok ()
-
-[<AutoOpen>]
-module Builders =
-    let asyncResult = AsyncResultBuilder()
-    let result = ResultBuilder()
-    let isNull x = obj.ReferenceEquals(x, null)
-    let nullable x = if isNull x then None else Some x
-
-module Async =
-    let map f a = async { let! x = a in return f x }
-```
-
-## Key Patterns
-
-### Dependency injection via records
-Pass dependencies as function records, not interfaces:
-```fsharp
-type Deps = {
-    GetData: Id -> AsyncResult<Data option, DomainError>
-    Save: Data -> AsyncResult<unit, DomainError>
-}
-```
-
-### Railway-oriented programming
-Chain operations with `asyncResult {}`. Errors short-circuit:
-```fsharp
-let process deps cmd = asyncResult {
-    let! existing = deps.Find cmd.Id          // Error? Stop here
-    do! deps.Validate existing                 // Error? Stop here
-    do! deps.Save { existing with ... }        // Error? Stop here
-    return existing.Id                         // Success path
-}
-```
-
-### Validation in handlers
-Keep domain pure. Validate at HTTP boundary:
-```fsharp
-let validate req = result {
-    do! if condition then Error (ValidationError(...)) else Ok ()
-    return command
-}
-```
-
-### Error mapping to HTTP
-```fsharp
-let toHttp = function
-    | ValidationError (f, m) -> badRequest {| error = m; field = f |}
-    | NotFound e -> notFound {| error = $"{e} not found" |}
-    | Conflict m -> conflict {| error = m |}
-    | Unauthorized -> unauthorized ...
-    | InternalError _ -> internalError {| error = "Internal error" |}
-```
-
-## Environment Variables
-
-Configure via environment for different deployments:
-```fsharp
-let loadConfig () = {
-    DatabaseUri = Environment.GetEnvironmentVariable "DATABASE_URI" |? "default"
-    JwtSecret = Environment.GetEnvironmentVariable "JWT_SECRET" |? "dev-secret"
-    // ...
-}
-```
+- **1-2 files per feature**: Handlers.fs (required) + Types.fs (optional)
+- **No Service layer**: Logic lives in handlers
+- **No Repository layer**: Use Db module directly
+- **No dependency records**: Pass db/config as parameters
+- **taskResult**: FsToolkit.ErrorHandling for async+result
+- **Inline helpers**: Define in Handlers.fs, not separate files

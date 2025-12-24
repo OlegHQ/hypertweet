@@ -5,6 +5,7 @@ open Microsoft.AspNetCore.Http
 
 module Log =
     type Ctx = ILogger
+    let make () = Serilog.Log.Logger
 
     let http (ctx: HttpContext) =
         Log.Logger

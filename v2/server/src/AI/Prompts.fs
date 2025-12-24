@@ -1,9 +1,9 @@
-module HypertweetServer.AI.Prompt
+module HypertweetServer.AI.Prompts
 
-open FsToolkit.ErrorHandling
 open HypertweetServer.Domain
-
-module ModelConfig = HypertweetServer.Features.Profiles.ModelConfig
+open HypertweetServer.AI.PromptBuilder
+open PromptDomain
+open Dsl
 
 type Site =
     | X
@@ -42,29 +42,28 @@ module Formatters =
         posts |> List.map formatPost |> String.concat "\n\n---\n\n"
 
 
-
 module ReplyPrompt =
     let private getPlatformGuidelines site =
         match site with
         | X ->
-            """- Keep response under 280 characters unless thread format is appropriate
-- Use casual, conversational tone typical of Twitter/X
-- Hashtags are optional and should be used sparingly
-- Emojis can enhance engagement but don't overuse"""
+            [ "Keep response under 280 characters unless thread format is appropriate"
+              "Use casual, conversational tone typical of Twitter/X"
+              "Hashtags are optional and should be used sparingly"
+              "Emojis can enhance engagement but don't overuse" ]
         | Reddit ->
-            """- Match the subreddit's culture and tone
-- Be informative and add value to the discussion
-- Use markdown formatting (bold, lists, quotes) when helpful
-- Avoid excessive self-promotion"""
+            [ "Match the subreddit's culture and tone"
+              "Be informative and add value to the discussion"
+              "Use markdown formatting (bold, lists, quotes) when helpful"
+              "Avoid excessive self-promotion" ]
         | LinkedIn ->
-            """- Maintain professional tone
-- Add insights or professional perspective
-- Be constructive and supportive
-- Keep appropriate business context"""
-        | _ ->
-            """- Be helpful and relevant to the discussion
-- Match the platform's general tone
-- Keep response appropriately sized for the context"""
+            [ "Maintain professional tone"
+              "Add insights or professional perspective"
+              "Be constructive and supportive"
+              "Keep appropriate business context" ]
+        | Generic ->
+            [ "Be helpful and relevant to the discussion"
+              "Match the platform's general tone"
+              "Keep response appropriately sized for the context" ]
 
     let make (tone: Tone) (page: Page) =
         let activePost =
@@ -77,39 +76,49 @@ module ReplyPrompt =
                 |> Option.defaultValue "No post content"
             )
 
-        let context =
-            match page.Posts with
-            | [] -> ""
-            | posts -> sprintf "\n<thread_context>\n%s\n</thread_context>\n" (Formatters.formatThread posts)
-
         let platformGuidelines = getPlatformGuidelines (siteOfString page.Site)
 
-        $"""<task>
-Generate a reply to the social media post below. Write ONLY the reply text, nothing else.
-</task>
+        let threadContext =
+            match page.Posts with
+            | [] -> None
+            | posts -> Some(Formatters.formatThread posts)
 
-<platform>
-Site: {page.Site}
-URL: {page.Url}
+        prompt {
+            Item.text "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."
+            |> xml "task"
+            |> nl
 
-Platform Guidelines:
-{platformGuidelines}
-</platform>
+            Item.rich (
+                TextContent.Concat
+                    [ TextContent.LabeledText("Site", page.Site)
+                      TextContent.NewLine
+                      TextContent.LabeledText("URL", page.Url)
+                      TextContent.NewLine
+                      TextContent.NewLine
+                      TextContent.TitledText("Platform Guidelines", TextContent.Empty) ]
+            )
 
-<tone_instruction>
-Style: {tone.Title}
-{tone.Instruction}
-</tone_instruction>
+            Item.list platformGuidelines |> xml "platform" |> nl
 
-<post_to_reply>
-{activePost}
-</post_to_reply>
-{context}
-<output_requirements>
-- Write ONLY the reply text
-- Do not include any meta-commentary, explanations, or formatting outside the reply
-- Do not prefix with "Reply:" or similar labels
-- Match the specified tone exactly
-- Be authentic and engaging
-</output_requirements>"""
+            Item.rich (
+                TextContent.Concat
+                    [ TextContent.LabeledText("Style", tone.Title)
+                      TextContent.NewLine
+                      TextContent.Text tone.Instruction ]
+            )
+            |> xml "tone_instruction"
+            |> nl
+
+            Item.text activePost |> xml "post_to_reply" |> nl
+
+            threadContext |> Option.map (Item.text >> xml "thread_context" >> nl)
+
+            Item.list
+                [ "Write ONLY the reply text"
+                  "Do not include any meta-commentary, explanations, or formatting outside the reply"
+                  "Do not prefix with \"Reply:\" or similar labels"
+                  "Match the specified tone exactly"
+                  "Be authentic and engaging" ]
+            |> xml "output_requirements"
+        }
 

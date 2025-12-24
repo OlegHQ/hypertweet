@@ -34,108 +34,17 @@ module AI =
                 return Error(InternalError $"AI completion failed: {ex.Message}")
         }
 
-
-module ReplyPrompt =
-    let private formatUser (user: PageUser) =
-        let parts =
-            [ user.UserName |> Option.map (sprintf "@%s")
-              user.Name
-              user.Bio |> Option.map (sprintf "Bio: %s")
-              user.Followers |> Option.map (sprintf "%d followers") ]
-            |> List.choose id
-
-        if List.isEmpty parts then
-            "Unknown user"
-        else
-            String.concat " | " parts
-
-    let private formatPost (post: Post) =
-        let author = formatUser post.Author
-        let time = post.Time |> Option.map (sprintf " (%s)") |> Option.defaultValue ""
-        sprintf "**%s**%s:\n%s" author time post.Text
-
-    let private formatThread (posts: Post list) =
-        posts |> List.map formatPost |> String.concat "\n\n---\n\n"
-
-    let private getPlatformGuidelines (site: string) =
-        match site with
-        | s when s.Contains "twitter" || s.Contains "x.com" ->
-            """- Keep response under 280 characters unless thread format is appropriate
-- Use casual, conversational tone typical of Twitter/X
-- Hashtags are optional and should be used sparingly
-- Emojis can enhance engagement but don't overuse"""
-        | s when s.Contains "reddit" ->
-            """- Match the subreddit's culture and tone
-- Be informative and add value to the discussion
-- Use markdown formatting (bold, lists, quotes) when helpful
-- Avoid excessive self-promotion"""
-        | s when s.Contains "linkedin" ->
-            """- Maintain professional tone
-- Add insights or professional perspective
-- Be constructive and supportive
-- Keep appropriate business context"""
-        | _ ->
-            """- Be helpful and relevant to the discussion
-- Match the platform's general tone
-- Keep response appropriately sized for the context"""
-
-    let make (tone: Tone) (page: Page) =
-        let activePost =
-            page.ActivePost
-            |> Option.map formatPost
-            |> Option.defaultValue (
-                page.Posts
-                |> List.tryHead
-                |> Option.map formatPost
-                |> Option.defaultValue "No post content"
-            )
-
-        let context =
-            match page.Posts with
-            | [] -> ""
-            | posts -> sprintf "\n<thread_context>\n%s\n</thread_context>\n" (formatThread posts)
-
-        let platformGuidelines = getPlatformGuidelines page.Site
-
-        $"""<task>
-Generate a reply to the social media post below. Write ONLY the reply text, nothing else.
-</task>
-
-<platform>
-Site: {page.Site}
-URL: {page.Url}
-
-Platform Guidelines:
-{platformGuidelines}
-</platform>
-
-<tone_instruction>
-Style: {tone.Title}
-{tone.Instruction}
-</tone_instruction>
-
-<post_to_reply>
-{activePost}
-</post_to_reply>
-{context}
-<output_requirements>
-- Write ONLY the reply text
-- Do not include any meta-commentary, explanations, or formatting outside the reply
-- Do not prefix with "Reply:" or similar labels
-- Match the specified tone exactly
-- Be authentic and engaging
-</output_requirements>"""
-
-
 module Service =
     open HypertweetServer
     open HypertweetServer.Features.Tones
 
-    let private resolveModelInputs db toneId userId =
+    let private resolveModelInputs logger db toneId userId =
         taskResult {
             let! user = DataAccess.user db userId
             let! profile = DataAccess.profile db userId
+            logger |> Log.info "loading tones..."
             let! userTones = DataAccess.userTones db userId
+            logger |> Log.info "tones are loaded"
             let! user = user |> Result.requireSome (NotFound "User")
 
             let model =
@@ -155,11 +64,13 @@ module Service =
 
     type ReplyEvent = { EventId: string; Reply: string }
 
-    let generateReply db llmApiKey (page: Page) toneId userId =
+    let generateReply logger db llmApiKey (page: Page) toneId userId =
         taskResult {
-            let! tone, model, user = resolveModelInputs db toneId userId
-            let prompt = ReplyPrompt.make tone page
+            let! tone, model, user = resolveModelInputs logger db toneId userId
+            logger |> Log.info "Resolved inputs"
+            let prompt = Prompts.ReplyPrompt.make tone page
             let! completion = AI.getCompletion llmApiKey model prompt
+            logger |> Log.info "Completion generated"
             let! evt = Tracing.saveLLMReplyEvent db prompt tone model page user
 
             return
@@ -177,10 +88,13 @@ module Handlers =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<ReplyRequest> ctx
+
             let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
             let page = req.Page
             let toneId = req.ToneId
-            let! reply = Service.generateReply db llmApiKey page toneId userId
+            let logger = Log.http ctx
+            logger |> Log.info "Generating reply"
+            let! reply = Service.generateReply logger db llmApiKey page toneId userId
 
             return! json reply next ctx
         }

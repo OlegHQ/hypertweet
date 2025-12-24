@@ -84,6 +84,12 @@ module Dsl =
         // Overload to allow yielding raw strings as Text items automatically
         member _.Yield(str: string) = [ Item.text str ]
 
+        // Overload to handle Option<Item.t> - None yields nothing
+        member _.Yield(item: Item.t option) =
+            match item with
+            | Some i -> [ i ]
+            | None -> []
+
         // Combine operations (binds lines together)
         member _.Combine(a, b) = a @ b
         member _.Zero() = []

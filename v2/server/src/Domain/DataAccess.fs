@@ -16,5 +16,7 @@ module DataAccess =
         profileCol db |> Db.findOne (Bson.make () |> Bson.field "_id" userId)
 
     let userTones db userId =
-        Db.collection db "tones"
+        Log.make () |> Log.info "attempting to get tones..."
+
+        Db.collection<Tone> db "tones"
         |> Db.findMany (Bson.make () |> Bson.field "UserId" userId) None
