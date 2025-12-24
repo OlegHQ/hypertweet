@@ -4,7 +4,11 @@ import { Button } from './Button';
 import { Input } from './Input';
 import { api } from '../../apiProxy';
 
-interface TokenRes { AccessToken: string; RefreshToken: string; ExpiresIn: number }
+interface TokenRes {
+  AccessToken: string;
+  RefreshToken: string;
+  ExpiresIn: number;
+}
 interface AuthFormProps {
   onSuccess: (token: string) => void;
   onClose: () => void;
@@ -12,7 +16,10 @@ interface AuthFormProps {
 
 type Mode = 'login' | 'register';
 
-export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElement {
+export function AuthForm({
+  onSuccess,
+  onClose,
+}: AuthFormProps): React.ReactElement {
   const [mode, setMode] = useState<Mode>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +27,10 @@ export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElem
 
   const loginMutation = useMutation({
     mutationFn: async () => {
-      const result = await api.login({ Email: email, Password: password }) as TokenRes;
+      const result = (await api.login({
+        Email: email,
+        Password: password,
+      })) as TokenRes;
       await api.saveTokens(result);
       return result;
     },
@@ -31,7 +41,10 @@ export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElem
   const registerMutation = useMutation({
     mutationFn: async () => {
       await api.register({ Email: email, Password: password });
-      const result = await api.login({ Email: email, Password: password }) as TokenRes;
+      const result = (await api.login({
+        Email: email,
+        Password: password,
+      })) as TokenRes;
       await api.saveTokens(result);
       return result;
     },
@@ -80,7 +93,11 @@ export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElem
           type="password"
           value={password}
           onChange={e => setPassword(e.target.value)}
-          placeholder={mode === 'login' ? 'Enter your password' : 'Create a password (min 8 chars)'}
+          placeholder={
+            mode === 'login'
+              ? 'Enter your password'
+              : 'Create a password (min 8 chars)'
+          }
           error={error}
           required
           minLength={mode === 'register' ? 8 : undefined}
@@ -90,11 +107,17 @@ export function AuthForm({ onSuccess, onClose }: AuthFormProps): React.ReactElem
       <div className="ht-form-buttons">
         <Button type="submit" disabled={isLoading}>
           {isLoading
-            ? mode === 'login' ? 'Signing in...' : 'Creating account...'
-            : mode === 'login' ? 'Sign in' : 'Create account'}
+            ? mode === 'login'
+              ? 'Signing in...'
+              : 'Creating account...'
+            : mode === 'login'
+              ? 'Sign in'
+              : 'Create account'}
         </Button>
         <Button type="button" variant="ghost" onClick={toggleMode}>
-          {mode === 'login' ? "Don't have an account? Sign up" : 'Already have an account? Sign in'}
+          {mode === 'login'
+            ? "Don't have an account? Sign up"
+            : 'Already have an account? Sign in'}
         </Button>
         <Button type="button" variant="ghost" onClick={onClose}>
           Cancel

@@ -90,20 +90,20 @@ window.__reddit = (function () {
     }
 
     var post = {
-      author: {
-        name: author,
-        userName: author,
+      Author: {
+        Name: author,
+        UserName: author,
       },
-      text: text,
-      upvotes: upvotes,
-      isTopLevel: depth === 0,
-      replies: [],
+      Text: text,
+      Upvotes: upvotes,
+      IsTopLevel: depth === 0,
+      Replies: [],
     };
 
     // Get nested comments
     var nestedComments = extractCommentsAtDepth(el, depth + 1, maxDepth);
     if (nestedComments.length > 0) {
-      post.replies = nestedComments;
+      post.Replies = nestedComments;
     }
 
     return post;
@@ -177,20 +177,20 @@ window.__reddit = (function () {
 
       if (postData) {
         var mainPost = {
-          author: {
-            name: postData.author,
-            userName: postData.author,
+          Author: {
+            Name: postData.author,
+            UserName: postData.author,
           },
-          text: postData.body || postData.title,
-          url: postData.url,
-          replies: [],
+          Text: postData.body || postData.title,
+          Url: postData.url,
+          Replies: [],
         };
 
         // Extract comments
         log('Extracting comments...');
         var comments = extractCommentsAtDepth(document, 0, MAX_COMMENT_DEPTH);
         log('Found ' + comments.length + ' top-level comments');
-        mainPost.replies = comments;
+        mainPost.Replies = comments;
 
         posts.push(mainPost);
 
@@ -205,10 +205,10 @@ window.__reddit = (function () {
       }
 
       var page = {
-        site: 'reddit.com',
-        url: window.location.href,
-        posts: posts,
-        activePost: activePost,
+        Site: 'reddit.com',
+        Url: window.location.href,
+        Posts: posts,
+        ActivePost: activePost,
       };
 
       log(

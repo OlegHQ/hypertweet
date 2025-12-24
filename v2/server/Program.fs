@@ -15,6 +15,7 @@ open Serilog
 
 module TonesHandlers = Handlers
 module ProfileHandlers = HypertweetServer.Features.Profiles.Handlers
+module AIHandlers = HypertweetServer.AI.Handlers
 module TonesRepo = Repository
 
 [<EntryPoint>]
@@ -51,7 +52,7 @@ let main args =
               >=> choose
                       [ POST >=> route "/profile/update" >=> ProfileHandlers.updateProfile db
                         DELETE >=> route "/users" >=> ProfileHandlers.deleteMe db
-                        POST >=> route "/ai/completion" >=> ProfileHandlers.deleteMe db
+                        POST >=> route "/ai/reply" >=> AIHandlers.reply db config.LlmApiKey
                         GET >=> route "/profile/available-models" >=> ProfileHandlers.listModels
                         GET >=> route "/tones" >=> TonesHandlers.list toneDeps
                         POST >=> route "/tones" >=> TonesHandlers.create toneDeps
@@ -96,3 +97,4 @@ let main args =
     app.UseGiraffe routes
     app.Run "http://0.0.0.0:5001"
     0
+

@@ -7,6 +7,7 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  wide?: boolean;
 }
 
 const MODAL_CONTAINER_ID = 'hypertweet-modal-root';
@@ -63,6 +64,9 @@ function injectModalStyles(): void {
       color: ${tokens.colors.foreground} !important;
       font-family: ${tokens.font.sans} !important;
     }
+    .ht-modal-content-wide {
+      max-width: 500px !important;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -85,6 +89,7 @@ export function Modal({
   isOpen,
   onClose,
   children,
+  wide = false,
 }: ModalProps): React.ReactElement | null {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -118,7 +123,7 @@ export function Modal({
           onClick={onClose}
         >
           <motion.div
-            className="ht-modal-content"
+            className={`ht-modal-content ${wide ? 'ht-modal-content-wide' : ''}`}
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}

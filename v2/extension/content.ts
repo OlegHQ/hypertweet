@@ -32,7 +32,10 @@ function renderKeyboard(
       React.createElement(
         CacheProvider,
         { value: emotionCache },
-        React.createElement(Keyboard, { insertText })
+        React.createElement(Keyboard, {
+          insertText,
+          readPage: () => socialPage.readPage(),
+        })
       )
     )
   );

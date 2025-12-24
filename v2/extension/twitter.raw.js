@@ -65,15 +65,15 @@ window.__twitter = (function () {
     var statusID = url ? url.split('/').pop() : undefined;
 
     return {
-      author: {
-        name: name,
-        userName: userName,
-        isVerified: isVerified,
+      Author: {
+        Name: name,
+        UserName: userName,
+        IsVerified: isVerified,
       },
-      text: text,
-      time: time,
-      statusID: statusID,
-      replies: [],
+      Text: text,
+      Time: time,
+      StatusID: statusID,
+      Replies: [],
     };
   }
 
@@ -96,9 +96,9 @@ window.__twitter = (function () {
 
       if (tweets.length > 0) {
         mainPost = extractTweetData(tweets[0]);
-        if (mainPost.text) {
+        if (mainPost.Text) {
           posts.push(mainPost);
-          console.log('Main post: "' + mainPost.text.substring(0, 50) + '..."');
+          console.log('Main post: "' + mainPost.Text.substring(0, 50) + '..."');
 
           // Process replies
           if (tweets.length > 1) {
@@ -106,8 +106,8 @@ window.__twitter = (function () {
             var validReplies = 0;
             for (var i = 1; i < tweets.length; i++) {
               var replyData = extractTweetData(tweets[i]);
-              if (replyData.text) {
-                mainPost.replies.push(replyData);
+              if (replyData.Text) {
+                mainPost.Replies.push(replyData);
                 validReplies++;
               }
             }
@@ -133,10 +133,10 @@ window.__twitter = (function () {
       }
 
       var page = {
-        site: 'x.com',
-        url: window.location.href,
-        posts: posts,
-        activePost: activePost,
+        Site: 'x.com',
+        Url: window.location.href,
+        Posts: posts,
+        ActivePost: activePost,
       };
 
       console.log(

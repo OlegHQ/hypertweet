@@ -16,8 +16,7 @@
     <Compile Include="src/Shared/Common.fs" />
 
     <!-- 2. Domain -->
-    <Compile Include="src/Domain/User.fs" />
-    <Compile Include="src/Domain/Tone.fs" />
+    <Compile Include="src/Domain/Models.fs" />
 
     <!-- 3. Data (shared repositories) -->
     <Compile Include="src/Data/UserRepository.fs" />
@@ -26,7 +25,7 @@
     <Compile Include="src/Infrastructure/Jwt.fs" />
     <Compile Include="src/Shared/Http.fs" />
 
-    <Compile Include="src/Domain/Data.fs" />
+    <Compile Include="src/Domain/DataAccess.fs" />
     <!-- 5. Features -->
     <Compile Include="src/Features/Auth/Types.fs" />
     <Compile Include="src/Features/Auth/Handlers.fs" />
@@ -37,6 +36,9 @@
     <Compile Include="src/Features/Tones/Handlers.fs" />
     <Compile Include="src/Features/Profiles/Handlers.fs" />
 
+    <Compile Include="src/Tracing/Service.fs" />
+    <Compile Include="src/AI/PromptDomain.fs" />
+    <Compile Include="src/AI/Prompts.fs" />
     <Compile Include="src/AI/Service.fs" />
 
     <!-- 6. Entry -->
@@ -58,7 +60,4 @@
   </ItemGroup>
 
 </Project>
-
-
-
 

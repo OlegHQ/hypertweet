@@ -23,16 +23,16 @@ type ToneResponse =
     { Id: string
       Title: string
       Instruction: string
-      IsDefault: bool }
+      IsDefault: bool
+      Enabled: bool option }
 
 module ToneResponse =
     let fromDomain (tone: Tone) =
-        let id = tone.Id
-
-        { Id = id
+        { Id = tone.Id
           Title = tone.Title
           Instruction = tone.Instruction
-          IsDefault = tone.UserId.IsNone }
+          IsDefault = tone.UserId.IsNone
+          Enabled = tone.Enabled }
 
 // Dependencies record
 type ToneDeps =

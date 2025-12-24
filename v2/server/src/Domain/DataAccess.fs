@@ -1,11 +1,11 @@
-namespace HypertweetServer.Domain
+namespace HypertweetServer
 
 open HypertweetServer.Shared
-type Profile = { Id: string; ModelName: string }
+open Domain
 
 module DataAccess =
     let userCol db = Db.collection<User> db "users"
-    let profileCol db = Db.collection<Profile> db "users"
+    let profileCol db = Db.collection<Profile> db "profiles"
 
     let userByKey db key value =
         userCol db |> Db.findOne (Bson.make () |> Bson.field key value)
@@ -18,4 +18,3 @@ module DataAccess =
     let userTones db userId =
         Db.collection db "tones"
         |> Db.findMany (Bson.make () |> Bson.field "UserId" userId) None
-

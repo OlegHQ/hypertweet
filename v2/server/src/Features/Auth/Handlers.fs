@@ -1,6 +1,7 @@
 namespace HypertweetServer.Features.Auth
 
 open Giraffe
+open HypertweetServer
 open HypertweetServer.Domain
 open HypertweetServer.Shared
 open FsToolkit.ErrorHandling
@@ -90,7 +91,7 @@ module Handlers =
             do! user |> Result.requireNone (Conflict "User already exists")
 
             let user =
-                { Id = User.newId ()
+                { Id = newId ()
                   Email = req.Email
                   PasswordHash = BCrypt.Net.BCrypt.HashPassword req.Password
                   RefreshToken = None
@@ -119,4 +120,3 @@ module Handlers =
             return! json {| token = result.AccessToken |} next ctx
         }
         |> HttpCtx.errHandle next ctx
-

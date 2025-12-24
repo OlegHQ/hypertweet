@@ -5,6 +5,7 @@ open HypertweetServer.Shared
 
 module Handlers =
     open FsToolkit.ErrorHandling
+    open Microsoft.AspNetCore.Http
 
     let private validateCreate (req: CreateToneRequest) =
         result {
@@ -68,15 +69,6 @@ module Handlers =
     let delete deps (toneId: string) =
         run (fun userId -> Service.delete deps userId toneId) (fun () -> Successful.ok (json {| message = "Deleted" |}))
 
-    let toggleDefault deps (toneId: string) : HttpHandler =
-        fun next ctx ->
-            let enabled = ctx.Request.Query.ContainsKey "enable"
-
-            run
-                (fun userId -> Service.toggleDefault deps userId toneId enabled)
-                (fun () -> Successful.ok (json {| message = if enabled then "Enabled" else "Disabled" |}))
-                next
-                ctx
 
     let deleteMe db next ctx =
         taskResult {
@@ -90,3 +82,17 @@ module Handlers =
             return! json {| Message = "Ok" |} next ctx
         }
         |> HttpCtx.errHandle next ctx
+
+    let toggleDefault deps (toneId: string) next (ctx: HttpContext) =
+        let enabled =
+            match HttpCtx.queryParam "enable" ctx with
+            | HttpCtx.Value "true" -> true
+            | HttpCtx.Value "false" -> false
+            | _ -> true
+
+        run
+            (fun userId -> Service.toggleDefault deps userId toneId enabled)
+            (fun () -> Successful.ok (json {| message = if enabled then "Enabled" else "Disabled" |}))
+            next
+            ctx
+

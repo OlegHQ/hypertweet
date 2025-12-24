@@ -6,34 +6,6 @@ open HypertweetServer.Shared
 
 module ModelConfig = HypertweetServer.Features.Profiles.ModelConfig
 
-type PageUser =
-    { UserName: string option
-      Email: string option
-      Name: string option
-      IsVerified: bool option
-      Bio: string option
-      Location: string option
-      Website: string option
-      JoinDate: string option
-      Following: int option
-      Followers: int option }
-
-type Post =
-    { Author: PageUser
-      Text: string
-      Replies: Post list option
-      Time: string option
-      StatusID: string option
-      Url: string option
-      Upvotes: int option
-      CommentCount: int option
-      IsTopLevel: bool option }
-
-type Page =
-    { Site: string
-      Url: string
-      Posts: Post list
-      ActivePost: Post option }
 
 module AI =
     open System
@@ -156,6 +128,7 @@ Style: {tone.Title}
 
 
 module Service =
+    open HypertweetServer
     open HypertweetServer.Features.Tones
 
     let private resolveModelInputs db toneId userId =
@@ -177,13 +150,38 @@ module Service =
                 |> List.tryFind (fun x -> x.Id = toneId)
                 |> Result.requireSome (NotFound "Tone")
 
-            return tone, model
+            return tone, model, user
         }
+
+    type ReplyEvent = { EventId: string; Reply: string }
 
     let generateReply db llmApiKey (page: Page) toneId userId =
         taskResult {
-            let! tone, model = resolveModelInputs db toneId userId
+            let! tone, model, user = resolveModelInputs db toneId userId
             let prompt = ReplyPrompt.make tone page
-            return! AI.getCompletion llmApiKey model prompt
+            let! completion = AI.getCompletion llmApiKey model prompt
+            let! evt = Tracing.saveLLMReplyEvent db prompt tone model page user
+
+            return
+                { EventId = evt.Base.Id
+                  Reply = completion }
         }
 
+module Handlers =
+    open Giraffe
+
+    type ReplyRequest = { ToneId: string; Page: Page }
+    type ReplyResult = { Reply: string }
+
+    let reply db llmApiKey next ctx =
+        taskResult {
+            let userId = HttpCtx.getUserId ctx
+            let! req = HttpCtx.bindJson<ReplyRequest> ctx
+            let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
+            let page = req.Page
+            let toneId = req.ToneId
+            let! reply = Service.generateReply db llmApiKey page toneId userId
+
+            return! json reply next ctx
+        }
+        |> HttpCtx.errHandle next ctx

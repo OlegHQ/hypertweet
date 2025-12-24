@@ -1,6 +1,7 @@
 namespace HypertweetServer.Features.Tones
 
 open System
+open HypertweetServer
 open HypertweetServer.Domain
 open HypertweetServer.Shared
 
@@ -10,11 +11,13 @@ module Service =
     let makeResolvedTones user userTones =
         let defaults = Helpers.getDefaultTones ()
 
-        let enabledDefaults =
+        let defaultsWithEnabled =
             defaults
-            |> List.filter (fun tone -> not (List.contains tone.Id user.DisabledToneIds))
+            |> List.map (fun tone ->
+                { tone with
+                    Enabled = Some(not (List.contains tone.Id user.DisabledToneIds)) })
 
-        userTones @ enabledDefaults
+        userTones @ defaultsWithEnabled
 
 
     let resolveTones db userId =
@@ -27,35 +30,27 @@ module Service =
             return makeResolvedTones user userTones
         }
 
-
-
     let list deps userId =
         asyncResult {
             match! deps.GetUser userId with
             | None -> return! AsyncResult.error (NotFound "User")
             | Some user ->
                 let! userTones = deps.FindTonesByUser userId
-                let defaults = Helpers.getDefaultTones ()
-
-                let enabledDefaults =
-                    defaults
-                    |> List.filter (fun tone -> not (List.contains tone.Id user.DisabledToneIds))
-
-                return userTones @ enabledDefaults
+                return makeResolvedTones user userTones
         }
 
     let create deps userId (cmd: CreateToneCommand) =
         asyncResult {
             let tone: Tone =
-                { Id = Tone.newId ()
+                { Id = newId ()
                   UserId = Some userId
                   Title = cmd.Title
                   Instruction = cmd.Instruction
+                  Enabled = None
                   CreatedAt = DateTime.UtcNow }
 
             do! deps.InsertTone tone
-            let id = tone.Id
-            return id
+            return tone.Id
         }
 
     let update deps userId (cmd: UpdateToneCommand) =
@@ -107,4 +102,3 @@ module Service =
                             { user with
                                 DisabledToneIds = newDisabled }
         }
-

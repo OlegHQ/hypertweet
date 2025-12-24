@@ -8,8 +8,19 @@ open FsToolkit.ErrorHandling
 open System.Security.Claims
 
 module HttpCtx =
+    type QueryParam =
+        | Empty
+        | Value of string
+        | Values of string list
+
     let logger name (ctx: HttpContext) = ctx.GetLogger name
     let bindJson<'T> (ctx: HttpContext) = ctx.BindJsonAsync<'T>()
+
+    let queryParam name (ctx: HttpContext) =
+        match ctx.Request.Query.TryGetValue name with
+        | true, values when values.Count > 1 -> Values(values |> Seq.toList)
+        | true, values when values.Count = 1 -> Value values.[0]
+        | _ -> Empty
 
     let getUserId (ctx: HttpContext) =
         let claim = ctx.User.FindFirst ClaimTypes.NameIdentifier

@@ -44,6 +44,7 @@ module Repository =
           UserId = if isNull doc.UserId then None else Some doc.UserId
           Title = doc.Title
           Instruction = doc.Instruction
+          Enabled = None
           CreatedAt = doc.CreatedAt }
 
     let findById (db: IMongoDatabase) (id: string) =

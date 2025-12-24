@@ -92,12 +92,12 @@ window.__linkedin = (function () {
     var authorName = authorEl ? authorEl.textContent.trim() : '';
 
     return {
-      author: {
-        name: authorName,
-        userName: authorName, // LinkedIn doesn't have separate usernames
+      Author: {
+        Name: authorName,
+        UserName: authorName, // LinkedIn doesn't have separate usernames
       },
-      text: text,
-      replies: [],
+      Text: text,
+      Replies: [],
     };
   }
 
@@ -111,10 +111,10 @@ window.__linkedin = (function () {
 
     for (var i = 0; i < postElements.length; i++) {
       var postData = extractPostFromElement(postElements[i]);
-      if (postData && postData.text) {
+      if (postData && postData.Text) {
         posts.push(postData);
         log(
-          'Post ' + (i + 1) + ': "' + postData.text.substring(0, 50) + '..."'
+          'Post ' + (i + 1) + ': "' + postData.Text.substring(0, 50) + '..."'
         );
       }
     }
@@ -157,10 +157,10 @@ window.__linkedin = (function () {
       }
 
       var page = {
-        site: 'linkedin.com',
-        url: window.location.href,
-        posts: posts,
-        activePost: activePost,
+        Site: 'linkedin.com',
+        Url: window.location.href,
+        Posts: posts,
+        ActivePost: activePost,
       };
 
       log(
