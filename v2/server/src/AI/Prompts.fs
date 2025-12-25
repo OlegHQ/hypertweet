@@ -20,6 +20,12 @@ let siteOfString (site: string) =
 
 
 module Formatters =
+    [<Literal>]
+    let DefaultMaxTreeDepth = 3
+
+    [<Literal>]
+    let DefaultMaxRepliesPerLevel = 5
+
     let formatUser (user: PageUser) =
         let parts =
             [ user.UserName |> Option.map (sprintf "@%s")
@@ -38,8 +44,44 @@ module Formatters =
         let time = post.Time |> Option.map (sprintf " (%s)") |> Option.defaultValue ""
         sprintf "**%s**%s:\n%s" author time post.Text
 
-    let formatThread (posts: Post list) =
-        posts |> List.map formatPost |> String.concat "\n\n---\n\n"
+    let formatPostCompact (post: Post) =
+        let author =
+            post.Author.UserName
+            |> Option.map (sprintf "@%s")
+            |> Option.orElse post.Author.Name
+            |> Option.defaultValue "Unknown"
+        sprintf "%s: %s" author post.Text
+
+    let formatThreadTree (maxDepth: int) (maxReplies: int) (post: Post) : string =
+        let rec format (p: Post) (depth: int) (indent: string) =
+            if depth >= maxDepth then
+                ""
+            else
+                let header =
+                    if depth = 0 then formatPost p
+                    else sprintf "%s↳ %s" indent (formatPostCompact p)
+
+                let allReplies = p.Replies |> Option.defaultValue []
+                let visibleReplies = allReplies |> List.truncate maxReplies
+                let nextIndent = indent + "  "
+
+                let childTexts =
+                    visibleReplies
+                    |> List.map (fun r -> format r (depth + 1) nextIndent)
+                    |> List.filter (System.String.IsNullOrWhiteSpace >> not)
+
+                let truncNote =
+                    let hidden = List.length allReplies - maxReplies
+                    if hidden > 0 then sprintf "\n%s[+%d more replies]" indent hidden
+                    else ""
+
+                match childTexts with
+                | [] -> header
+                | children -> header + "\n" + (String.concat "\n" children) + truncNote
+
+        format post 0 ""
+
+    let formatThreadTreeDefault = formatThreadTree DefaultMaxTreeDepth DefaultMaxRepliesPerLevel
 
 
 module ReplyPrompt =
@@ -66,22 +108,30 @@ module ReplyPrompt =
               "Keep response appropriately sized for the context" ]
 
     let make (tone: Tone) (page: Page) =
+        let activePostObj =
+            match page.Posts with
+            | [ singlePost ] -> Some singlePost
+            | [] -> None
+            | _ -> page.ActivePost |> Option.orElse (List.tryHead page.Posts)
+
         let activePost =
-            page.ActivePost
+            activePostObj
             |> Option.map Formatters.formatPost
-            |> Option.defaultValue (
-                page.Posts
-                |> List.tryHead
-                |> Option.map Formatters.formatPost
-                |> Option.defaultValue "No post content"
-            )
+            |> Option.defaultValue "No post content"
 
         let platformGuidelines = getPlatformGuidelines (siteOfString page.Site)
 
         let threadContext =
             match page.Posts with
             | [] -> None
-            | posts -> Some(Formatters.formatThread posts)
+            | posts ->
+                let formatted =
+                    posts
+                    |> List.map Formatters.formatThreadTreeDefault
+                    |> String.concat "\n\n---\n\n"
+                match formatted with
+                | s when System.String.IsNullOrWhiteSpace s -> None
+                | s -> Some s
 
         prompt {
             Item.text "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."

@@ -20,6 +20,7 @@ module Domain =
           CreatedAt: DateTime }
 
 
+    [<CLIMutable>]
     type Tone =
         { [<BsonId>]
           Id: string

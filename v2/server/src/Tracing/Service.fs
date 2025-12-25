@@ -8,16 +8,23 @@ open HypertweetServer.Shared
 let tracingCollection = "traces"
 
 module TracingEvents =
+    type User = { UserId: string; Email: string }
 
-
-    type User = { Id: string; Email: string }
-
-    type Base =
+    [<CLIMutable>]
+    type BaseEvent<'I, 'R> =
         { Id: string
           Type: string
-          User: User option }
+          CreatedAt: System.DateTime
+          User: User option
+          Input: 'I
+          Result: 'R }
 
-    let makeUser (u: Domain.User) = { Id = u.Id; Email = u.Email }
+
+
+
+    type Base = { Type: string; User: User option }
+
+    let makeUser (u: Domain.User) = { UserId = u.Id; Email = u.Email }
 
     module ReplyEvent =
         type Tone = { ToneId: string; ToneName: string }
@@ -28,10 +35,8 @@ module TracingEvents =
               Page: Domain.Page
               Tone: Tone }
 
-        type t =
-            { Base: Base
-              Input: Input
-              CreatedAt: System.DateTime }
+
+        type Result = { Reply: string; TimeTookMs: int }
 
         let makeInput prompt model page tone =
             { Prompt = prompt
@@ -39,10 +44,13 @@ module TracingEvents =
               Page = page
               Tone = tone }
 
-        let makeEvt inBase input createdAt =
-            { Base = inBase
+        let makeEvt id user input createdAt result =
+            { Id = id
+              Type = "ReplyEvent"
+              User = user
               Input = input
-              CreatedAt = createdAt }
+              CreatedAt = createdAt
+              Result = result }
 
         let makeTone (domainTone: Domain.Tone) =
             { ToneId = domainTone.Id
@@ -50,19 +58,20 @@ module TracingEvents =
 
 
 
-let saveLLMReplyEvent db prompt tone model page user =
+let saveLLMReplyEvent db prompt tone model page user (result: TracingEvents.ReplyEvent.Result) =
     taskResult {
         let createdUtc = System.DateTime.UtcNow
 
         let evt =
             TracingEvents.ReplyEvent.makeEvt
-                { Id = Domain.newId ()
-                  Type = "LLMReply"
-                  User = Some(TracingEvents.makeUser user) }
+                (Domain.newId ())
+                (Some(TracingEvents.makeUser user))
                 (TracingEvents.ReplyEvent.makeInput prompt model page (TracingEvents.ReplyEvent.makeTone tone))
                 createdUtc
+                result
 
-        let col = Db.collection<TracingEvents.ReplyEvent.t> db tracingCollection
+        let col = Db.collection db tracingCollection
         do! col |> Db.insertOne evt
         return evt
     }
+

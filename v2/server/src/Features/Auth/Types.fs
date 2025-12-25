@@ -1,9 +1,5 @@
 namespace HypertweetServer.Features.Auth
 
-open HypertweetServer.Domain
-open HypertweetServer.Shared
-
-// DTOs for HTTP requests
 [<CLIMutable>]
 type RegisterRequest = { Email: string; Password: string }
 
@@ -24,3 +20,4 @@ type TokenResult =
 
 [<CLIMutable>]
 type RefreshRequest = { RefreshToken: string }
+

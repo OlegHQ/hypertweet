@@ -7,6 +7,18 @@ open MongoDB.Bson
 open FsToolkit.ErrorHandling
 open System.Security.Claims
 
+
+module TracingUtils =
+    open System.Diagnostics
+
+    let measureTask f =
+        task {
+            let sw = Stopwatch.StartNew()
+            let! result = f ()
+            sw.Stop()
+            return result, sw.Elapsed
+        }
+
 module HttpCtx =
     type QueryParam =
         | Empty

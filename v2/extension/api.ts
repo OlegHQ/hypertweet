@@ -150,6 +150,10 @@ interface UpdateProfileReq {
   NewPassword?: string;
   ModelName?: string;
 }
+export interface ProfileRes {
+  Id: string;
+  ModelName: string;
+}
 export interface ModelDef {
   ModelName: string;
 }
@@ -158,6 +162,7 @@ export interface AvailableModelsRes {
   AllModels: ModelDef[];
 }
 
+export const getProfile = make<undefined, ProfileRes>('GET', '/profile', true);
 export const updateProfile = make<UpdateProfileReq, { Message: string }>(
   'POST',
   '/profile/update',

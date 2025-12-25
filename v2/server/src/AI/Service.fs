@@ -52,7 +52,7 @@ module Service =
                 | Some profile -> profile.ModelName
                 | _ -> ModelConfig.defaultModel
 
-            let dps = Service.makeResolvedTones user userTones
+            let dps = Handlers.makeResolvedTones user userTones
 
             let! tone =
                 dps
@@ -69,13 +69,24 @@ module Service =
             let! tone, model, user = resolveModelInputs logger db toneId userId
             logger |> Log.info "Resolved inputs"
             let prompt = Prompts.ReplyPrompt.make tone page
-            let! completion = AI.getCompletion llmApiKey model prompt
-            logger |> Log.info "Completion generated"
-            let! evt = Tracing.saveLLMReplyEvent db prompt tone model page user
 
-            return
-                { EventId = evt.Base.Id
-                  Reply = completion }
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> AI.getCompletion llmApiKey model prompt)
+            let! completion = completion
+
+            logger |> Log.info "Completion generated"
+
+            let! evt =
+                Tracing.saveLLMReplyEvent
+                    db
+                    prompt
+                    tone
+                    model
+                    page
+                    user
+                    { TimeTookMs = int timeSpent.TotalMilliseconds
+                      Reply = completion }
+
+            return { EventId = evt.Id; Reply = completion }
         }
 
 module Handlers =
@@ -99,3 +110,4 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
+

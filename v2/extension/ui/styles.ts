@@ -519,6 +519,92 @@ export function injectGlobalStyles(): void {
       max-height: 300px !important;
       overflow-y: auto !important;
     }
+
+    /* Subtabs - smaller variant for nested tabs */
+    .ht-subtabs {
+      display: flex !important;
+      gap: ${tokens.spacing[1]} !important;
+      padding: ${tokens.spacing[1]} !important;
+      background: ${tokens.colors.muted} !important;
+      border-radius: ${tokens.radius.md} !important;
+      margin-bottom: ${tokens.spacing[3]} !important;
+    }
+    .ht-subtab {
+      flex: 1 !important;
+      padding: ${tokens.spacing[2]} !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: ${tokens.radius.sm} !important;
+      cursor: pointer !important;
+      transition: all ${tokens.transition.fast} !important;
+      text-align: center !important;
+    }
+    .ht-subtab:hover {
+      color: ${tokens.colors.foreground} !important;
+    }
+    .ht-subtab-active {
+      background: ${tokens.colors.card} !important;
+      color: ${tokens.colors.foreground} !important;
+    }
+
+    /* Accordion tone item for default tones */
+    .ht-tone-accordion {
+      border: 1px solid ${tokens.colors.border} !important;
+      border-radius: ${tokens.radius.md} !important;
+      overflow: hidden !important;
+      margin-bottom: ${tokens.spacing[2]} !important;
+    }
+    .ht-tone-accordion-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: ${tokens.spacing[3]} !important;
+      background: ${tokens.colors.muted} !important;
+      cursor: pointer !important;
+      transition: background ${tokens.transition.fast} !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-tone-accordion-header:hover {
+      background: ${tokens.colors.cardHover} !important;
+    }
+    .ht-tone-accordion-title {
+      flex: 1 !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: ${tokens.colors.foreground} !important;
+      text-align: left !important;
+    }
+    .ht-tone-accordion-title-disabled {
+      color: ${tokens.colors.mutedForeground} !important;
+    }
+    .ht-tone-accordion-content {
+      padding: ${tokens.spacing[3]} !important;
+      background: ${tokens.colors.background} !important;
+      border-top: 1px solid ${tokens.colors.border} !important;
+    }
+    .ht-tone-accordion-instruction {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      white-space: pre-wrap !important;
+      margin: 0 !important;
+      line-height: 1.5 !important;
+    }
+    .ht-tone-accordion-chevron {
+      width: 16px !important;
+      height: 16px !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      transition: transform ${tokens.transition.fast} !important;
+      flex-shrink: 0 !important;
+    }
+    .ht-tone-accordion-chevron-open {
+      transform: rotate(180deg) !important;
+    }
   `;
   document.head.appendChild(style);
 }

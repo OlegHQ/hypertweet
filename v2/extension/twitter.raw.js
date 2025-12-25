@@ -64,17 +64,43 @@ window.__twitter = (function () {
     var url = linkElement ? linkElement.href : '';
     var statusID = url ? url.split('/').pop() : undefined;
 
-    return {
-      Author: {
-        Name: name,
-        UserName: userName,
-        IsVerified: isVerified,
+    function checkNextIsReply(tweet) {
+      var userAvatar = tweet.querySelector(
+        '[data-testid="Tweet-User-Avatar"]'
+      )?.parentElement;
+      const nextElementCouldBeReply = userAvatar?.childElementCount ?? 1;
+      if (nextElementCouldBeReply == 1) {
+        return false;
+      }
+      /**@type{HTMLElement} */
+      const tweetHolder = tweet.closest('[data-testid="cellInnerDiv"]');
+      const sibling = tweetHolder?.nextSibling;
+      if (!sibling) {
+        return false;
+      }
+      const showRepliesSpan = Array.from(sibling.querySelectorAll('span')).find(
+        el => el.textContent.trim() === 'Show replies'
+      );
+      if (!showRepliesSpan) {
+        return true;
+      }
+      return false;
+    }
+    let nextIsReply = checkNextIsReply(tweet);
+    return [
+      {
+        Author: {
+          Name: name,
+          UserName: userName,
+          IsVerified: isVerified,
+        },
+        Text: text,
+        Time: time,
+        StatusID: statusID,
+        Replies: [],
       },
-      Text: text,
-      Time: time,
-      StatusID: statusID,
-      Replies: [],
-    };
+      nextIsReply,
+    ];
   }
 
   function readPage() {
@@ -95,7 +121,7 @@ window.__twitter = (function () {
       var mainPost = null;
 
       if (tweets.length > 0) {
-        mainPost = extractTweetData(tweets[0]);
+        [mainPost] = extractTweetData(tweets[0]);
         if (mainPost.Text) {
           posts.push(mainPost);
           console.log('Main post: "' + mainPost.Text.substring(0, 50) + '..."');
@@ -104,10 +130,19 @@ window.__twitter = (function () {
           if (tweets.length > 1) {
             console.log('Processing ' + (tweets.length - 1) + ' replies...');
             var validReplies = 0;
+            let nextIsReply = false;
             for (var i = 1; i < tweets.length; i++) {
-              var replyData = extractTweetData(tweets[i]);
+              let isReplyOfPrevious = nextIsReply;
+              let replyData = null;
+              [replyData, nextIsReply] = extractTweetData(tweets[i]);
               if (replyData.Text) {
-                mainPost.Replies.push(replyData);
+                let prev = mainPost.Replies[mainPost.Replies.length - 1];
+                if (isReplyOfPrevious && prev) {
+                  prev.Replies.push(replyData);
+                } else {
+                  mainPost.Replies.push(replyData);
+                }
+
                 validReplies++;
               }
             }

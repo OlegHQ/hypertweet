@@ -1,22 +1,24 @@
-import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Select } from './Select';
-import { Button } from './Button';
-import { ToneItem } from './ToneItem';
 import { ToneEditor } from './ToneEditor';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
+import { TonesSection } from './TonesSection';
 import { useTones } from '../hooks/useTones';
 import { useModels } from '../hooks/useModels';
+import { useProfile } from '../hooks/useProfile';
 import { api } from '../../apiProxy';
-import type { Tone } from '../../api';
+import type { Tone, ProfileRes } from '../../api';
+import { useState } from 'react';
 
 export function AISettingsTab(): React.ReactElement {
   const queryClient = useQueryClient();
 
-  // Models
+  // Profile (for current model)
+  const { data: profile, isLoading: profileLoading } = useProfile(true);
+
+  // Available models
   const { data: modelsData, isLoading: modelsLoading } = useModels(true);
-  const [selectedModel, setSelectedModel] = useState<string | null>(null);
 
   // Tones
   const { data: tones = [], isLoading: tonesLoading } = useTones(true);
@@ -31,8 +33,24 @@ export function AISettingsTab(): React.ReactElement {
   const updateModelMutation = useMutation({
     mutationFn: (modelName: string) =>
       api.updateProfile({ ModelName: modelName }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['models'] });
+    onMutate: async modelName => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previous = queryClient.getQueryData<ProfileRes>(['profile']);
+      if (previous) {
+        queryClient.setQueryData<ProfileRes>(['profile'], {
+          ...previous,
+          ModelName: modelName,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['profile'], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
   });
 
@@ -142,9 +160,7 @@ export function AISettingsTab(): React.ReactElement {
   });
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
-    const model = e.target.value;
-    setSelectedModel(model);
-    updateModelMutation.mutate(model);
+    updateModelMutation.mutate(e.target.value);
   };
 
   const handleEditTone = (tone: Tone): void => {
@@ -178,19 +194,14 @@ export function AISettingsTab(): React.ReactElement {
       label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
     })) ?? [];
 
-  const currentModel =
-    selectedModel ?? modelsData?.DefaultModel ?? modelOptions[0]?.value ?? '';
-
-  // Separate default and custom tones
-  const defaultTones = tones.filter(t => t.IsDefault);
-  const customTones = tones.filter(t => !t.IsDefault);
+  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
 
   return (
     <div>
       {/* Model Selection */}
       <div className="ht-section">
         <h3 className="ht-section-title">AI Model</h3>
-        {modelsLoading ? (
+        {modelsLoading || profileLoading ? (
           <p className="ht-loading">Loading models...</p>
         ) : (
           <Select
@@ -206,36 +217,15 @@ export function AISettingsTab(): React.ReactElement {
 
       {/* Tones Section */}
       <div className="ht-section">
-        <div className="ht-section-header">
-          <h3 className="ht-section-title">Tones</h3>
-          <Button size="sm" onClick={handleCreateTone}>
-            + Add
-          </Button>
-        </div>
-
-        {tonesLoading ? (
-          <p className="ht-loading">Loading tones...</p>
-        ) : tones.length === 0 ? (
-          <p className="ht-tones-empty">No tones available</p>
-        ) : (
-          <div className="ht-tone-list ht-scrollable">
-            {defaultTones.map(tone => (
-              <ToneItem
-                key={tone.Id}
-                tone={tone}
-                onToggle={enabled => handleToggleTone(tone, enabled)}
-              />
-            ))}
-            {customTones.map(tone => (
-              <ToneItem
-                key={tone.Id}
-                tone={tone}
-                onEdit={() => handleEditTone(tone)}
-                onDelete={() => setDeletingTone(tone)}
-              />
-            ))}
-          </div>
-        )}
+        <h3 className="ht-section-title">Tones</h3>
+        <TonesSection
+          tones={tones}
+          isLoading={tonesLoading}
+          onToggle={handleToggleTone}
+          onEdit={handleEditTone}
+          onDelete={tone => setDeletingTone(tone)}
+          onCreate={handleCreateTone}
+        />
       </div>
 
       {/* Tone Editor Modal */}

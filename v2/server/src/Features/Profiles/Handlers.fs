@@ -11,7 +11,14 @@ type UpdateProfileInput =
       ModelName: string option }
 
 module ModelConfig =
-    let allModels = [ "xiaomi/mimo-v2-flash:free"; "tngtech/deepseek-r1t-chimera:free" ]
+    let allModels =
+        [ "xiaomi/mimo-v2-flash:free"
+          "tngtech/deepseek-r1t-chimera:free"
+          "nex-agi/deepseek-v3.1-nex-n1:free"
+          "deepseek/deepseek-r1-0528:free"
+          "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
+          "meta-llama/llama-3.1-405b-instruct:free"
+          "openai/gpt-oss-20b:free" ]
 
     let defaultModel = "xiaomi/mimo-v2-flash:free"
 
@@ -36,6 +43,18 @@ module Handlers =
                 |> AsyncResult.map ignore
 
             return! json {| Message = "Ok" |} next ctx
+        }
+        |> HttpCtx.errHandle next ctx
+
+    open HypertweetServer
+
+    let getProfile db next ctx =
+        taskResult {
+            let userId = HttpCtx.getUserId ctx
+            let! profile = DataAccess.profileCol db |> Db.findOne (DataAccess.idFilter userId)
+            let! profile = profile |> Result.requireSome (NotFound "User")
+
+            return! json profile next ctx
         }
         |> HttpCtx.errHandle next ctx
 

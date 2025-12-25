@@ -148,24 +148,29 @@ export function Keyboard({
             </button>
           </div>
         </div>
-        {tonesLoading ? (
-          <div className="ht-tones-loading">Loading tones...</div>
-        ) : tones.length === 0 ? (
-          <div className="ht-tones-empty">No tones available</div>
-        ) : (
-          <div className="ht-tones-grid">
-            {tones.map(tone => (
-              <button
-                key={tone.Id}
-                className={`ht-tone-btn ${loadingTone === tone.Id ? 'ht-tone-btn-loading' : ''}`}
-                onClick={() => void handleToneClick(tone)}
-                disabled={loadingTone !== null}
-              >
-                {loadingTone === tone.Id ? '...' : tone.Title}
-              </button>
-            ))}
-          </div>
-        )}
+        {(() => {
+          const enabledTones = tones.filter(t => t.Enabled !== false);
+          if (tonesLoading) {
+            return <div className="ht-tones-loading">Loading tones...</div>;
+          }
+          if (enabledTones.length === 0) {
+            return <div className="ht-tones-empty">No tones available</div>;
+          }
+          return (
+            <div className="ht-tones-grid">
+              {enabledTones.map(tone => (
+                <button
+                  key={tone.Id}
+                  className={`ht-tone-btn ${loadingTone === tone.Id ? 'ht-tone-btn-loading' : ''}`}
+                  onClick={() => void handleToneClick(tone)}
+                  disabled={loadingTone !== null}
+                >
+                  {loadingTone === tone.Id ? '...' : tone.Title}
+                </button>
+              ))}
+            </div>
+          );
+        })()}
       </Card>
 
       <SettingsModal

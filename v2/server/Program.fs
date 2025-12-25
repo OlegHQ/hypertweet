@@ -8,7 +8,6 @@ open Microsoft.Extensions.DependencyInjection
 open Microsoft.IdentityModel.Tokens
 open Giraffe
 open HypertweetServer.Shared
-open HypertweetServer.Data
 open HypertweetServer.Features.Auth
 open HypertweetServer.Features.Tones
 open Serilog
@@ -16,7 +15,6 @@ open Serilog
 module TonesHandlers = Handlers
 module ProfileHandlers = HypertweetServer.Features.Profiles.Handlers
 module AIHandlers = HypertweetServer.AI.Handlers
-module TonesRepo = Repository
 
 [<EntryPoint>]
 let main args =
@@ -29,17 +27,6 @@ let main args =
     let config = Config.load ()
     let db = Db.connect config
 
-
-    // Tones feature deps (uses shared UserRepository + feature-specific Repository)
-    let toneDeps: ToneDeps =
-        { GetUser = UserRepository.findById db
-          UpdateUser = UserRepository.update db
-          FindToneById = TonesRepo.findById db
-          FindTonesByUser = TonesRepo.findByUser db
-          InsertTone = TonesRepo.insert db
-          UpdateTone = TonesRepo.update db
-          DeleteTone = TonesRepo.delete db }
-
     let routes =
         choose
             [ // Public routes
@@ -51,15 +38,15 @@ let main args =
               requiresAuthentication (challenge JwtBearerDefaults.AuthenticationScheme)
               >=> choose
                       [ POST >=> route "/profile/update" >=> ProfileHandlers.updateProfile db
+                        GET >=> route "/profile" >=> ProfileHandlers.getProfile db
                         DELETE >=> route "/users" >=> ProfileHandlers.deleteMe db
                         POST >=> route "/ai/reply" >=> AIHandlers.reply db config.LlmApiKey
                         GET >=> route "/profile/available-models" >=> ProfileHandlers.listModels
-                        GET >=> route "/tones" >=> TonesHandlers.list toneDeps
-                        POST >=> route "/tones" >=> TonesHandlers.create toneDeps
-                        PUT >=> routef "/tones/%s" (fun id -> TonesHandlers.update toneDeps id)
-                        DELETE >=> routef "/tones/%s" (fun id -> TonesHandlers.delete toneDeps id)
-                        POST
-                        >=> routef "/tones/%s/toggle" (fun id -> TonesHandlers.toggleDefault toneDeps id) ] ]
+                        GET >=> route "/tones" >=> TonesHandlers.list db
+                        POST >=> route "/tones" >=> TonesHandlers.create db
+                        PUT >=> routef "/tones/%s" (TonesHandlers.update db)
+                        DELETE >=> routef "/tones/%s" (TonesHandlers.delete db)
+                        POST >=> routef "/tones/%s/toggle" (TonesHandlers.toggleDefault db) ] ]
 
     let builder = WebApplication.CreateBuilder args
     builder.Host.UseSerilog() |> ignore
