@@ -2,7 +2,7 @@ module HypertweetServer.Config
 
 open System
 
-type AppConfig =
+type t =
     { MongoConnectionString: string
       LlmApiKey: string option
       DatabaseName: string

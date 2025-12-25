@@ -26,9 +26,9 @@ let main args =
     let routes =
         choose
             [ // Public routes
-              POST >=> route "/auth/register" >=> Auth.register db
-              POST >=> route "/auth/login" >=> Auth.login config db
-              POST >=> route "/auth/refresh" >=> Auth.refresh config db
+              POST >=> route "/auth/register" >=> Auth.Handlers.register db
+              POST >=> route "/auth/login" >=> Auth.Handlers.login config db
+              POST >=> route "/auth/refresh" >=> Auth.Handlers.refresh config db
 
               // Protected routes (require JWT)
               requiresAuthentication (challenge JwtBearerDefaults.AuthenticationScheme)

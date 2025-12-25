@@ -5,7 +5,6 @@ open Base
 open Base.Common
 open HypertweetServer
 open HypertweetServer.Models
-open HypertweetServer.Config
 open FsToolkit.ErrorHandling
 
 [<CLIMutable>]
@@ -63,7 +62,7 @@ let userCol = DataAccess.userCol
 let userByEmail db = userByKey db "Email"
 let userByRefreshToken db = userByKey db "RefreshToken"
 
-let createTokenResult config (user: User) =
+let createTokenResult (config: Config.t) (user: User) =
     let accessToken =
         Jwt.generateToken config.JwtSecret config.JwtIssuer config.JwtAudience config.JwtExpiryDays user.Id user.Email
 
@@ -87,57 +86,59 @@ let updateRefreshToken userId refreshToken expiry db =
               |> Bson.field "RefreshTokenExpiry" expiry))
     |> AsyncResult.map ignore
 
-let login config db next ctx =
-    taskResult {
-        let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
+module Handlers =
 
-        let! user =
-            userByEmail db req.Email
-            |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+    let login config db next ctx =
+        taskResult {
+            let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
 
-        let result = createTokenResult config user
+            let! user =
+                userByEmail db req.Email
+                |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
 
-        let expiry = System.DateTime.UtcNow.AddDays 30.0
-        do! updateRefreshToken user.Id result.RefreshToken expiry db
+            let result = createTokenResult config user
 
-        return! json result next ctx
-    }
-    |> HttpCtx.errHandle next ctx
+            let expiry = System.DateTime.UtcNow.AddDays 30.0
+            do! updateRefreshToken user.Id result.RefreshToken expiry db
 
-let register db next ctx =
-    taskResult {
-        let! req = HttpCtx.bindJson<RegisterRequest> ctx |> Task.map validateRegister
-        let col = userCol db
-        let! user = userByEmail db req.Email
-        do! user |> Result.requireNone (Conflict "User already exists")
+            return! json result next ctx
+        }
+        |> HttpCtx.errHandle next ctx
 
-        let user =
-            { Id = newId ()
-              Email = req.Email
-              PasswordHash = BCrypt.Net.BCrypt.HashPassword req.Password
-              RefreshToken = None
-              RefreshTokenExpiry = None
-              DisabledToneIds = []
-              CreatedAt = System.DateTime.UtcNow }
+    let register db next ctx =
+        taskResult {
+            let! req = HttpCtx.bindJson<RegisterRequest> ctx |> Task.map validateRegister
+            let col = userCol db
+            let! user = userByEmail db req.Email
+            do! user |> Result.requireNone (Conflict "User already exists")
 
-        do! Db.insertOne user col
-        let u = { user with PasswordHash = "" }
-        return! json u next ctx
-    }
-    |> HttpCtx.errHandle next ctx
+            let user =
+                { Id = newId ()
+                  Email = req.Email
+                  PasswordHash = BCrypt.Net.BCrypt.HashPassword req.Password
+                  RefreshToken = None
+                  RefreshTokenExpiry = None
+                  DisabledToneIds = []
+                  CreatedAt = System.DateTime.UtcNow }
+
+            do! Db.insertOne user col
+            let u = { user with PasswordHash = "" }
+            return! json u next ctx
+        }
+        |> HttpCtx.errHandle next ctx
 
 
-let refresh config db next ctx =
-    taskResult {
-        let! req = HttpCtx.bindJson<RefreshRequest> ctx |> Task.map validateRefresh
+    let refresh config db next ctx =
+        taskResult {
+            let! req = HttpCtx.bindJson<RefreshRequest> ctx |> Task.map validateRefresh
 
-        let! user = userByRefreshToken db req.RefreshToken
-        let! user = user |> Result.requireSome (NotFound "User")
-        let result = createTokenResult config user
+            let! user = userByRefreshToken db req.RefreshToken
+            let! user = user |> Result.requireSome (NotFound "User")
+            let result = createTokenResult config user
 
-        let expiry = System.DateTime.UtcNow.AddDays 30.0
-        do! updateRefreshToken user.Id result.RefreshToken expiry db
+            let expiry = System.DateTime.UtcNow.AddDays 30.0
+            do! updateRefreshToken user.Id result.RefreshToken expiry db
 
-        return! json {| token = result.AccessToken |} next ctx
-    }
-    |> HttpCtx.errHandle next ctx
+            return! json {| token = result.AccessToken |} next ctx
+        }
+        |> HttpCtx.errHandle next ctx
