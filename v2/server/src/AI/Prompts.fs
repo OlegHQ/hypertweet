@@ -44,47 +44,46 @@ module Formatters =
         let time = post.Time |> Option.map (sprintf " (%s)") |> Option.defaultValue ""
         sprintf "**%s**%s:\n%s" author time post.Text
 
-    let formatPostCompact (post: Post) =
+    let formatPostWithDepth (depth: int) (post: Post) =
+        let prefix = String.replicate depth "> "
         let author =
             post.Author.UserName
-            |> Option.map (sprintf "@%s")
+            |> Option.map (fun u -> if u.StartsWith("@") then u else "@" + u)
             |> Option.orElse post.Author.Name
             |> Option.defaultValue "Unknown"
-        sprintf "%s: %s" author post.Text
+        let time = post.Time |> Option.map (sprintf " (%s)") |> Option.defaultValue ""
+        let header = sprintf "**%s**%s:" author time
+        let textLines = post.Text.Split('\n') |> Array.map (fun line -> prefix + line)
+        prefix + header + "\n" + (String.concat "\n" textLines)
 
-    let formatThreadTree (maxDepth: int) (maxReplies: int) (post: Post) : string =
-        let rec format (p: Post) (depth: int) (indent: string) =
-            if depth >= maxDepth then
-                ""
-            else
-                let header =
-                    if depth = 0 then formatPost p
-                    else sprintf "%s↳ %s" indent (formatPostCompact p)
+    let rec formatThreadQuote (maxDepth: int) (maxReplies: int) (post: Post) (depth: int) : string list =
+        if depth >= maxDepth then []
+        else
+            let current = formatPostWithDepth depth post
+            let allReplies = post.Replies |> Option.defaultValue []
+            let visibleReplies = allReplies |> List.truncate maxReplies
+            let replies =
+                visibleReplies
+                |> List.collect (fun r -> formatThreadQuote maxDepth maxReplies r (depth + 1))
+            let truncNote =
+                let hidden = List.length allReplies - maxReplies
+                if hidden > 0 then
+                    [ String.replicate (depth + 1) "> " + sprintf "[+%d more]" hidden ]
+                else []
+            current :: replies @ truncNote
 
-                let allReplies = p.Replies |> Option.defaultValue []
-                let visibleReplies = allReplies |> List.truncate maxReplies
-                let nextIndent = indent + "  "
-
-                let childTexts =
-                    visibleReplies
-                    |> List.map (fun r -> format r (depth + 1) nextIndent)
-                    |> List.filter (System.String.IsNullOrWhiteSpace >> not)
-
-                let truncNote =
-                    let hidden = List.length allReplies - maxReplies
-                    if hidden > 0 then sprintf "\n%s[+%d more replies]" indent hidden
-                    else ""
-
-                match childTexts with
-                | [] -> header
-                | children -> header + "\n" + (String.concat "\n" children) + truncNote
-
-        format post 0 ""
-
-    let formatThreadTreeDefault = formatThreadTree DefaultMaxTreeDepth DefaultMaxRepliesPerLevel
+    let formatThreadQuoteDefault post = formatThreadQuote DefaultMaxTreeDepth DefaultMaxRepliesPerLevel post 0
 
 
 module ReplyPrompt =
+    let private postsEqual (a: Post) (b: Post) =
+        match a.StatusID, b.StatusID with
+        | Some idA, Some idB -> idA = idB
+        | _ ->
+            match a.Url, b.Url with
+            | Some urlA, Some urlB -> urlA = urlB
+            | _ -> a.Text = b.Text
+
     let private getPlatformGuidelines site =
         match site with
         | X ->
@@ -122,16 +121,20 @@ module ReplyPrompt =
         let platformGuidelines = getPlatformGuidelines (siteOfString page.Site)
 
         let threadContext =
-            match page.Posts with
-            | [] -> None
-            | posts ->
-                let formatted =
-                    posts
-                    |> List.map Formatters.formatThreadTreeDefault
-                    |> String.concat "\n\n---\n\n"
-                match formatted with
-                | s when System.String.IsNullOrWhiteSpace s -> None
-                | s -> Some s
+            match activePostObj with
+            | None -> None
+            | Some active ->
+                let replies = active.Replies |> Option.defaultValue []
+                match replies with
+                | [] -> None
+                | _ ->
+                    let formatted =
+                        replies
+                        |> List.collect Formatters.formatThreadQuoteDefault
+                        |> String.concat "\n\n"
+                    match formatted with
+                    | s when System.String.IsNullOrWhiteSpace s -> None
+                    | s -> Some s
 
         prompt {
             Item.text "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."

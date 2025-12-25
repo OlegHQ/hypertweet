@@ -18,6 +18,7 @@ module ModelConfig =
           "deepseek/deepseek-r1-0528:free"
           "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
           "meta-llama/llama-3.1-405b-instruct:free"
+          "openai/gpt-oss-120b:free"
           "openai/gpt-oss-20b:free" ]
 
     let defaultModel = "xiaomi/mimo-v2-flash:free"

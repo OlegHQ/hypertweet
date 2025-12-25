@@ -103,7 +103,7 @@ export function Keyboard({
 
   return (
     <>
-      <Card style={{ padding: '12px' }}>
+      <Card style={{ padding: '8px' }}>
         <div className="ht-keyboard-header">
           <span className="ht-keyboard-title">Hypertweet</span>
           <div className="ht-keyboard-actions">
