@@ -1,4 +1,4 @@
-namespace HypertweetServer.Shared
+module Base.Common
 
 open Giraffe
 open Microsoft.AspNetCore.Http
@@ -6,6 +6,13 @@ open MongoDB.Driver
 open MongoDB.Bson
 open FsToolkit.ErrorHandling
 open System.Security.Claims
+
+type DomainError =
+    | ValidationError of field: string * message: string
+    | NotFound of entity: string
+    | Conflict of message: string
+    | Unauthorized
+    | InternalError of message: string
 
 
 module TracingUtils =
@@ -53,11 +60,41 @@ module HttpCtx =
                     Log.error (sprintf "Internal error: %s" message) (Log.http ctx)
                     ServerErrors.INTERNAL_ERROR {| Error = "Internal server error" |} next ctx)
 
+module Jwt =
+    open System
+    open System.Text
+    open System.Security.Claims
+    open System.IdentityModel.Tokens.Jwt
+    open Microsoft.IdentityModel.Tokens
+    open System.Security.Cryptography
+
+    let generateRefreshToken () =
+        Convert.ToBase64String(RandomNumberGenerator.GetBytes 64)
+
+    let generateToken (jwtSecret: string) jwtIssuer jwtAudience jwtExpiryDays (id: string) (email: string) =
+        let key = SymmetricSecurityKey(Encoding.UTF8.GetBytes jwtSecret)
+        let creds = SigningCredentials(key, SecurityAlgorithms.HmacSha256)
+
+        let claims =
+            [| Claim(ClaimTypes.NameIdentifier, id); Claim(ClaimTypes.Email, email) |]
+
+        let token =
+            JwtSecurityToken(
+                issuer = jwtIssuer,
+                audience = jwtAudience,
+                claims = claims,
+                expires = DateTime.UtcNow.AddDays(float jwtExpiryDays),
+                signingCredentials = creds
+            )
+
+        JwtSecurityTokenHandler().WriteToken token
+
+
 module Db =
-    let connect (config: AppConfig) =
+    let connect (mongoConnectionString: string) databaseName =
         Bson.registerSerializers ()
-        let client = MongoClient config.MongoConnectionString
-        client.GetDatabase config.DatabaseName
+        let client = MongoClient mongoConnectionString
+        client.GetDatabase databaseName
 
     let collection<'T> (db: IMongoDatabase) name = db.GetCollection<'T> name
 
@@ -111,3 +148,31 @@ module Db =
     let insertOne<'T> (doc: 'T) (col: IMongoCollection<'T>) =
         tryDb (fun () -> col.InsertOneAsync doc |> Async.AwaitTask)
 
+module Validate =
+    open System
+
+    let notEmpty field value =
+        if String.IsNullOrWhiteSpace value then
+            Error(ValidationError(field, "cannot be empty"))
+        else
+            Ok value
+
+    let minLength field len (value: string) =
+        if value.Length < len then
+            Error(ValidationError(field, $"must be at least {len} characters"))
+        else
+            Ok value
+
+    let matches field pattern (value: string) =
+        if System.Text.RegularExpressions.Regex.IsMatch(value, pattern) then
+            Ok value
+        else
+            Error(ValidationError(field, "invalid format"))
+
+    let email field value =
+        value
+        |> notEmpty field
+        |> Result.bind (matches field @"^[^@\s]+@[^@\s]+\.[^@\s]+$")
+
+    let chain validators value =
+        validators |> List.fold (fun acc v -> Result.bind v acc) (Ok value)

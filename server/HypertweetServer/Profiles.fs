@@ -1,7 +1,8 @@
-namespace HypertweetServer.Features.Profiles
+module HypertweetServer.Profiles
 
 open Giraffe
-open HypertweetServer.Shared
+open Base
+open Base.Common
 open FsToolkit.ErrorHandling
 
 type ModelDef = { ModelName: string }
@@ -107,4 +108,3 @@ module Handlers =
             return! json {| Message = "Ok" |} next ctx
         }
         |> HttpCtx.errHandle next ctx
-

@@ -6,38 +6,20 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- 1. Shared -->
-    <Compile Include="src/Shared/Errors.fs" />
-    <Compile Include="src/Shared/Config.fs" />
-    <Compile Include="src/Shared/Prelude.fs" />
-    <Compile Include="src/Shared/Helpers.fs" />
-    <Compile Include="src/Shared/Log.fs" />
-    <Compile Include="src/Shared/Bson.fs" />
-    <Compile Include="src/Shared/Common.fs" />
-
-    <!-- 2. Domain -->
-    <Compile Include="src/Domain/Models.fs" />
-
-    <!-- 3. Data (shared repositories) -->
-    <Compile Include="src/Data/UserRepository.fs" />
-
-    <!-- 4. Infrastructure -->
-    <Compile Include="src/Infrastructure/Jwt.fs" />
-    <Compile Include="src/Shared/Http.fs" />
-
-    <Compile Include="src/Domain/DataAccess.fs" />
-    <!-- 5. Features -->
-    <Compile Include="src/Features/Auth/Types.fs" />
-    <Compile Include="src/Features/Auth/Handlers.fs" />
-    <Compile Include="src/Features/Tones/Handlers.fs" />
-    <Compile Include="src/Features/Profiles/Handlers.fs" />
-
-    <Compile Include="src/Tracing/Service.fs" />
-    <Compile Include="src/AI/PromptDomain.fs" />
-    <Compile Include="src/AI/Prompts.fs" />
-    <Compile Include="src/AI/Service.fs" />
-
-    <!-- 6. Entry -->
+    <Compile Include="Base/Prelude.fs" />
+    <Compile Include="Base/Bson.fs" />
+    <Compile Include="Base/Log.fs" />
+    <Compile Include="Base/Common.fs" />
+    <Compile Include="Base/PromptDsl.fs" />
+    <Compile Include="HypertweetServer/Config.fs" />
+    <Compile Include="HypertweetServer/Models.fs" />
+    <Compile Include="HypertweetServer/DataAccess.fs" />
+    <Compile Include="HypertweetServer/Auth.fs" />
+    <Compile Include="HypertweetServer/Profiles.fs" />
+    <Compile Include="HypertweetServer/Tones.fs" />
+    <Compile Include="HypertweetServer/Tracing.fs" />
+    <Compile Include="HypertweetServer/Prompts.fs" />
+    <Compile Include="HypertweetServer/AI.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
 
@@ -56,4 +38,3 @@
   </ItemGroup>
 
 </Project>
-

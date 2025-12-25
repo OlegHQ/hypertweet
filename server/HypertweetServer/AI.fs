@@ -1,10 +1,11 @@
 namespace HypertweetServer.AI
 
 open FsToolkit.ErrorHandling
-open HypertweetServer.Domain
-open HypertweetServer.Shared
+open Base
+open Base.Common
+open HypertweetServer.Models
 
-module ModelConfig = HypertweetServer.Features.Profiles.ModelConfig
+module ModelConfig = HypertweetServer.Profiles.ModelConfig
 
 
 module AI =
@@ -36,7 +37,7 @@ module AI =
 
 module Service =
     open HypertweetServer
-    open HypertweetServer.Features.Tones
+    open HypertweetServer.Tones
 
     let private resolveModelInputs logger db toneId userId =
         taskResult {
@@ -110,4 +111,3 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
-

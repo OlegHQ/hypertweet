@@ -1,9 +1,9 @@
-module HypertweetServer.AI.Prompts
+module HypertweetServer.Prompts
 
-open HypertweetServer.Domain
-open HypertweetServer.AI.PromptBuilder
-open PromptDomain
-open Dsl
+open HypertweetServer.Models
+
+open Base.PromptDsl.Domain
+open Base.PromptDsl.Dsl
 
 type Site =
     | X
@@ -46,33 +46,42 @@ module Formatters =
 
     let formatPostWithDepth (depth: int) (post: Post) =
         let prefix = String.replicate depth "> "
+
         let author =
             post.Author.UserName
             |> Option.map (fun u -> if u.StartsWith("@") then u else "@" + u)
             |> Option.orElse post.Author.Name
             |> Option.defaultValue "Unknown"
+
         let time = post.Time |> Option.map (sprintf " (%s)") |> Option.defaultValue ""
         let header = sprintf "**%s**%s:" author time
         let textLines = post.Text.Split('\n') |> Array.map (fun line -> prefix + line)
         prefix + header + "\n" + (String.concat "\n" textLines)
 
     let rec formatThreadQuote (maxDepth: int) (maxReplies: int) (post: Post) (depth: int) : string list =
-        if depth >= maxDepth then []
+        if depth >= maxDepth then
+            []
         else
             let current = formatPostWithDepth depth post
             let allReplies = post.Replies |> Option.defaultValue []
             let visibleReplies = allReplies |> List.truncate maxReplies
+
             let replies =
                 visibleReplies
                 |> List.collect (fun r -> formatThreadQuote maxDepth maxReplies r (depth + 1))
+
             let truncNote =
                 let hidden = List.length allReplies - maxReplies
+
                 if hidden > 0 then
                     [ String.replicate (depth + 1) "> " + sprintf "[+%d more]" hidden ]
-                else []
+                else
+                    []
+
             current :: replies @ truncNote
 
-    let formatThreadQuoteDefault post = formatThreadQuote DefaultMaxTreeDepth DefaultMaxRepliesPerLevel post 0
+    let formatThreadQuoteDefault post =
+        formatThreadQuote DefaultMaxTreeDepth DefaultMaxRepliesPerLevel post 0
 
 
 module ReplyPrompt =
@@ -125,6 +134,7 @@ module ReplyPrompt =
             | None -> None
             | Some active ->
                 let replies = active.Replies |> Option.defaultValue []
+
                 match replies with
                 | [] -> None
                 | _ ->
@@ -132,6 +142,7 @@ module ReplyPrompt =
                         replies
                         |> List.collect Formatters.formatThreadQuoteDefault
                         |> String.concat "\n\n"
+
                     match formatted with
                     | s when System.String.IsNullOrWhiteSpace s -> None
                     | s -> Some s
@@ -174,4 +185,3 @@ module ReplyPrompt =
                   "Be authentic and engaging" ]
             |> xml "output_requirements"
         }
-

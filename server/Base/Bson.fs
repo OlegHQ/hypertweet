@@ -1,4 +1,4 @@
-namespace HypertweetServer.Shared
+module Base.Bson
 
 open MongoDB.Bson
 open MongoDB.Bson.Serialization
@@ -28,15 +28,19 @@ type ListSerializer<'T>() =
 
     override _.Serialize(ctx, args, value) =
         ctx.Writer.WriteStartArray()
+
         for item in value do
             (innerSerializer.Value :> IBsonSerializer<'T>).Serialize(ctx, args, item)
+
         ctx.Writer.WriteEndArray()
 
     override _.Deserialize(ctx, args) =
         ctx.Reader.ReadStartArray()
         let items = ResizeArray<'T>()
+
         while ctx.Reader.ReadBsonType() <> BsonType.EndOfDocument do
             items.Add((innerSerializer.Value :> IBsonSerializer<'T>).Deserialize(ctx, args))
+
         ctx.Reader.ReadEndArray()
         items |> Seq.toList
 
@@ -46,31 +50,33 @@ type FSharpSerializationProvider() =
             if t.IsGenericType then
                 let genericDef = t.GetGenericTypeDefinition()
                 let innerType = t.GetGenericArguments().[0]
+
                 if genericDef = typedefof<option<_>> then
                     typedefof<OptionSerializer<_>>.MakeGenericType(innerType)
-                    |> System.Activator.CreateInstance :?> IBsonSerializer
+                    |> System.Activator.CreateInstance
+                    :?> IBsonSerializer
                 elif genericDef = typedefof<list<_>> then
                     typedefof<ListSerializer<_>>.MakeGenericType(innerType)
-                    |> System.Activator.CreateInstance :?> IBsonSerializer
+                    |> System.Activator.CreateInstance
+                    :?> IBsonSerializer
                 else
                     null
             else
                 null
 
-module Bson =
-    let mutable private registered = false
+let mutable private registered = false
 
-    let registerSerializers () =
-        if not registered then
-            BsonSerializer.RegisterSerializationProvider(FSharpSerializationProvider())
-            registered <- true
+let registerSerializers () =
+    if not registered then
+        BsonSerializer.RegisterSerializationProvider(FSharpSerializationProvider())
+        registered <- true
 
-    do registerSerializers ()
+do registerSerializers ()
 
-    let make () = BsonDocument()
-    let field key value (doc: BsonDocument) = doc.Add(key, BsonValue.Create value)
+let make () = BsonDocument()
+let field key value (doc: BsonDocument) = doc.Add(key, BsonValue.Create value)
 
-    let optionField key value (doc: BsonDocument) =
-        match value with
-        | Some v -> doc.Add(key, BsonValue.Create v)
-        | None -> doc
+let optionField key value (doc: BsonDocument) =
+    match value with
+    | Some v -> doc.Add(key, BsonValue.Create v)
+    | None -> doc

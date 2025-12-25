@@ -7,14 +7,10 @@ open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.IdentityModel.Tokens
 open Giraffe
-open HypertweetServer.Shared
-open HypertweetServer.Features.Auth
-open HypertweetServer.Features.Tones
+open Base
+open Base.Common
+open HypertweetServer
 open Serilog
-
-module TonesHandlers = Handlers
-module ProfileHandlers = HypertweetServer.Features.Profiles.Handlers
-module AIHandlers = HypertweetServer.AI.Handlers
 
 [<EntryPoint>]
 let main args =
@@ -25,28 +21,28 @@ let main args =
             .CreateLogger()
 
     let config = Config.load ()
-    let db = Db.connect config
+    let db = Db.connect config.MongoConnectionString config.DatabaseName
 
     let routes =
         choose
             [ // Public routes
-              POST >=> route "/auth/register" >=> Handlers.register db
-              POST >=> route "/auth/login" >=> Handlers.login config db
-              POST >=> route "/auth/refresh" >=> Handlers.refresh config db
+              POST >=> route "/auth/register" >=> Auth.register db
+              POST >=> route "/auth/login" >=> Auth.login config db
+              POST >=> route "/auth/refresh" >=> Auth.refresh config db
 
               // Protected routes (require JWT)
               requiresAuthentication (challenge JwtBearerDefaults.AuthenticationScheme)
               >=> choose
-                      [ POST >=> route "/profile/update" >=> ProfileHandlers.updateProfile db
-                        GET >=> route "/profile" >=> ProfileHandlers.getProfile db
-                        DELETE >=> route "/users" >=> ProfileHandlers.deleteMe db
-                        POST >=> route "/ai/reply" >=> AIHandlers.reply db config.LlmApiKey
-                        GET >=> route "/profile/available-models" >=> ProfileHandlers.listModels
-                        GET >=> route "/tones" >=> TonesHandlers.list db
-                        POST >=> route "/tones" >=> TonesHandlers.create db
-                        PUT >=> routef "/tones/%s" (TonesHandlers.update db)
-                        DELETE >=> routef "/tones/%s" (TonesHandlers.delete db)
-                        POST >=> routef "/tones/%s/toggle" (TonesHandlers.toggleDefault db) ] ]
+                      [ POST >=> route "/profile/update" >=> Profiles.Handlers.updateProfile db
+                        GET >=> route "/profile" >=> Profiles.Handlers.getProfile db
+                        DELETE >=> route "/users" >=> Profiles.Handlers.deleteMe db
+                        POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.LlmApiKey
+                        GET >=> route "/profile/available-models" >=> Profiles.Handlers.listModels
+                        GET >=> route "/tones" >=> Tones.Handlers.list db
+                        POST >=> route "/tones" >=> Tones.Handlers.create db
+                        PUT >=> routef "/tones/%s" (Tones.Handlers.update db)
+                        DELETE >=> routef "/tones/%s" (Tones.Handlers.delete db)
+                        POST >=> routef "/tones/%s/toggle" (Tones.Handlers.toggleDefault db) ] ]
 
     let builder = WebApplication.CreateBuilder args
     builder.Host.UseSerilog() |> ignore
@@ -55,7 +51,6 @@ let main args =
         options.AddDefaultPolicy(fun policy -> policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader() |> ignore))
     |> ignore
 
-    // Configure JWT authentication
     builder.Services
         .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(fun options ->
@@ -71,7 +66,6 @@ let main args =
                 ))
     |> ignore
 
-    // Configure JSON serializer with case-insensitive property matching
     let jsonOptions = JsonSerializerOptions(PropertyNameCaseInsensitive = true)
     builder.Services.AddGiraffe() |> ignore
 
@@ -84,4 +78,3 @@ let main args =
     app.UseGiraffe routes
     app.Run "http://0.0.0.0:5001"
     0
-

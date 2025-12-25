@@ -1,4 +1,5 @@
-namespace HypertweetServer.Shared
+[<AutoOpen>]
+module Base.Prelude
 
 type AsyncResult<'T, 'E> = Async<Result<'T, 'E>>
 
@@ -44,4 +45,3 @@ module Option =
         match opt with
         | Some x -> Ok x
         | None -> Error error
-

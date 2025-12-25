@@ -1,8 +1,6 @@
-module HypertweetServer.AI.PromptBuilder
+module Base.PromptDsl
 
-module PromptDomain =
-
-    // 1. Low-level text components
+module Domain =
     module TextContent =
         type t =
             | Empty
@@ -47,7 +45,7 @@ module PromptDomain =
         let withXmlTag tag x = { x with XMLTagName = Some tag }
 
 module Render =
-    open PromptDomain
+    open Domain
 
     // Helper to indent if you want pretty-printed XML later
     let private wrapXml tag content =
@@ -75,7 +73,7 @@ module Render =
         if item.HasNewLine then withXml + "\n" else withXml
 
 module Dsl =
-    open PromptDomain
+    open Domain
 
     type PromptBuilder() =
         // The internal state is just a list of Items
@@ -104,4 +102,3 @@ module Dsl =
     // Fluent helpers for inside the builder
     let nl = Item.withNewLine
     let xml tag = Item.withXmlTag tag
-

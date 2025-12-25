@@ -1,11 +1,12 @@
-namespace HypertweetServer.Features.Tones
+module HypertweetServer.Tones
 
 open System
 open Giraffe
 open MongoDB.Driver
+open Base
+open Base.Common
 open HypertweetServer
-open HypertweetServer.Domain
-open HypertweetServer.Shared
+open HypertweetServer.Models
 open FsToolkit.ErrorHandling
 
 // DTOs
@@ -49,7 +50,8 @@ module Handlers =
           { Id = "default-insightful"
             UserId = None
             Title = "Insightful"
-            Instruction = "Provide thoughtful, analytical perspectives. Add value through unique observations and deeper understanding."
+            Instruction =
+              "Provide thoughtful, analytical perspectives. Add value through unique observations and deeper understanding."
             Enabled = None
             CreatedAt = DateTime(2024, 1, 1, 0, 0, 0, DateTimeKind.Utc) }
           { Id = "default-casual"
@@ -75,10 +77,11 @@ module Handlers =
         let defaultsWithEnabled =
             defaultTones
             |> List.map (fun tone ->
-                { tone with Enabled = Some(not (List.contains tone.Id user.DisabledToneIds)) })
+                { tone with
+                    Enabled = Some(not (List.contains tone.Id user.DisabledToneIds)) })
+
         userTones @ defaultsWithEnabled
 
-    // Validation
     let private validateCreate (req: CreateToneRequest) =
         result {
             let! title = req.Title |> Validate.notEmpty "title"
@@ -102,9 +105,7 @@ module Handlers =
                 DataAccess.user db userId
                 |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
 
-            let! userTones =
-                toneCol db
-                |> Db.findMany (Bson.make () |> Bson.field "UserId" userId) None
+            let! userTones = toneCol db |> Db.findMany (Bson.make () |> Bson.field "UserId" userId) None
 
             let resolved = makeResolvedTones user userTones
             return! json (resolved |> List.map toResponse) next ctx
@@ -143,7 +144,7 @@ module Handlers =
                 if tone.UserId <> Some userId then
                     Error Unauthorized
                 else
-                    Ok ()
+                    Ok()
 
             let updated =
                 { tone with
@@ -155,7 +156,11 @@ module Handlers =
                 |> Db.updateOne
                     (Bson.make () |> Bson.field "_id" toneId)
                     (Bson.make ()
-                     |> Bson.field "$set" (Bson.make () |> Bson.field "Title" updated.Title |> Bson.field "Instruction" updated.Instruction))
+                     |> Bson.field
+                         "$set"
+                         (Bson.make ()
+                          |> Bson.field "Title" updated.Title
+                          |> Bson.field "Instruction" updated.Instruction))
                 |> AsyncResult.map ignore
 
             return! Successful.ok (json {| message = "Updated" |}) next ctx
@@ -170,7 +175,7 @@ module Handlers =
             do!
                 match findDefaultById toneId with
                 | Some _ -> Error(ValidationError("toneId", "Cannot delete default tone"))
-                | None -> Ok ()
+                | None -> Ok()
 
             let! tone =
                 toneCol db
@@ -181,7 +186,7 @@ module Handlers =
                 if tone.UserId <> Some userId then
                     Error Unauthorized
                 else
-                    Ok ()
+                    Ok()
 
             do!
                 toneCol db
@@ -206,7 +211,7 @@ module Handlers =
             do!
                 match findDefaultById toneId with
                 | None -> Error(ValidationError("toneId", "Not a default tone"))
-                | Some _ -> Ok ()
+                | Some _ -> Ok()
 
             let! user =
                 DataAccess.user db userId
@@ -224,7 +229,8 @@ module Handlers =
                 DataAccess.userCol db
                 |> Db.updateOne
                     (Bson.make () |> Bson.field "_id" userId)
-                    (Bson.make () |> Bson.field "$set" (Bson.make () |> Bson.field "DisabledToneIds" newDisabled))
+                    (Bson.make ()
+                     |> Bson.field "$set" (Bson.make () |> Bson.field "DisabledToneIds" newDisabled))
                 |> AsyncResult.map ignore
 
             return! Successful.ok (json {| message = if enabled then "Enabled" else "Disabled" |}) next ctx

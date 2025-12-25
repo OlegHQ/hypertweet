@@ -3,7 +3,6 @@ module HypertweetServer.Tracing
 open FsToolkit.ErrorHandling
 
 open HypertweetServer
-open HypertweetServer.Shared
 
 let tracingCollection = "traces"
 
@@ -24,7 +23,7 @@ module TracingEvents =
 
     type Base = { Type: string; User: User option }
 
-    let makeUser (u: Domain.User) = { UserId = u.Id; Email = u.Email }
+    let makeUser (u: Models.User) = { UserId = u.Id; Email = u.Email }
 
     module ReplyEvent =
         type Tone = { ToneId: string; ToneName: string }
@@ -32,7 +31,7 @@ module TracingEvents =
         type Input =
             { Prompt: string
               Model: string
-              Page: Domain.Page
+              Page: Models.Page
               Tone: Tone }
 
 
@@ -52,7 +51,7 @@ module TracingEvents =
               CreatedAt = createdAt
               Result = result }
 
-        let makeTone (domainTone: Domain.Tone) =
+        let makeTone (domainTone: Models.Tone) =
             { ToneId = domainTone.Id
               ToneName = domainTone.Title }
 
@@ -64,14 +63,13 @@ let saveLLMReplyEvent db prompt tone model page user (result: TracingEvents.Repl
 
         let evt =
             TracingEvents.ReplyEvent.makeEvt
-                (Domain.newId ())
+                (Models.newId ())
                 (Some(TracingEvents.makeUser user))
                 (TracingEvents.ReplyEvent.makeInput prompt model page (TracingEvents.ReplyEvent.makeTone tone))
                 createdUtc
                 result
 
-        let col = Db.collection db tracingCollection
-        do! col |> Db.insertOne evt
+        let col = Base.Common.Db.collection db tracingCollection
+        do! col |> Base.Common.Db.insertOne evt
         return evt
     }
-
