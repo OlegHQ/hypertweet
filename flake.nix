@@ -1,31 +1,43 @@
 {
-  description = "A development environment with Bun, Node.js 22, TypeScript LSP, and Fish shell";
+  description = "Hypertweet development environment";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
     flake-utils.url = "github:numtide/flake-utils";
   };
 
   outputs = { self, nixpkgs, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs {
+          inherit system;
+        };
       in
       {
         devShells.default = pkgs.mkShell {
           buildInputs = with pkgs; [
-            bun
+            # Node.js ecosystem with Bun
             nodejs_22
-            nodePackages.typescript
-            nodePackages.typescript-language-server
+            bun
+
+            # Build tools
+            esbuild
+            nodePackages.prettier
+
+            # Development utilities
+            git
+            which
+            just
           ];
 
           shellHook = ''
-            # Automatically start fish shell
-            exec fish
+            echo "Hypertweet development environment loaded"
+            echo "Node: $(node --version)"
+            echo "Bun: $(bun --version)"
+            echo "esbuild: $(esbuild --version)"
+            echo "prettier: $(prettier --version)"
+            echo "just: $(just --version)"
           '';
         };
-      }
-    );
-} 
-
+      });
+}
