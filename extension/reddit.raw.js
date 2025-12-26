@@ -199,6 +199,14 @@ window.__reddit = (function () {
         if (composer) {
           log('Composer detected');
           activePost = mainPost;
+          var textbox = composer.querySelector('div[contenteditable="true"][role="textbox"]');
+          if (textbox) {
+            var draftText = textbox.textContent.trim();
+            if (draftText) {
+              activePost.CurrentReplyDraft = draftText;
+              log('Draft text captured: ' + draftText.substring(0, 50));
+            }
+          }
         } else {
           log('No composer detected');
         }

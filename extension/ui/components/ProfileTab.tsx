@@ -1,146 +1,191 @@
-import { useState } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Input } from './Input';
-import { Button } from './Button';
-import { ConfirmDialog } from './ConfirmDialog';
+import { Textarea } from './Textarea';
+import { Checkbox } from './Checkbox';
 import { api } from '../../apiProxy';
+import { useProfile } from '../hooks/useProfile';
+import { useAuth } from '../hooks/useAuth';
 
-interface ProfileTabProps {
-  onLogout: () => void;
-}
+const REPLY_OPTIONS = [
+  { id: 'NoEmojis', label: 'No Emojis' },
+  { id: 'NoHashtags', label: 'No Hashtags' },
+  { id: 'NoPunctuation', label: 'No Punctuation' },
+] as const;
 
-export function ProfileTab({ onLogout }: ProfileTabProps): React.ReactElement {
+export function ProfileTab(): React.ReactElement {
   const queryClient = useQueryClient();
+  const { token } = useAuth();
+  const { data: profile } = useProfile(!!token);
 
-  // Password change state
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  // Profile fields state
+  const [userBio, setUserBio] = useState('');
+  const [customGuidance, setCustomGuidance] = useState('');
+  const [postProcess, setPostProcess] = useState(false);
+  const [replyOptions, setReplyOptions] = useState<string[]>([]);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
+    'idle'
+  );
 
-  // Delete account state
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  // Debounce timer ref
+  const saveTimerRef = useRef<number | null>(null);
+  const saveStatusTimerRef = useRef<number | null>(null);
 
-  const updatePasswordMutation = useMutation({
-    mutationFn: async () => {
-      if (newPassword.length < 8) {
-        throw new Error('Password must be at least 8 characters');
-      }
-      if (newPassword !== confirmPassword) {
-        throw new Error('Passwords do not match');
-      }
-      return api.updateProfile({ NewPassword: newPassword });
-    },
+  // Sync state with profile data
+  useEffect(() => {
+    if (profile) {
+      setUserBio(profile.UserBio ?? '');
+      setCustomGuidance(profile.CustomReplyGuidance ?? '');
+      setPostProcess(profile.PostProcessReply ?? false);
+      setReplyOptions(profile.ReplyPromptOptions ?? []);
+    }
+  }, [profile]);
+
+  const updateProfileMutation = useMutation({
+    mutationFn: (data: {
+      UserBio?: string;
+      CustomReplyGuidance?: string;
+      PostProcessReply?: boolean;
+      ReplyPromptOptions?: string[];
+    }) => api.updateProfile(data),
     onSuccess: () => {
-      setNewPassword('');
-      setConfirmPassword('');
-      setPasswordError('');
-      setPasswordSuccess(true);
-      window.setTimeout(() => setPasswordSuccess(false), 3000);
+      setSaveStatus('saved');
+      if (saveStatusTimerRef.current) {
+        window.clearTimeout(saveStatusTimerRef.current);
+      }
+      saveStatusTimerRef.current = window.setTimeout(() => {
+        setSaveStatus('idle');
+      }, 2000);
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
-    onError: (error: Error) => {
-      setPasswordError(error.message);
-    },
-  });
-
-  const deleteAccountMutation = useMutation({
-    mutationFn: () => api.deleteAccount(),
-    onSuccess: async () => {
-      await api.clearTokens();
-      queryClient.clear();
-      onLogout();
-    },
-    onError: (error: Error) => {
-      console.error('Failed to delete account:', error);
+    onError: () => {
+      setSaveStatus('idle');
     },
   });
 
-  const handlePasswordSubmit = (e: React.FormEvent): void => {
-    e.preventDefault();
-    setPasswordError('');
-    updatePasswordMutation.mutate();
+  const debouncedSave = useCallback(
+    (data: {
+      UserBio?: string;
+      CustomReplyGuidance?: string;
+      PostProcessReply?: boolean;
+      ReplyPromptOptions?: string[];
+    }) => {
+      if (saveTimerRef.current) {
+        window.clearTimeout(saveTimerRef.current);
+      }
+      setSaveStatus('saving');
+      saveTimerRef.current = window.setTimeout(() => {
+        updateProfileMutation.mutate(data);
+      }, 500);
+    },
+    [updateProfileMutation]
+  );
+
+  const handleBioBlur = (): void => {
+    if (userBio !== (profile?.UserBio ?? '')) {
+      debouncedSave({
+        UserBio: userBio,
+        CustomReplyGuidance: customGuidance,
+        PostProcessReply: postProcess,
+        ReplyPromptOptions: replyOptions,
+      });
+    }
+  };
+
+  const handleGuidanceBlur = (): void => {
+    if (customGuidance !== (profile?.CustomReplyGuidance ?? '')) {
+      debouncedSave({
+        UserBio: userBio,
+        CustomReplyGuidance: customGuidance,
+        PostProcessReply: postProcess,
+        ReplyPromptOptions: replyOptions,
+      });
+    }
+  };
+
+  const handlePostProcessToggle = (): void => {
+    const newValue = !postProcess;
+    setPostProcess(newValue);
+    updateProfileMutation.mutate({ PostProcessReply: newValue });
+  };
+
+  const handleReplyOptionToggle = (optionId: string): void => {
+    const newOptions = replyOptions.includes(optionId)
+      ? replyOptions.filter(o => o !== optionId)
+      : [...replyOptions, optionId];
+    setReplyOptions(newOptions);
+    updateProfileMutation.mutate({ ReplyPromptOptions: newOptions });
   };
 
   return (
     <div>
-      {/* Change Password Section */}
       <div className="ht-section">
-        <h3 className="ht-section-title">Change Password</h3>
-        <form onSubmit={handlePasswordSubmit}>
-          <div className="ht-form-fields">
-            <Input
-              label="New Password"
-              type="password"
-              placeholder="Enter new password"
-              value={newPassword}
-              onChange={e => {
-                setNewPassword(e.target.value);
-                setPasswordError('');
-              }}
-              disabled={updatePasswordMutation.isPending}
-            />
-            <Input
-              label="Confirm Password"
-              type="password"
-              placeholder="Confirm new password"
-              value={confirmPassword}
-              onChange={e => {
-                setConfirmPassword(e.target.value);
-                setPasswordError('');
-              }}
-              error={passwordError || undefined}
-              disabled={updatePasswordMutation.isPending}
-            />
-          </div>
-          <div style={{ marginTop: 12 }}>
-            {passwordSuccess && (
-              <p className="ht-success-text" style={{ marginBottom: 8 }}>
-                Password updated successfully
-              </p>
-            )}
-            <Button
-              type="submit"
-              disabled={
-                updatePasswordMutation.isPending ||
-                !newPassword ||
-                !confirmPassword
-              }
-            >
-              {updatePasswordMutation.isPending
-                ? 'Updating...'
-                : 'Update Password'}
-            </Button>
-          </div>
-        </form>
-      </div>
-
-      <hr className="ht-divider" />
-
-      {/* Danger Zone */}
-      <div className="ht-danger-zone">
-        <h4 className="ht-danger-zone-title">Danger Zone</h4>
-        <p className="ht-danger-zone-description">
-          Once you delete your account, there is no going back. Please be
-          certain.
+        <div className="ht-section-header">
+          <h3 className="ht-section-title">Reply Customization</h3>
+          {saveStatus === 'saving' && (
+            <span className="ht-save-indicator ht-saving-indicator">
+              Saving...
+            </span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="ht-save-indicator">Saved</span>
+          )}
+        </div>
+        <p className="ht-section-description">
+          Customize how the AI generates replies for you.
         </p>
-        <Button
-          variant="destructive"
-          onClick={() => setShowDeleteConfirm(true)}
-        >
-          Delete Account
-        </Button>
-      </div>
 
-      <ConfirmDialog
-        isOpen={showDeleteConfirm}
-        title="Delete Account"
-        message="Are you sure you want to delete your account? This action cannot be undone."
-        confirmLabel="Delete Account"
-        onConfirm={() => deleteAccountMutation.mutate()}
-        onCancel={() => setShowDeleteConfirm(false)}
-        isLoading={deleteAccountMutation.isPending}
-        variant="destructive"
-      />
+        <div className="ht-form-fields">
+          <Textarea
+            label="User Bio"
+            placeholder="Describe yourself, your expertise, and writing style..."
+            value={userBio}
+            onChange={e => setUserBio(e.target.value)}
+            onBlur={handleBioBlur}
+            rows={3}
+          />
+
+          <Textarea
+            label="Custom Reply Guidance"
+            placeholder="Add specific instructions for how you want replies to be written..."
+            value={customGuidance}
+            onChange={e => setCustomGuidance(e.target.value)}
+            onBlur={handleGuidanceBlur}
+            rows={3}
+          />
+
+          <div className="ht-toggle-row">
+            <div className="ht-toggle-row-content">
+              <p className="ht-toggle-row-label">Post-Process Replies</p>
+              <p className="ht-toggle-row-description">
+                Apply additional AI processing to refine generated replies
+              </p>
+            </div>
+            <button
+              type="button"
+              className={`ht-toggle ${postProcess ? 'ht-toggle-checked' : ''}`}
+              onClick={handlePostProcessToggle}
+              disabled={updateProfileMutation.isPending}
+            />
+          </div>
+
+          <div>
+            <p className="ht-input-label" style={{ marginBottom: 8 }}>
+              Reply Options
+            </p>
+            <div className="ht-checkbox-list">
+              {REPLY_OPTIONS.map(option => (
+                <Checkbox
+                  key={option.id}
+                  checked={replyOptions.includes(option.id)}
+                  onChange={() => handleReplyOptionToggle(option.id)}
+                  label={option.label}
+                  disabled={updateProfileMutation.isPending}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

@@ -16,6 +16,7 @@ export interface User {
 export interface Post {
   Author: User;
   Text: string;
+  CurrentReplyDraft?: string;
   Replies?: Post[];
   Time?: string;
   StatusID?: string;

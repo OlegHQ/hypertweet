@@ -60,19 +60,43 @@ module Service =
                 |> List.tryFind (fun x -> x.Id = toneId)
                 |> Result.requireSome (NotFound "Tone")
 
-            return tone, model, user
+            return tone, model, user, profile
         }
 
     type ReplyEvent = { EventId: string; Reply: string }
 
+    let applyPostProcess (reply: string) =
+        reply
+            .Replace("—", ", ")
+            .Replace(
+                """, "\"")
+            .Replace(""",
+                "\""
+            )
+            .Replace("'", "'")
+            .Replace("’", "'")
+            .Replace("'", "'")
+
     let generateReply logger db llmApiKey (page: Page) toneId userId =
         taskResult {
-            let! tone, model, user = resolveModelInputs logger db toneId userId
-            logger |> Log.info "Resolved inputs"
-            let prompt = Prompts.ReplyPrompt.make tone page
+            let! tone, model, user, profile = resolveModelInputs logger db toneId userId
+            let userBio = profile |> Option.bind (fun x -> x.UserBio)
+            let customReplyGuidance = profile |> Option.bind (fun x -> x.CustomReplyGuidance)
+
+            let replyPromptOptions =
+                profile |> Option.map ReplyPromptOption.fromProfile |> Option.defaultValue []
+
+            let postProcessReply =
+                profile |> Option.bind (fun x -> x.PostProcessReply) |> Option.defaultValue true
+
+            let prompt =
+                Prompts.ReplyPrompt.make tone page userBio customReplyGuidance replyPromptOptions
 
             let! completion, timeSpent = TracingUtils.measureTask (fun () -> AI.getCompletion llmApiKey model prompt)
-            let! completion = completion
+
+            let! completion =
+                completion
+                |> Result.map (fun x -> if postProcessReply then applyPostProcess x else x)
 
             logger |> Log.info "Completion generated"
 
@@ -87,7 +111,9 @@ module Service =
                     { TimeTookMs = int timeSpent.TotalMilliseconds
                       Reply = completion }
 
-            return { EventId = evt.Id; Reply = completion }
+            return
+                { EventId = evt.Id.ToString()
+                  Reply = completion }
         }
 
 module Handlers =
@@ -111,3 +137,4 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
+

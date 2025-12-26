@@ -161,6 +161,11 @@ window.__twitter = (function () {
         console.log('Reply form detected');
         if (posts.length > 0) {
           activePost = posts[0];
+          var draftText = replyForm.textContent.trim();
+          if (draftText) {
+            activePost.CurrentReplyDraft = draftText;
+            console.log('Draft text captured: ' + draftText.substring(0, 50));
+          }
           console.log('Active post set to first post');
         }
       } else {

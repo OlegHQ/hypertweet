@@ -23,6 +23,12 @@ let main args =
     let config = Config.load ()
     let db = Db.connect config.MongoConnectionString config.DatabaseName
 
+    Log.Information "Generating database indexes..."
+
+    match DataAccess.generateIndexes db |> Async.AwaitTask |> Async.RunSynchronously with
+    | Ok () -> Log.Information "Database indexes generated"
+    | Error err -> Log.Error("Failed to generate indexes: {Error}", err)
+
     let routes =
         choose
             [ // Public routes
@@ -33,7 +39,8 @@ let main args =
               // Protected routes (require JWT)
               requiresAuthentication (challenge JwtBearerDefaults.AuthenticationScheme)
               >=> choose
-                      [ POST >=> route "/profile/update" >=> Profiles.Handlers.updateProfile db
+                      [ POST >=> route "/profile/password" >=> Profiles.Handlers.updatePassword db
+                        POST >=> route "/profile/update" >=> Profiles.Handlers.updateProfile db
                         GET >=> route "/profile" >=> Profiles.Handlers.getProfile db
                         DELETE >=> route "/users" >=> Profiles.Handlers.deleteMe db
                         POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.LlmApiKey

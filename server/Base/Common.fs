@@ -148,6 +148,15 @@ module Db =
     let insertOne<'T> (doc: 'T) (col: IMongoCollection<'T>) =
         tryDb (fun () -> col.InsertOneAsync doc |> Async.AwaitTask)
 
+    let createTtlIndexIfNotExists<'T> (field: string) (col: IMongoCollection<'T>) =
+        tryDb (fun () ->
+            async {
+                let indexKeys = Builders<'T>.IndexKeys.Ascending(field)
+                let indexOptions = CreateIndexOptions(ExpireAfter = System.TimeSpan.Zero)
+                let indexModel = CreateIndexModel<'T>(indexKeys, indexOptions)
+                do! col.Indexes.CreateOneAsync(indexModel) |> Async.AwaitTask |> Async.Ignore
+            })
+
 module Validate =
     open System
 

@@ -115,7 +115,7 @@ module ReplyPrompt =
               "Match the platform's general tone"
               "Keep response appropriately sized for the context" ]
 
-    let make (tone: Tone) (page: Page) =
+    let make (tone: Tone) (page: Page) userBio customReplyGuidance replyPromptOptions =
         let activePostObj =
             match page.Posts with
             | [ singlePost ] -> Some singlePost
@@ -126,6 +126,11 @@ module ReplyPrompt =
             activePostObj
             |> Option.map Formatters.formatPost
             |> Option.defaultValue "No post content"
+
+        let currentDraft =
+            activePostObj
+            |> Option.bind (fun p -> p.CurrentReplyDraft)
+            |> Option.bind (fun d -> if System.String.IsNullOrWhiteSpace d then None else Some d)
 
         let platformGuidelines = getPlatformGuidelines (siteOfString page.Site)
 
@@ -147,10 +152,14 @@ module ReplyPrompt =
                     | s when System.String.IsNullOrWhiteSpace s -> None
                     | s -> Some s
 
+        let taskInstruction =
+            match currentDraft with
+            | Some _ ->
+                "Edit and refine the existing reply draft below to match the specified tone. Write ONLY the revised reply text, nothing else."
+            | None -> "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."
+
         prompt {
-            Item.text "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."
-            |> xml "task"
-            |> nl
+            Item.text taskInstruction |> xml "task" |> nl
 
             Item.rich (
                 TextContent.Concat
@@ -164,6 +173,8 @@ module ReplyPrompt =
 
             Item.list platformGuidelines |> xml "platform" |> nl
 
+            userBio |> Option.map (Item.text >> xml "user_bio" >> nl)
+
             Item.rich (
                 TextContent.Concat
                     [ TextContent.LabeledText("Style", tone.Title)
@@ -175,13 +186,28 @@ module ReplyPrompt =
 
             Item.text activePost |> xml "post_to_reply" |> nl
 
+
             threadContext |> Option.map (Item.text >> xml "thread_context" >> nl)
 
-            Item.list
+            Item.list (
                 [ "Write ONLY the reply text"
                   "Do not include any meta-commentary, explanations, or formatting outside the reply"
                   "Do not prefix with \"Reply:\" or similar labels"
                   "Match the specified tone exactly"
                   "Be authentic and engaging" ]
+                @ List.map
+                    (function
+                    | ReplyPromptOption.NoEmojis -> "No emojis"
+                    | ReplyPromptOption.NoHashtags -> "No hash tags allowed"
+                    | ReplyPromptOption.NoPunctuation -> "loose punctuation")
+                    replyPromptOptions
+            )
             |> xml "output_requirements"
+            |> nl
+
+            customReplyGuidance
+            |> Option.map (Item.text >> xml "user_defined_guidance" >> nl)
+
+            currentDraft |> Option.map (Item.text >> xml "current_draft_to_edit" >> nl)
         }
+

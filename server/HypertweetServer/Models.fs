@@ -5,7 +5,40 @@ open MongoDB.Bson.Serialization.Attributes
 
 let newId () = Guid.NewGuid().ToString()
 
-type Profile = { Id: string; ModelName: string }
+[<CLIMutable; BsonIgnoreExtraElements>]
+type Profile =
+    { Id: string
+      ModelName: string
+      UserBio: string option
+      CustomReplyGuidance: string option
+      PostProcessReply: bool option
+      ReplyPromptOptions: string list }
+
+module ReplyPromptOption =
+    type T =
+        | NoEmojis
+        | NoHashtags
+        | NoPunctuation
+
+    let tryParse (s: string) : T option =
+        match s with
+        | "NoEmojis" -> Some NoEmojis
+        | "NoHashtags" -> Some NoHashtags
+        | "NoPunctuation" -> Some NoPunctuation
+        | _ -> None
+
+    let toString (opt: T) : string =
+        match opt with
+        | NoEmojis -> "NoEmojis"
+        | NoHashtags -> "NoHashtags"
+        | NoPunctuation -> "NoPunctuation"
+
+    let fromProfile profile =
+        profile.ReplyPromptOptions
+        |> List.map tryParse
+        |> List.filter Option.isSome
+        |> List.map Option.get
+
 
 [<CLIMutable; BsonIgnoreExtraElements>]
 type User =
@@ -45,6 +78,7 @@ type PageUser =
 type Post =
     { Author: PageUser
       Text: string
+      CurrentReplyDraft: string option
       Replies: Post list option
       Time: string option
       StatusID: string option

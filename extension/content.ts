@@ -6,6 +6,7 @@ import { Router } from './router';
 import { Keyboard } from './Keyboard';
 import { emotionCache } from './ui/emotion';
 import { queryClient } from './ui/query';
+import { ToastProvider } from './ui/toast';
 import type { InsertTextCallback } from './base';
 
 const router = new Router();
@@ -30,12 +31,16 @@ function renderKeyboard(
       QueryClientProvider,
       { client: queryClient },
       React.createElement(
-        CacheProvider,
-        { value: emotionCache },
-        React.createElement(Keyboard, {
-          insertText,
-          readPage: () => socialPage.readPage(),
-        })
+        ToastProvider,
+        null,
+        React.createElement(
+          CacheProvider,
+          { value: emotionCache },
+          React.createElement(Keyboard, {
+            insertText,
+            readPage: () => socialPage.readPage(),
+          })
+        )
       )
     )
   );

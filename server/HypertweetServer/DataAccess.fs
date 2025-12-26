@@ -1,8 +1,14 @@
 module HypertweetServer.DataAccess
 
+open MongoDB.Bson
+open MongoDB.Driver
+open FsToolkit.ErrorHandling
 open Base
 open Base.Common
 open HypertweetServer.Models
+
+let generateIndexes (db: IMongoDatabase) =
+    taskResult { do! Db.collection<BsonDocument> db "traces" |> Db.createTtlIndexIfNotExists "DeleteAt" }
 
 let userCol db = Db.collection<User> db "users"
 let profileCol db = Db.collection<Profile> db "profiles"

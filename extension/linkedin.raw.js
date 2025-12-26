@@ -152,6 +152,14 @@ window.__linkedin = (function () {
       var activePost = findActivePost();
       if (activePost) {
         log('Active post found');
+        var editor = findVisibleEditor();
+        if (editor) {
+          var draftText = editor.textContent.trim();
+          if (draftText) {
+            activePost.CurrentReplyDraft = draftText;
+            log('Draft text captured: ' + draftText.substring(0, 50));
+          }
+        }
       } else {
         log('No active post (no visible editor)');
       }

@@ -604,6 +604,241 @@ export function injectGlobalStyles(): void {
     .ht-tone-accordion-chevron-open {
       transform: rotate(180deg) !important;
     }
+
+    /* Toggle row - label with toggle switch */
+    .ht-toggle-row {
+      display: flex !important;
+      align-items: flex-start !important;
+      justify-content: space-between !important;
+      padding: ${tokens.spacing[3]} !important;
+      background: ${tokens.colors.muted} !important;
+      border: 1px solid ${tokens.colors.border} !important;
+      border-radius: ${tokens.radius.md} !important;
+      gap: ${tokens.spacing[3]} !important;
+    }
+    .ht-toggle-row-content {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[1]} !important;
+      flex: 1 !important;
+    }
+    .ht-toggle-row-label {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: ${tokens.colors.foreground} !important;
+      margin: 0 !important;
+    }
+    .ht-toggle-row-description {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      margin: 0 !important;
+      line-height: 1.4 !important;
+    }
+
+    /* Checkbox styles */
+    .ht-checkbox-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-checkbox-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[2]} !important;
+      cursor: pointer !important;
+      padding: ${tokens.spacing[2]} ${tokens.spacing[3]} !important;
+      background: ${tokens.colors.muted} !important;
+      border: 1px solid ${tokens.colors.border} !important;
+      border-radius: ${tokens.radius.md} !important;
+      transition: all ${tokens.transition.fast} !important;
+    }
+    .ht-checkbox-item:hover {
+      background: ${tokens.colors.cardHover} !important;
+      border-color: ${tokens.colors.ring} !important;
+    }
+    .ht-checkbox {
+      width: 16px !important;
+      height: 16px !important;
+      border: 1px solid ${tokens.colors.border} !important;
+      border-radius: ${tokens.radius.sm} !important;
+      background: ${tokens.colors.background} !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-shrink: 0 !important;
+      transition: all ${tokens.transition.fast} !important;
+    }
+    .ht-checkbox-checked {
+      background: ${tokens.colors.primary} !important;
+      border-color: ${tokens.colors.primary} !important;
+    }
+    .ht-checkbox-label {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: ${tokens.colors.foreground} !important;
+      flex: 1 !important;
+    }
+
+    /* Save indicator */
+    .ht-save-indicator {
+      display: inline-flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[1]} !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      color: ${tokens.colors.success} !important;
+    }
+    .ht-saving-indicator {
+      color: ${tokens.colors.mutedForeground} !important;
+    }
+
+    /* Section description */
+    .ht-section-description {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      margin: 0 0 ${tokens.spacing[3]} 0 !important;
+    }
+
+    /* Settings layout with sidebar */
+    .ht-settings-layout {
+      display: flex !important;
+      height: 500px !important;
+    }
+
+    /* Settings sidebar - clean minimal design */
+    .ht-settings-sidebar {
+      width: 200px !important;
+      flex-shrink: 0 !important;
+      border-right: 1px solid ${tokens.colors.border} !important;
+      padding: ${tokens.spacing[3]} !important;
+      background: linear-gradient(180deg, ${tokens.colors.card} 0%, #131316 100%) !important;
+      display: flex !important;
+      flex-direction: column !important;
+      border-radius: ${tokens.radius.xl} 0 0 ${tokens.radius.xl} !important;
+    }
+    .ht-settings-sidebar-header {
+      padding: ${tokens.spacing[3]} ${tokens.spacing[3]} ${tokens.spacing[4]} !important;
+      border-bottom: 1px solid ${tokens.colors.border} !important;
+      margin-bottom: ${tokens.spacing[3]} !important;
+    }
+    .ht-settings-sidebar-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.base} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      color: ${tokens.colors.foreground} !important;
+      margin: 0 !important;
+      letter-spacing: -0.01em !important;
+    }
+    .ht-settings-menu {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      flex: 1 !important;
+    }
+    .ht-settings-menu-item {
+      display: flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[3]} !important;
+      padding: 10px 12px !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.normal} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: ${tokens.radius.md} !important;
+      cursor: pointer !important;
+      transition: all 150ms ease !important;
+      text-align: left !important;
+      width: 100% !important;
+      position: relative !important;
+    }
+    .ht-settings-menu-item:hover {
+      color: ${tokens.colors.foreground} !important;
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+    .ht-settings-menu-item-active {
+      color: ${tokens.colors.foreground} !important;
+      background: rgba(255, 255, 255, 0.08) !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+    }
+    .ht-settings-menu-item-active::before {
+      content: '' !important;
+      position: absolute !important;
+      left: 0 !important;
+      top: 50% !important;
+      transform: translateY(-50%) !important;
+      width: 3px !important;
+      height: 16px !important;
+      background: ${tokens.colors.primary} !important;
+      border-radius: 0 2px 2px 0 !important;
+    }
+
+    /* Settings main content */
+    .ht-settings-main {
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      background: ${tokens.colors.card} !important;
+    }
+    .ht-settings-main-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: ${tokens.spacing[4]} ${tokens.spacing[5]} !important;
+      border-bottom: 1px solid ${tokens.colors.border} !important;
+      flex-shrink: 0 !important;
+      background: ${tokens.colors.card} !important;
+    }
+    .ht-settings-main-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.base} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      color: ${tokens.colors.foreground} !important;
+      margin: 0 !important;
+      letter-spacing: -0.01em !important;
+    }
+    .ht-settings-close-btn {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      width: 28px !important;
+      height: 28px !important;
+      padding: 0 !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: ${tokens.radius.md} !important;
+      color: ${tokens.colors.mutedForeground} !important;
+      cursor: pointer !important;
+      transition: all 150ms ease !important;
+    }
+    .ht-settings-close-btn:hover {
+      background: rgba(255, 255, 255, 0.08) !important;
+      color: ${tokens.colors.foreground} !important;
+    }
+    .ht-settings-content {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      padding: ${tokens.spacing[5]} !important;
+    }
+    .ht-settings-content::-webkit-scrollbar {
+      width: 6px !important;
+    }
+    .ht-settings-content::-webkit-scrollbar-track {
+      background: transparent !important;
+    }
+    .ht-settings-content::-webkit-scrollbar-thumb {
+      background: ${tokens.colors.border} !important;
+      border-radius: 3px !important;
+    }
+    .ht-settings-content::-webkit-scrollbar-thumb:hover {
+      background: ${tokens.colors.mutedForeground} !important;
+    }
   `;
   document.head.appendChild(style);
 }

@@ -147,12 +147,22 @@ export async function toggleTone(
 
 // Profile (protected)
 interface UpdateProfileReq {
-  NewPassword?: string;
+  UserBio?: string;
+  CustomReplyGuidance?: string;
+  PostProcessReply?: boolean;
+  ReplyPromptOptions?: string[];
   ModelName?: string;
+}
+interface UpdatePasswordReq {
+  NewPassword: string;
 }
 export interface ProfileRes {
   Id: string;
   ModelName: string;
+  UserBio?: string;
+  CustomReplyGuidance?: string;
+  PostProcessReply?: boolean;
+  ReplyPromptOptions?: string[];
 }
 export interface ModelDef {
   ModelName: string;
@@ -166,6 +176,11 @@ export const getProfile = make<undefined, ProfileRes>('GET', '/profile', true);
 export const updateProfile = make<UpdateProfileReq, { Message: string }>(
   'POST',
   '/profile/update',
+  true
+);
+export const updatePassword = make<UpdatePasswordReq, { Message: string }>(
+  'POST',
+  '/profile/password',
   true
 );
 export const deleteAccount = make<undefined, { Message: string }>(

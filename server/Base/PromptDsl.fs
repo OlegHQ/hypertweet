@@ -21,27 +21,27 @@ module Domain =
 
         type t =
             { Content: Content
-              HasNewLine: bool
+              NewLines: int
               XMLTagName: string option }
 
         // Constructors
         let text t =
             { Content = Inline(TextContent.Text t)
-              HasNewLine = false
+              NewLines = 0
               XMLTagName = None }
 
         let rich t =
             { Content = Inline t
-              HasNewLine = false
+              NewLines = 0
               XMLTagName = None }
 
         let list l =
             { Content = BulletList l
-              HasNewLine = false
+              NewLines = 0
               XMLTagName = None }
 
         // Modifiers
-        let withNewLine x = { x with HasNewLine = true }
+        let withNewLine x = { x with NewLines = x.NewLines + 1 }
         let withXmlTag tag x = { x with XMLTagName = Some tag }
 
 module Render =
@@ -70,7 +70,10 @@ module Render =
 
         let withXml = wrapXml item.XMLTagName rawContent
 
-        if item.HasNewLine then withXml + "\n" else withXml
+        if item.NewLines <> 0 then
+            withXml + (String.replicate item.NewLines "\n")
+        else
+            withXml
 
 module Dsl =
     open Domain

@@ -5,8 +5,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "bun run build.js",
-    "watch": "bun run build.js --watch",
+    "build": "bun ./build.js",
+    "watch": "bun ./build.js --watch",
     "dev": "bun run clean && bun run watch",
     "prod": "bun run clean && bun run build",
     "clean": "rimraf dist",
