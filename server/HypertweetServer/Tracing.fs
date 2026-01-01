@@ -61,6 +61,31 @@ module TracingEvents =
             { ToneId = domainTone.Id
               ToneName = domainTone.Title }
 
+    module ChatEvent =
+        type Message = { Role: string; Content: string }
+
+        type Input =
+            { SystemPrompt: string
+              Messages: Message list
+              Model: string
+              Page: Models.Page }
+
+        type Result = { Response: string; TimeTookMs: int }
+
+        let makeInput systemPrompt messages model page =
+            { SystemPrompt = systemPrompt
+              Messages = messages
+              Model = model
+              Page = page }
+
+        let makeEvt id user input createdAt deleteAt result =
+            { Id = id
+              Type = "ChatEvent"
+              User = user
+              Input = input
+              CreatedAt = createdAt
+              DeleteAt = deleteAt
+              Result = result }
 
 
 let saveLLMReplyEvent db prompt tone model page user (result: TracingEvents.ReplyEvent.Result) =
@@ -73,6 +98,25 @@ let saveLLMReplyEvent db prompt tone model page user (result: TracingEvents.Repl
                 (newObjectId ())
                 (Some(TracingEvents.makeUser user))
                 (TracingEvents.ReplyEvent.makeInput prompt model page (TracingEvents.ReplyEvent.makeTone tone))
+                createdUtc
+                deleteAt
+                result
+
+        let col = Base.Common.Db.collection db tracingCollection
+        do! col |> Base.Common.Db.insertOne evt
+        return evt
+    }
+
+let saveChatEvent db systemPrompt messages model page user (result: TracingEvents.ChatEvent.Result) =
+    taskResult {
+        let createdUtc = System.DateTime.UtcNow
+        let deleteAt = createdUtc.AddDays(float ttlDays)
+
+        let evt =
+            TracingEvents.ChatEvent.makeEvt
+                (newObjectId ())
+                (Some(TracingEvents.makeUser user))
+                (TracingEvents.ChatEvent.makeInput systemPrompt messages model page)
                 createdUtc
                 deleteAt
                 result

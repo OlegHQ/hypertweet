@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Modal } from './Modal';
+import { Markdown } from './Markdown';
 import { streamChatProxy } from '../../apiProxy';
 import { useToast } from '../hooks/useToast';
 import type { Page } from '../../models';
@@ -225,13 +226,14 @@ export function ChatModal({
                   )}
                 </div>
                 <div className="ht-chat-message-content">
-                  {message.content ||
-                    (isStreaming && message.role === 'assistant' ? (
-                      <span className="ht-chat-streaming">
-                        <span className="ht-chat-streaming-dot" />
-                        Thinking...
-                      </span>
-                    ) : null)}
+                  {message.content ? (
+                    <Markdown>{message.content}</Markdown>
+                  ) : isStreaming && message.role === 'assistant' ? (
+                    <span className="ht-chat-streaming">
+                      <span className="ht-chat-streaming-dot" />
+                      Thinking...
+                    </span>
+                  ) : null}
                 </div>
               </div>
             ))}

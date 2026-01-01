@@ -1146,6 +1146,113 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       0%, 100% { opacity: 0.4; }
       50% { opacity: 1; }
     }
+
+    /* Markdown/Streamdown styles */
+    .ht-chat-message-content p {
+      margin: 0 0 ${tokens.spacing[2]} 0 !important;
+    }
+    .ht-chat-message-content p:last-child {
+      margin-bottom: 0 !important;
+    }
+    .ht-chat-message-content pre {
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      padding: ${tokens.spacing[3]} !important;
+      margin: ${tokens.spacing[2]} 0 !important;
+      overflow-x: auto !important;
+      position: relative !important;
+    }
+    .ht-chat-message-user .ht-chat-message-content pre {
+      background: rgba(255, 255, 255, 0.1) !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    .ht-chat-message-content code {
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace !important;
+      font-size: 13px !important;
+    }
+    .ht-chat-message-content pre code {
+      background: transparent !important;
+      padding: 0 !important;
+    }
+    .ht-chat-message-content :not(pre) > code {
+      background: var(${cssVars.muted}) !important;
+      padding: 2px 4px !important;
+      border-radius: ${tokens.radius.sm} !important;
+      font-size: 0.9em !important;
+    }
+    .ht-chat-message-user .ht-chat-message-content :not(pre) > code {
+      background: rgba(255, 255, 255, 0.15) !important;
+    }
+    .ht-chat-message-content ul,
+    .ht-chat-message-content ol {
+      margin: ${tokens.spacing[2]} 0 !important;
+      padding-left: ${tokens.spacing[5]} !important;
+    }
+    .ht-chat-message-content li {
+      margin: ${tokens.spacing[1]} 0 !important;
+    }
+    .ht-chat-message-content blockquote {
+      border-left: 3px solid var(${cssVars.border}) !important;
+      margin: ${tokens.spacing[2]} 0 !important;
+      padding-left: ${tokens.spacing[3]} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-chat-message-content h1,
+    .ht-chat-message-content h2,
+    .ht-chat-message-content h3 {
+      margin: ${tokens.spacing[3]} 0 ${tokens.spacing[2]} 0 !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+    }
+    .ht-chat-message-content h1 { font-size: 1.3em !important; }
+    .ht-chat-message-content h2 { font-size: 1.2em !important; }
+    .ht-chat-message-content h3 { font-size: 1.1em !important; }
+    .ht-chat-message-content a {
+      color: var(${cssVars.primary}) !important;
+      text-decoration: underline !important;
+    }
+    .ht-chat-message-user .ht-chat-message-content a {
+      color: var(${cssVars.primaryForeground}) !important;
+    }
+    .ht-chat-message-content strong {
+      font-weight: ${tokens.font.weight.semibold} !important;
+    }
+    .ht-chat-message-content table {
+      border-collapse: collapse !important;
+      width: 100% !important;
+      margin: ${tokens.spacing[2]} 0 !important;
+    }
+    .ht-chat-message-content th,
+    .ht-chat-message-content td {
+      border: 1px solid var(${cssVars.border}) !important;
+      padding: ${tokens.spacing[2]} !important;
+      text-align: left !important;
+    }
+    .ht-chat-message-content th {
+      background: var(${cssVars.muted}) !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+    }
+
+    /* Streamdown copy button override */
+    .ht-chat-message-content [data-copy-button] {
+      position: absolute !important;
+      top: ${tokens.spacing[2]} !important;
+      right: ${tokens.spacing[2]} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.sm} !important;
+      padding: ${tokens.spacing[1]} !important;
+      cursor: pointer !important;
+      opacity: 0 !important;
+      transition: opacity 150ms !important;
+    }
+    .ht-chat-message-content pre:hover [data-copy-button] {
+      opacity: 1 !important;
+    }
+    .ht-chat-message-content [data-copy-button]:hover {
+      background: var(${cssVars.mutedForeground}) !important;
+      color: var(${cssVars.background}) !important;
+    }
   `;
   document.head.appendChild(style);
 }

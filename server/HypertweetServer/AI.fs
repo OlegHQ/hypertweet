@@ -28,6 +28,7 @@ module AIClient =
             try
                 let client = makeClient apiKey modelId
                 let! response = client.CompleteChatAsync messages
+
                 return
                     response.Value.Content
                     |> Seq.tryHead
@@ -41,15 +42,18 @@ module AIClient =
         }
 
     let completeWithFallbacks apiKey models messages =
-        let rec loop = function
+        let rec loop =
+            function
             | [] -> task { return Error(InternalError "exhausted all fallbacks") }
             | model :: rest ->
                 task {
                     let! result = complete apiKey model messages
+
                     match result with
                     | Error(RateLimited _) -> return! loop rest
                     | other -> return other
                 }
+
         loop models
 
     let stream apiKey modelId (messages: ChatMessage array) onToken =
@@ -59,13 +63,16 @@ module AIClient =
                 let updates = client.CompleteChatStreamingAsync messages
                 let enum = updates.GetAsyncEnumerator()
                 let mutable hasMore = true
+
                 while hasMore do
                     let! next = enum.MoveNextAsync()
                     hasMore <- next
+
                     if hasMore then
                         for content in enum.Current.ContentUpdate do
                             if not (String.IsNullOrEmpty content.Text) then
                                 do! onToken content.Text
+
                 return Ok()
             with
             | :? ClientResultException as ex when ex.Status = 429 ->
@@ -105,10 +112,14 @@ module Service =
     let applyPostProcess (reply: string) =
         reply
             .Replace("—", ", ")
-            .Replace(""", "\"")
-            .Replace(""", "\"")
+            .Replace(
+                """, "\"")
+            .Replace(""",
+                "\""
+            )
             .Replace("'", "'")
             .Replace("'", "'")
+
 
     let generateReply logger db llmApiKey (page: Page) toneId userId =
         taskResult {
@@ -132,7 +143,8 @@ module Service =
                 TracingUtils.measureTask (fun () -> AIClient.completeWithFallbacks llmApiKey models messages)
 
             let! completion =
-                completion |> Result.map (fun x -> if postProcessReply then applyPostProcess x else x)
+                completion
+                |> Result.map (fun x -> if postProcessReply then applyPostProcess x else x)
 
             logger |> Log.info "Completion generated"
 
@@ -147,28 +159,13 @@ module Service =
                     { TimeTookMs = int timeSpent.TotalMilliseconds
                       Reply = completion }
 
-            return { EventId = evt.Id.ToString(); Reply = completion }
+            return
+                { EventId = evt.Id.ToString()
+                  Reply = completion }
         }
 
 module Chat =
-    let private defaultPersona =
-        "You are an AI assistant helping users craft social media replies. " +
-        "Help critique and improve draft replies. Be concise and actionable. " +
-        "Consider platform norms and character limits."
-
-    let buildSystemPrompt (persona: string option) (page: Page) =
-        let postText = page.ActivePost |> Option.map (fun p -> p.Text) |> Option.defaultValue ""
-        prompt {
-            Item.text (persona |> Option.defaultValue defaultPersona) |> nl
-            Item.rich (
-                TextContent.Concat [
-                    TextContent.LabeledText("Platform", page.Site)
-                    TextContent.NewLine
-                    TextContent.LabeledText("URL", page.Url)
-                ]
-            ) |> xml "context" |> nl
-            Item.text postText |> xml "post"
-        }
+    let buildSystemPrompt = Prompts.ChatPrompt.make
 
 module Handlers =
     type ReplyRequest = { ToneId: string; Page: Page }
@@ -177,7 +174,9 @@ module Handlers =
     type ChatMessageReq = { Role: string; Content: string }
 
     [<CLIMutable>]
-    type ChatRequest = { Messages: ChatMessageReq list; PageContext: Page }
+    type ChatRequest =
+        { Messages: ChatMessageReq list
+          PageContext: Page }
 
     let private validateChat (req: ChatRequest) =
         if req.Messages |> List.isEmpty then
@@ -192,25 +191,56 @@ module Handlers =
             let! req = HttpCtx.bindJson<ChatRequest> ctx |> Task.map validateChat
 
             let! profile = DataAccess.profile db userId
+
+            let! user =
+                DataAccess.user db userId
+                |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+
             let persona = profile |> Option.bind (fun p -> p.ChatBotPersona)
-            let model = profile |> Option.map (fun p -> p.ModelName) |> Option.defaultValue ModelConfig.defaultModel
+
+            let model =
+                profile
+                |> Option.map (fun p -> p.ModelName)
+                |> Option.defaultValue ModelConfig.defaultModel
 
             let systemPrompt = Chat.buildSystemPrompt persona req.PageContext
-            let messages = [|
-                yield ChatMessage.CreateSystemMessage systemPrompt :> ChatMessage
-                for msg in req.Messages do
-                    match msg.Role with
-                    | "user" -> yield ChatMessage.CreateUserMessage msg.Content :> ChatMessage
-                    | "assistant" -> yield ChatMessage.CreateAssistantMessage msg.Content :> ChatMessage
-                    | _ -> ()
-            |]
+
+            let messages =
+                [| yield ChatMessage.CreateSystemMessage systemPrompt :> ChatMessage
+                   for msg in req.Messages do
+                       match msg.Role with
+                       | "user" -> yield ChatMessage.CreateUserMessage msg.Content :> ChatMessage
+                       | "assistant" -> yield ChatMessage.CreateAssistantMessage msg.Content :> ChatMessage
+                       | _ -> () |]
 
             let chatId = newId ()
             SSE.setHeaders ctx
             ctx.Response.StatusCode <- 200
             do! SSE.writeJson ctx "chatId" chatId
 
-            let! _ = AIClient.stream apiKey model messages (fun token -> SSE.writeJson ctx "token" token)
+            let responseBuilder = System.Text.StringBuilder()
+            let startTime = DateTime.UtcNow
+
+            let! _ =
+                AIClient.stream apiKey model messages (fun token ->
+                    let processed = Service.applyPostProcess token
+                    responseBuilder.Append processed |> ignore
+                    SSE.writeJson ctx "token" processed)
+
+            let elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds |> int
+
+            let chatMessages =
+                req.Messages
+                |> List.map (fun m ->
+                    { Tracing.TracingEvents.ChatEvent.Role = m.Role
+                      Tracing.TracingEvents.ChatEvent.Content = m.Content })
+
+            let traceResult: Tracing.TracingEvents.ChatEvent.Result =
+                { Response = responseBuilder.ToString()
+                  TimeTookMs = elapsed }
+
+            let! _ = Tracing.saveChatEvent db systemPrompt chatMessages model req.PageContext user traceResult
+
             do! SSE.writeDone ctx
 
             return Some ctx

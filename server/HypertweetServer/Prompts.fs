@@ -18,6 +18,35 @@ let siteOfString (site: string) =
     | s when s.Contains "linkedin" -> LinkedIn
     | _ -> Generic
 
+module Common =
+    let getPlatformGuidelines site =
+        match site with
+        | X ->
+            [ "Keep response under 280 characters unless thread format is appropriate"
+              "Use casual, conversational tone typical of Twitter/X"
+              "Hashtags are optional and should be used sparingly"
+              "Emojis can enhance engagement but don't overuse" ]
+        | Reddit ->
+            [ "Match the subreddit's culture and tone"
+              "Be informative and add value to the discussion"
+              "Use markdown formatting (bold, lists, quotes) when helpful"
+              "Avoid excessive self-promotion" ]
+        | LinkedIn ->
+            [ "Maintain professional tone"
+              "Add insights or professional perspective"
+              "Be constructive and supportive"
+              "Keep appropriate business context" ]
+        | Generic ->
+            [ "Be helpful and relevant to the discussion"
+              "Match the platform's general tone"
+              "Keep response appropriately sized for the context" ]
+
+    let formatSiteContext (page: Page) =
+        TextContent.Concat [
+            TextContent.LabeledText("Site", page.Site)
+            TextContent.NewLine
+            TextContent.LabeledText("URL", page.Url)
+        ]
 
 module Formatters =
     [<Literal>]
@@ -93,28 +122,6 @@ module ReplyPrompt =
             | Some urlA, Some urlB -> urlA = urlB
             | _ -> a.Text = b.Text
 
-    let private getPlatformGuidelines site =
-        match site with
-        | X ->
-            [ "Keep response under 280 characters unless thread format is appropriate"
-              "Use casual, conversational tone typical of Twitter/X"
-              "Hashtags are optional and should be used sparingly"
-              "Emojis can enhance engagement but don't overuse" ]
-        | Reddit ->
-            [ "Match the subreddit's culture and tone"
-              "Be informative and add value to the discussion"
-              "Use markdown formatting (bold, lists, quotes) when helpful"
-              "Avoid excessive self-promotion" ]
-        | LinkedIn ->
-            [ "Maintain professional tone"
-              "Add insights or professional perspective"
-              "Be constructive and supportive"
-              "Keep appropriate business context" ]
-        | Generic ->
-            [ "Be helpful and relevant to the discussion"
-              "Match the platform's general tone"
-              "Keep response appropriately sized for the context" ]
-
     let make (tone: Tone) (page: Page) userBio customReplyGuidance replyPromptOptions =
         let activePostObj =
             match page.Posts with
@@ -132,7 +139,7 @@ module ReplyPrompt =
             |> Option.bind (fun p -> p.CurrentReplyDraft)
             |> Option.bind (fun d -> if System.String.IsNullOrWhiteSpace d then None else Some d)
 
-        let platformGuidelines = getPlatformGuidelines (siteOfString page.Site)
+        let platformGuidelines = Common.getPlatformGuidelines (siteOfString page.Site)
 
         let threadContext =
             match activePostObj with
@@ -211,3 +218,29 @@ module ReplyPrompt =
             currentDraft |> Option.map (Item.text >> xml "current_draft_to_edit" >> nl)
         }
 
+
+module ChatPrompt =
+    let private defaultPersona =
+        "You are an AI assistant helping users craft social media replies. " +
+        "Help critique and improve draft replies. Be concise and actionable."
+
+    let make (persona: string option) (page: Page) =
+        let site = siteOfString page.Site
+        let platformGuidelines = Common.getPlatformGuidelines site
+        let postText = page.ActivePost |> Option.map (fun p -> p.Text) |> Option.defaultValue ""
+
+        prompt {
+            Item.text (persona |> Option.defaultValue defaultPersona) |> nl
+
+            Item.rich (Common.formatSiteContext page) |> xml "platform" |> nl
+            Item.list platformGuidelines |> xml "platform_guidelines" |> nl
+
+            Item.text postText |> xml "post_context" |> nl
+
+            Item.list [
+                "Help the user craft effective social media responses"
+                "Consider platform character limits and norms"
+                "Be concise and actionable in your suggestions"
+                "Provide specific improvements, not vague advice"
+            ] |> xml "guidelines"
+        }

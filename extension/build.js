@@ -33,6 +33,12 @@ const config = {
   drop: isProduction ? ['console', 'debugger'] : [],
   legalComments: 'none',
   keepNames: !isProduction,
+  loader: {
+    '.woff': 'dataurl',
+    '.woff2': 'dataurl',
+    '.ttf': 'dataurl',
+    '.eot': 'dataurl',
+  },
 };
 
 // Plugin to copy manifest and other assets
