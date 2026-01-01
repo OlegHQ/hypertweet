@@ -8,7 +8,7 @@ interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   wide?: boolean;
-  variant?: 'default' | 'settings';
+  variant?: 'default' | 'settings' | 'chat';
 }
 
 const MODAL_CONTAINER_ID = 'hypertweet-modal-root';
@@ -75,6 +75,16 @@ function injectModalStyles(): void {
       overflow: hidden !important;
       border-radius: ${tokens.radius.xl} !important;
     }
+    .ht-modal-content-chat {
+      max-width: 600px !important;
+      height: 80vh !important;
+      max-height: 700px !important;
+      padding: 0 !important;
+      overflow: hidden !important;
+      border-radius: ${tokens.radius.xl} !important;
+      display: flex !important;
+      flex-direction: column !important;
+    }
   `;
   document.head.appendChild(style);
 }
@@ -132,7 +142,7 @@ export function Modal({
           onClick={onClose}
         >
           <motion.div
-            className={`ht-modal-content ${wide ? 'ht-modal-content-wide' : ''} ${variant === 'settings' ? 'ht-modal-content-settings' : ''}`}
+            className={`ht-modal-content ${wide ? 'ht-modal-content-wide' : ''} ${variant === 'settings' ? 'ht-modal-content-settings' : ''} ${variant === 'chat' ? 'ht-modal-content-chat' : ''}`}
             initial={{ opacity: 0, scale: 0.95, y: -10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -10 }}

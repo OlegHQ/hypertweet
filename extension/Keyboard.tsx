@@ -15,6 +15,7 @@ import { Card } from './ui/components/Card';
 import { Modal } from './ui/components/Modal';
 import { AuthForm } from './ui/components/AuthForm';
 import { SettingsModal } from './ui/components/SettingsModal';
+import { ChatModal } from './ui/components/ChatModal';
 import { injectGlobalStyles } from './ui/styles';
 import { api } from './apiProxy';
 
@@ -33,6 +34,7 @@ export function Keyboard({
   const { token, isLoading, login, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [showChat, setShowChat] = useState(false);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
   const [redditSuggestion, setRedditSuggestion] = useState<string | null>(null);
   const suggestionRef = useRef<HTMLDivElement>(null);
@@ -200,6 +202,24 @@ export function Keyboard({
           <div className="ht-keyboard-actions">
             <button
               className="ht-icon-btn"
+              title="Chat"
+              onClick={() => setShowChat(true)}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
+            <button
+              className="ht-icon-btn"
               title="Settings"
               onClick={() => setShowSettings(true)}
             >
@@ -323,6 +343,12 @@ export function Keyboard({
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onLogout={handleLogout}
+      />
+
+      <ChatModal
+        isOpen={showChat}
+        onClose={() => setShowChat(false)}
+        readPage={readPage}
       />
     </>
   );

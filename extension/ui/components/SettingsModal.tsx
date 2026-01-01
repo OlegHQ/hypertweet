@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Modal } from './Modal';
 import { SettingsSidebar } from './SettingsSidebar';
 import { ProfileTab } from './ProfileTab';
+import { ChatSettingsTab } from './ChatSettingsTab';
 import { AccountTab } from './AccountTab';
 import { AISettingsTab } from './AISettingsTab';
 
@@ -13,12 +14,14 @@ interface SettingsModalProps {
 
 const MENU_ITEMS = [
   { id: 'profile', label: 'Profile' },
+  { id: 'chat', label: 'Chat' },
   { id: 'account', label: 'Account' },
   { id: 'ai', label: 'AI Settings' },
 ];
 
 const TITLES: Record<string, string> = {
   profile: 'Profile',
+  chat: 'Chat Settings',
   account: 'Account',
   ai: 'AI Settings',
 };
@@ -64,6 +67,7 @@ export function SettingsModal({
           </div>
           <div className="ht-settings-content">
             {activeTab === 'profile' && <ProfileTab />}
+            {activeTab === 'chat' && <ChatSettingsTab />}
             {activeTab === 'account' && <AccountTab onLogout={onLogout} />}
             {activeTab === 'ai' && <AISettingsTab />}
           </div>

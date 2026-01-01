@@ -975,6 +975,177 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       background: var(${cssVars.border}) !important;
       border-radius: 3px !important;
     }
+
+    /* Chat modal styles */
+    .ht-chat-container {
+      display: flex !important;
+      flex-direction: column !important;
+      height: 100% !important;
+      overflow: hidden !important;
+    }
+    .ht-chat-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      padding: ${tokens.spacing[3]} ${tokens.spacing[4]} !important;
+      border-bottom: 1px solid var(${cssVars.border}) !important;
+      flex-shrink: 0 !important;
+    }
+    .ht-chat-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.base} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      color: var(${cssVars.foreground}) !important;
+      margin: 0 !important;
+    }
+    .ht-chat-actions {
+      display: flex !important;
+      gap: ${tokens.spacing[1]} !important;
+    }
+    .ht-chat-messages {
+      flex: 1 !important;
+      overflow-y: auto !important;
+      padding: ${tokens.spacing[4]} !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[3]} !important;
+    }
+    .ht-chat-messages::-webkit-scrollbar {
+      width: 6px !important;
+    }
+    .ht-chat-messages::-webkit-scrollbar-track {
+      background: transparent !important;
+    }
+    .ht-chat-messages::-webkit-scrollbar-thumb {
+      background: var(${cssVars.border}) !important;
+      border-radius: 3px !important;
+    }
+    .ht-chat-empty {
+      flex: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      color: var(${cssVars.mutedForeground}) !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+    }
+    .ht-chat-message {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[1]} !important;
+      max-width: 85% !important;
+    }
+    .ht-chat-message-user {
+      align-self: flex-end !important;
+    }
+    .ht-chat-message-assistant {
+      align-self: flex-start !important;
+    }
+    .ht-chat-message-header {
+      display: flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[2]} !important;
+      padding: 0 ${tokens.spacing[2]} !important;
+    }
+    .ht-chat-message-role {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-chat-message-content {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.muted}) !important;
+      border-radius: ${tokens.radius.lg} !important;
+      padding: ${tokens.spacing[3]} !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+      line-height: 1.5 !important;
+    }
+    .ht-chat-message-user .ht-chat-message-content {
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
+    }
+    .ht-chat-message-copy {
+      opacity: 0 !important;
+      transition: opacity 150ms !important;
+    }
+    .ht-chat-message:hover .ht-chat-message-copy {
+      opacity: 1 !important;
+    }
+    .ht-chat-input-area {
+      display: flex !important;
+      gap: ${tokens.spacing[2]} !important;
+      padding: ${tokens.spacing[3]} ${tokens.spacing[4]} !important;
+      border-top: 1px solid var(${cssVars.border}) !important;
+      flex-shrink: 0 !important;
+      background: var(${cssVars.card}) !important;
+    }
+    .ht-chat-input {
+      flex: 1 !important;
+      resize: none !important;
+      min-height: 40px !important;
+      max-height: 120px !important;
+      padding: ${tokens.spacing[2]} ${tokens.spacing[3]} !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.input}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      outline: none !important;
+      box-sizing: border-box !important;
+    }
+    .ht-chat-input:focus {
+      border-color: var(${cssVars.ring}) !important;
+    }
+    .ht-chat-input::placeholder {
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-chat-send-btn {
+      align-self: flex-end !important;
+      width: 40px !important;
+      height: 40px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
+      border: none !important;
+      border-radius: ${tokens.radius.md} !important;
+      cursor: pointer !important;
+      transition: all ${tokens.transition.fast} !important;
+      flex-shrink: 0 !important;
+    }
+    .ht-chat-send-btn:hover {
+      background: var(${cssVars.primaryHover}) !important;
+    }
+    .ht-chat-send-btn:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+    }
+    .ht-chat-streaming {
+      display: flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[2]} !important;
+      padding: ${tokens.spacing[2]} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+    }
+    .ht-chat-streaming-dot {
+      width: 6px !important;
+      height: 6px !important;
+      background: var(${cssVars.primary}) !important;
+      border-radius: 50% !important;
+      animation: ht-pulse 1s infinite !important;
+    }
+    @keyframes ht-pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
   `;
   document.head.appendChild(style);
 }

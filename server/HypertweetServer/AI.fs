@@ -174,12 +174,16 @@ module Handlers =
     type ReplyRequest = { ToneId: string; Page: Page }
 
     [<CLIMutable>]
-    type ChatRequest = { Message: string; PageContext: Page }
+    type ChatMessageReq = { Role: string; Content: string }
+
+    [<CLIMutable>]
+    type ChatRequest = { Messages: ChatMessageReq list; PageContext: Page }
 
     let private validateChat (req: ChatRequest) =
-        req.Message
-        |> Validate.notEmpty "message"
-        |> Result.map (fun m -> { req with Message = m })
+        if req.Messages |> List.isEmpty then
+            Error(ValidationError("messages", "cannot be empty"))
+        else
+            Ok req
 
     let chat db llmApiKey next ctx =
         taskResult {
@@ -193,8 +197,12 @@ module Handlers =
 
             let systemPrompt = Chat.buildSystemPrompt persona req.PageContext
             let messages = [|
-                ChatMessage.CreateSystemMessage systemPrompt :> ChatMessage
-                ChatMessage.CreateUserMessage req.Message :> ChatMessage
+                yield ChatMessage.CreateSystemMessage systemPrompt :> ChatMessage
+                for msg in req.Messages do
+                    match msg.Role with
+                    | "user" -> yield ChatMessage.CreateUserMessage msg.Content :> ChatMessage
+                    | "assistant" -> yield ChatMessage.CreateAssistantMessage msg.Content :> ChatMessage
+                    | _ -> ()
             |]
 
             let chatId = newId ()

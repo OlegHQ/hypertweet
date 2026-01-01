@@ -170,6 +170,7 @@ interface UpdateProfileReq {
   PostProcessReply?: boolean;
   ReplyPromptOptions?: string[];
   ModelName?: string;
+  ChatBotPersona?: string;
 }
 interface UpdatePasswordReq {
   NewPassword: string;
@@ -181,6 +182,7 @@ export interface ProfileRes {
   CustomReplyGuidance?: string;
   PostProcessReply?: boolean;
   ReplyPromptOptions?: string[];
+  ChatBotPersona?: string;
 }
 export interface ModelDef {
   ModelName: string;
@@ -226,3 +228,71 @@ export const generateReply = make<ReplyRequest, ReplyResult>(
   '/ai/reply',
   true
 );
+
+// Chat types
+export interface ChatMessageReq {
+  Role: 'user' | 'assistant';
+  Content: string;
+}
+
+export interface ChatRequest {
+  Messages: ChatMessageReq[];
+  PageContext: Page;
+}
+
+export interface ChatStreamEvent {
+  chatId?: string;
+  token?: string;
+}
+
+// SSE streaming chat - called from background script
+export async function streamChat(
+  request: ChatRequest,
+  onEvent: (event: ChatStreamEvent) => void
+): Promise<void> {
+  const token = await getValidToken();
+  if (!token) throw new ApiError('Not authenticated', 401);
+
+  const baseUrl = await getBaseUrl();
+  const response = await fetch(baseUrl + '/ai/chat', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const json = (await response.json()) as { error?: string };
+    throw new ApiError(json.error ?? 'Chat failed', response.status);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) throw new ApiError('No response body', 500);
+
+  const decoder = new TextDecoder();
+  let buffer = '';
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split('\n');
+    buffer = lines.pop() ?? '';
+
+    for (const line of lines) {
+      if (line.startsWith('data: ')) {
+        const data = line.slice(6).trim();
+        if (data !== '[DONE]') {
+          try {
+            onEvent(JSON.parse(data) as ChatStreamEvent);
+          } catch {
+            // skip malformed events
+          }
+        }
+      }
+    }
+  }
+}
