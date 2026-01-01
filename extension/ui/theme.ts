@@ -1,5 +1,7 @@
+import type { SiteType } from '../router';
+
+export type { SiteType };
 export type Theme = 'light' | 'dark';
-export type SiteType = 'twitter' | 'reddit' | 'linkedin';
 
 function isLightColor(color: string): boolean {
   const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
@@ -13,73 +15,64 @@ function isLightColor(color: string): boolean {
   return luminance > 0.5;
 }
 
-function detectTwitterTheme(): Theme {
-  const html = document.documentElement;
-
-  const dataTheme = html.getAttribute('data-theme');
-  if (dataTheme === 'dark') return 'dark';
-
-  if (html.style.colorScheme === 'dark') return 'dark';
-
+function getThemeFromBackgroundColor(): Theme {
   const bgColor = window.getComputedStyle(document.body).backgroundColor;
   return isLightColor(bgColor) ? 'light' : 'dark';
 }
 
-function detectRedditTheme(): Theme {
-  const html = document.documentElement;
-  const body = document.body;
-
-  // Check color-scheme on html element (new Reddit uses this)
-  const colorScheme = window.getComputedStyle(html).colorScheme;
-  if (colorScheme === 'dark') return 'dark';
-  if (colorScheme === 'light') return 'light';
-
-  // Check for dark class
-  if (html.classList.contains('dark') || body.classList.contains('dark')) {
-    return 'dark';
-  }
-
-  // Check shreddit-app element (new Reddit's main container)
-  const shredditApp = document.querySelector('shreddit-app');
-  if (shredditApp) {
-    const darkMode = shredditApp.getAttribute('darkmode');
-    if (darkMode === 'true') return 'dark';
-    if (darkMode === 'false') return 'light';
-  }
-
-  // Check data-theme attributes
-  const themeAttr =
-    html.getAttribute('data-theme') || body.getAttribute('data-theme');
-  if (themeAttr?.includes('dark')) return 'dark';
-  if (themeAttr?.includes('light')) return 'light';
-
-  // Fallback to background color check
-  const bgColor = window.getComputedStyle(body).backgroundColor;
-  return isLightColor(bgColor) ? 'light' : 'dark';
+function hasColorScheme(scheme: 'dark' | 'light'): boolean {
+  return (
+    window.getComputedStyle(document.documentElement).colorScheme === scheme
+  );
 }
 
-function detectLinkedInTheme(): Theme {
+function hasDarkClass(...classNames: string[]): boolean {
   const html = document.documentElement;
   const body = document.body;
-
-  if (
-    body.classList.contains('theme--dark') ||
-    html.classList.contains('theme--dark')
-  ) {
-    return 'dark';
-  }
-
-  const bgColor = window.getComputedStyle(body).backgroundColor;
-  return isLightColor(bgColor) ? 'light' : 'dark';
+  return classNames.some(
+    cls => html.classList.contains(cls) || body.classList.contains(cls)
+  );
 }
+
+function hasDarkAttribute(attrName: string, darkValue: string): boolean {
+  const html = document.documentElement;
+  return html.getAttribute(attrName) === darkValue;
+}
+
+const THEME_DETECTORS: Record<SiteType, () => Theme> = {
+  twitter: () => {
+    if (hasDarkAttribute('data-theme', 'dark')) return 'dark';
+    if (document.documentElement.style.colorScheme === 'dark') return 'dark';
+    return getThemeFromBackgroundColor();
+  },
+
+  reddit: () => {
+    if (hasColorScheme('dark')) return 'dark';
+    if (hasColorScheme('light')) return 'light';
+    if (hasDarkClass('dark')) return 'dark';
+
+    const shredditApp = document.querySelector('shreddit-app');
+    if (shredditApp) {
+      const darkMode = shredditApp.getAttribute('darkmode');
+      if (darkMode === 'true') return 'dark';
+      if (darkMode === 'false') return 'light';
+    }
+
+    const themeAttr =
+      document.documentElement.getAttribute('data-theme') ||
+      document.body.getAttribute('data-theme');
+    if (themeAttr?.includes('dark')) return 'dark';
+    if (themeAttr?.includes('light')) return 'light';
+
+    return getThemeFromBackgroundColor();
+  },
+
+  linkedin: () => {
+    if (hasDarkClass('theme--dark')) return 'dark';
+    return getThemeFromBackgroundColor();
+  },
+};
 
 export function detectTheme(siteType: SiteType): Theme {
-  switch (siteType) {
-    case 'twitter':
-      return detectTwitterTheme();
-    case 'reddit':
-      return detectRedditTheme();
-    case 'linkedin':
-      return detectLinkedInTheme();
-  }
+  return THEME_DETECTORS[siteType]();
 }

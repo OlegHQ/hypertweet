@@ -3,12 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { Button } from './Button';
 import { Input } from './Input';
 import { api } from '../../apiProxy';
-
-interface TokenRes {
-  AccessToken: string;
-  RefreshToken: string;
-  ExpiresIn: number;
-}
+import type { TokenRes } from '../../api';
 interface AuthFormProps {
   onSuccess: (token: string) => void;
   onClose: () => void;

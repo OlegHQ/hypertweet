@@ -4,6 +4,7 @@ import { Input } from './Input';
 import { Button } from './Button';
 import { ConfirmDialog } from './ConfirmDialog';
 import { api } from '../../apiProxy';
+import { useToast } from '../hooks/useToast';
 
 interface AccountTabProps {
   onLogout: () => void;
@@ -11,6 +12,7 @@ interface AccountTabProps {
 
 export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
   const queryClient = useQueryClient();
+  const toast = useToast();
 
   // Beta mode state
   const [betaMode, setBetaMode] = useState(false);
@@ -69,7 +71,7 @@ export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
       onLogout();
     },
     onError: (error: Error) => {
-      console.error('Failed to delete account:', error);
+      toast.error(error.message || 'Failed to delete account');
     },
   });
 

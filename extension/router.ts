@@ -1,13 +1,9 @@
-import { SocialPage } from './base';
-import { TwitterSocialPage } from './twitter';
-import { RedditSocialPage } from './reddit';
-import { LinkedInSocialPage } from './linkedin';
+import type { SocialPage } from './base';
+import { twitterSocialPage } from './twitter';
+import { redditSocialPage } from './reddit';
+import { linkedinSocialPage } from './linkedin';
 
-export enum SiteType {
-  Twitter,
-  Reddit,
-  LinkedIn,
-}
+export type SiteType = 'twitter' | 'reddit' | 'linkedin';
 
 export class Router {
   private siteType: SiteType;
@@ -18,37 +14,28 @@ export class Router {
 
   public getSocialPage(): SocialPage {
     switch (this.siteType) {
-      case SiteType.Twitter:
-        return new TwitterSocialPage();
-      case SiteType.Reddit:
-        return new RedditSocialPage();
-      case SiteType.LinkedIn:
-        return new LinkedInSocialPage();
-      default:
-        throw new Error(`Unsupported site: ${this.siteType}`);
+      case 'twitter':
+        return twitterSocialPage;
+      case 'reddit':
+        return redditSocialPage;
+      case 'linkedin':
+        return linkedinSocialPage;
     }
   }
 
-  public getSiteTypeString(): 'twitter' | 'reddit' | 'linkedin' {
-    switch (this.siteType) {
-      case SiteType.Twitter:
-        return 'twitter';
-      case SiteType.Reddit:
-        return 'reddit';
-      case SiteType.LinkedIn:
-        return 'linkedin';
-    }
+  public getSiteType(): SiteType {
+    return this.siteType;
   }
 
   private detectSiteType(): SiteType {
     const { hostname } = window.location;
 
     if (hostname.includes('x.com') || hostname.includes('twitter.com')) {
-      return SiteType.Twitter;
+      return 'twitter';
     } else if (hostname.includes('reddit.com')) {
-      return SiteType.Reddit;
+      return 'reddit';
     } else if (hostname.includes('linkedin.com')) {
-      return SiteType.LinkedIn;
+      return 'linkedin';
     }
 
     throw new Error(`Unsupported hostname: ${hostname}`);

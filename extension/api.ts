@@ -98,11 +98,11 @@ function make<Req, Res>(method: string, path: string, auth = false) {
 }
 
 // Auth (public)
-interface AuthReq {
+export interface AuthReq {
   Email: string;
   Password: string;
 }
-interface TokenRes {
+export interface TokenRes {
   AccessToken: string;
   RefreshToken: string;
   ExpiresIn: number;
@@ -213,11 +213,11 @@ export const getAvailableModels = make<undefined, AvailableModelsRes>(
 );
 
 // AI Reply (protected)
-interface ReplyRequest {
+export interface ReplyRequest {
   ToneId: string;
   Page: Page;
 }
-interface ReplyResult {
+export interface ReplyResult {
   Reply: string;
 }
 

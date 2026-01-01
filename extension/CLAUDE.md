@@ -217,3 +217,13 @@ queryClient.clear();
 4. **Handle loading/error**: Destructure `isLoading`, `error` from query result
 5. **Mutations for side effects**: Never use `useQuery` for POST/PUT/DELETE
 6. **Clear cache on logout**: Call `queryClient.clear()` to reset state
+
+## Raw Scraper Files (\*.raw.js)
+
+The `twitter.raw.js`, `reddit.raw.js`, and `linkedin.raw.js` files are **self-contained** vanilla JavaScript scrapers designed for:
+
+1. **Console debugging** - Copy-paste entire file into browser DevTools to test selectors
+2. **No dependencies** - Each file must work standalone without imports
+3. **Duplication is intentional** - Shared utilities like `waitForSelector()` are duplicated in each file to maintain copy-paste capability
+
+**DO NOT** refactor these files to share code or reduce duplication. The duplication is a deliberate design choice.

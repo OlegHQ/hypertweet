@@ -242,23 +242,33 @@ window.__linkedin = (function () {
       return null;
     }
 
-    // Find the comment form container (parent of the editor)
-    var formContainer = editor.closest('.comments-comment-box');
-    var insertTarget = formContainer || editor.parentElement;
-
-    if (!insertTarget) {
+    // Find the comment box form and its container
+    var boxForm = editor.closest('.comments-comment-box__form');
+    if (!boxForm) {
+      boxForm = editor.closest('.comments-comment-box');
+    }
+    if (!boxForm) {
       return null;
     }
 
-    var existing = insertTarget.querySelector('.' + CONTAINER_CLASS);
-    if (existing) {
-      return existing;
+    var boxContainer = boxForm.closest('.comments-comment-box--cr');
+    if (!boxContainer) {
+      boxContainer = boxForm;
+    }
+
+    // Check for existing container as next sibling
+    if (
+      boxContainer.nextSibling &&
+      boxContainer.nextSibling.classList &&
+      boxContainer.nextSibling.classList.contains(CONTAINER_CLASS)
+    ) {
+      return boxContainer.nextSibling;
     }
 
     var container = document.createElement('div');
     container.className = CONTAINER_CLASS;
-    insertTarget.appendChild(container);
-    log('Keyboard container inserted in comment box');
+    boxContainer.parentNode.insertBefore(container, boxContainer.nextSibling);
+    log('Keyboard container inserted after comment box');
     return container;
   }
 

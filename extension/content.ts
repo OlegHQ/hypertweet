@@ -10,7 +10,7 @@ import { ToastProvider } from './ui/toast';
 import type { InsertTextCallback } from './base';
 
 const router = new Router();
-const siteType = router.getSiteTypeString();
+const siteType = router.getSiteType();
 const socialPage = router.getSocialPage();
 const roots = new Map<HTMLElement, Root>();
 
@@ -48,7 +48,3 @@ function renderKeyboard(
   );
   roots.set(container, root);
 }
-
-void socialPage.readPage().then(p => {
-  console.log("here's your page", p);
-});

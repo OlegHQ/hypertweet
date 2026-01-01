@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { InsertTextCallback } from './base';
 import type { Page } from './models';
-import type { ProfileRes } from './api';
+import type { ProfileRes, ReplyResult } from './api';
 import type { SiteType } from './ui/theme';
 import { useAuth } from './ui/hooks/useAuth';
 import { useTones } from './ui/hooks/useTones';
@@ -105,16 +105,13 @@ export function Keyboard({
       const result = (await api.generateReply({
         ToneId: tone.Id,
         Page: page,
-      })) as {
-        Reply: string;
-      };
+      })) as ReplyResult;
       if (isReddit) {
         setRedditSuggestion(result.Reply);
       } else {
         insertText(result.Reply);
       }
     } catch (error) {
-      console.error('Failed to generate reply:', error);
       const message =
         error instanceof Error ? error.message : 'Failed to generate reply';
       toast.error(message);
