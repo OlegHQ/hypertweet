@@ -266,7 +266,8 @@ window.__reddit = (function () {
         if (composer) {
           var container = createKeyboardContainer(composer);
           if (container) {
-            callback(container);
+            // Pass insertReply and readPage functions
+            callback(container, insertReply, readPage);
           }
         }
       }

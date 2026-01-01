@@ -122,19 +122,23 @@ window.__linkedin = (function () {
     return posts;
   }
 
-  function findActivePost() {
-    var editor = findVisibleEditor();
+  function findActivePostForEditor(editor) {
     if (!editor) {
       return null;
     }
 
-    // Find the closest article element to this editor
+    // Find the closest article element to this specific editor
     var articleElement = editor.closest(ARTICLE_SELECTOR);
     if (!articleElement) {
       return null;
     }
 
     return extractPostFromElement(articleElement);
+  }
+
+  function findActivePost() {
+    var editor = findVisibleEditor();
+    return findActivePostForEditor(editor);
   }
 
   function readPage() {
@@ -181,16 +185,15 @@ window.__linkedin = (function () {
     });
   }
 
-  function insertReply(text) {
-    log('Inserting reply: "' + text.substring(0, 50) + '..."');
-
-    var editor = findVisibleEditor();
+  function insertTextToEditor(editor, text) {
     if (!editor) {
-      warn('Comment editor not found');
+      warn('No editor provided');
       return false;
     }
 
-    log('Editor found, inserting text...');
+    log(
+      'Inserting text to specific editor: "' + text.substring(0, 50) + '..."'
+    );
 
     try {
       editor.focus();
@@ -235,6 +238,18 @@ window.__linkedin = (function () {
     }
   }
 
+  function insertReply(text) {
+    log('Inserting reply (fallback): "' + text.substring(0, 50) + '..."');
+
+    var editor = findVisibleEditor();
+    if (!editor) {
+      warn('Comment editor not found');
+      return false;
+    }
+
+    return insertTextToEditor(editor, text);
+  }
+
   var CONTAINER_CLASS = 'hypertweet-keyboard';
 
   function createKeyboardContainer(editor) {
@@ -272,6 +287,38 @@ window.__linkedin = (function () {
     return container;
   }
 
+  function createReadPageForEditor(editor) {
+    return function () {
+      log('Starting page read for specific editor...');
+      log('URL: ' + window.location.href);
+
+      return waitForSelector(ARTICLE_SELECTOR).then(function () {
+        var posts = extractAllPosts();
+        log('Extracted ' + posts.length + ' posts');
+
+        // Find active post for THIS specific editor
+        var activePost = findActivePostForEditor(editor);
+        if (activePost) {
+          log('Active post found for editor');
+          var draftText = editor.textContent.trim();
+          if (draftText) {
+            activePost.CurrentReplyDraft = draftText;
+            log('Draft text captured: ' + draftText.substring(0, 50));
+          }
+        } else {
+          log('No active post found for this editor');
+        }
+
+        return {
+          Site: 'linkedin.com',
+          Url: window.location.href,
+          Posts: posts,
+          ActivePost: activePost,
+        };
+      });
+    };
+  }
+
   function onReplyFormRendered(callback) {
     log('Setting up reply form observer...');
 
@@ -282,7 +329,18 @@ window.__linkedin = (function () {
         if (editor && isElementVisible(editor)) {
           var container = createKeyboardContainer(editor);
           if (container) {
-            callback(container);
+            // Create editor-specific functions using IIFE to capture reference
+            var insertText = (function (targetEditor) {
+              return function (text) {
+                return insertTextToEditor(targetEditor, text);
+              };
+            })(editor);
+
+            var readPage = (function (targetEditor) {
+              return createReadPageForEditor(targetEditor);
+            })(editor);
+
+            callback(container, insertText, readPage);
           }
         }
       }

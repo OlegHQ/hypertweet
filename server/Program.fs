@@ -47,6 +47,7 @@ let main args =
                         GET >=> route "/profile" >=> Profiles.Handlers.getProfile db
                         DELETE >=> route "/users" >=> Profiles.Handlers.deleteMe db
                         POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.LlmApiKey
+                        POST >=> route "/ai/chat" >=> AI.Handlers.chat db config.LlmApiKey
                         GET >=> route "/profile/available-models" >=> Profiles.Handlers.listModels
                         GET >=> route "/tones" >=> Tones.Handlers.list db
                         POST >=> route "/tones" >=> Tones.Handlers.create db

@@ -12,7 +12,8 @@ type Profile =
       UserBio: string option
       CustomReplyGuidance: string option
       PostProcessReply: bool option
-      ReplyPromptOptions: string list }
+      ReplyPromptOptions: string list
+      ChatBotPersona: string option }
 
 module ReplyPromptOption =
     type T =
@@ -92,3 +93,4 @@ type Page =
       Url: string
       Posts: Post list
       ActivePost: Post option }
+

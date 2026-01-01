@@ -120,48 +120,45 @@ let login config db next ctx =
 
 ## Adding a New Feature
 
-1. **Types.fs** (optional) - Only if types are complex or reused:
+**IMPORTANT: Use `module` syntax, NOT `namespace`**
+
+1. **Feature file** - Single file with everything:
    ```fsharp
-   namespace MyApp.Features.Thing
-
-   [<CLIMutable>]
-   type CreateRequest = { Name: string; Value: int }
-
-   type CreateCommand = { Name: string; Value: int }
-
-   type ThingResponse = { Id: string; Name: string }
-   ```
-
-2. **Handlers.fs** - Everything else:
-   ```fsharp
-   namespace MyApp.Features.Thing
+   module HypertweetServer.Thing
 
    open Giraffe
    open FsToolkit.ErrorHandling
-   open MyApp.Shared
-   open MyApp.Domain
+   open Base
+   open Base.Common
+   open HypertweetServer.Models
 
+   // Types - DTOs at the top
+   [<CLIMutable>]
+   type CreateRequest = { Name: string; Value: int }
+
+   type ThingResponse = { Id: string; Name: string }
+
+   // Validation - private, returns Result
+   let private validateCreate (req: CreateRequest) =
+       result {
+           let! name = req.Name |> Validate.notEmpty "name"
+           let! value = req.Value |> Validate.positive "value"
+           return name, value
+       }
+
+   // Data access helpers (if needed beyond DataAccess module)
+   let thingCol db = Db.collection<Thing> db "things"
+
+   // Handlers module - all logic inline
    module Handlers =
-       // Validation
-       let private validateCreate (req: CreateRequest) =
-           result {
-               let! name = req.Name |> Validate.notEmpty "name"
-               let! value = req.Value |> Validate.positive "value"
-               return { CreateCommand.Name = name; Value = value }
-           }
-
-       // Data access helpers (if needed beyond DataAccess module)
-       let thingCol db = Db.collection<Thing> db "things"
-
-       // Handlers - all logic inline
        let create db next ctx =
            taskResult {
                let! req = HttpCtx.bindJson<CreateRequest> ctx |> Task.map validateCreate
 
                let thing = {
                    Id = newId ()
-                   Name = req.Name
-                   Value = req.Value
+                   Name = fst req
+                   Value = snd req
                    CreatedAt = System.DateTime.UtcNow
                }
 
@@ -182,7 +179,7 @@ let login config db next ctx =
            |> HttpCtx.errHandle next ctx
    ```
 
-3. **Wire in Program.fs**:
+2. **Wire in Program.fs**:
    ```fsharp
    let routes = choose [
        POST >=> route "/things" >=> ThingHandlers.create db
@@ -190,10 +187,9 @@ let login config db next ctx =
    ]
    ```
 
-4. **Add to .fsproj**:
+3. **Add to .fsproj**:
    ```xml
-   <!-- Types.fs only if needed -->
-   <Compile Include="src/Features/Thing/Handlers.fs" />
+   <Compile Include="HypertweetServer/Thing.fs" />
    ```
 
 ## Style Guide

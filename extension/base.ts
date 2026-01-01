@@ -1,9 +1,11 @@
 import type { Page, RawScraperAPI } from './models';
 
 export type InsertTextCallback = (text: string) => void;
+export type ReadPageCallback = () => Promise<Page>;
 export type ReplyFormCallback = (
   container: HTMLElement,
-  insertText: InsertTextCallback
+  insertText: InsertTextCallback,
+  readPage: ReadPageCallback
 ) => void;
 
 export abstract class SocialPage {
@@ -30,8 +32,9 @@ export function createSocialPage(
     readPage: () => getAPI().readPage(),
     insertReply: (text: string) => getAPI().insertReply(text),
     onReplyFormRendered(callback: ReplyFormCallback) {
-      getAPI().onReplyFormRendered(container => {
-        callback(container, text => this.insertReply(text));
+      getAPI().onReplyFormRendered((container, insertText, readPage) => {
+        // Pass through the editor-specific insertText and readPage from raw API
+        callback(container, insertText, readPage);
       });
     },
   };

@@ -33,13 +33,31 @@ export interface Page {
   ActivePost?: Post;
 }
 
-export type ReplyFormRenderedCallback = (container: HTMLElement) => void;
+// Raw API insert callback type - editor-specific insert function
+export type RawInsertTextCallback = (text: string) => boolean;
+
+// Raw API readPage callback type - editor-specific page reader
+export type RawReadPageCallback = () => Promise<Page>;
+
+// Raw API callback signature - receives container, editor-specific insert and readPage
+export type RawReplyFormRenderedCallback = (
+  container: HTMLElement,
+  insertText: RawInsertTextCallback,
+  readPage: RawReadPageCallback
+) => void;
+
+// Callback for when reply form is rendered - receives container, insert function and readPage
+export type ReplyFormRenderedCallback = (
+  container: HTMLElement,
+  insertText: (text: string) => boolean,
+  readPage: () => Promise<Page>
+) => void;
 
 // Raw API interface - all platform scrapers implement this
 export interface RawScraperAPI {
   readPage(): Promise<Page>;
   insertReply(text: string): boolean;
-  onReplyFormRendered(callback: ReplyFormRenderedCallback): void;
+  onReplyFormRendered(callback: RawReplyFormRenderedCallback): void;
 }
 
 // Global window augmentation for raw APIs

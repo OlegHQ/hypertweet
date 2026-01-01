@@ -32,7 +32,8 @@ module UpdateProfileInput =
           CustomReplyGuidance: string option
           PostProcessReply: bool option
           ReplyPromptOptions: string list option
-          ModelName: string option }
+          ModelName: string option
+          ChatBotPersona: string option }
 
     type Variant =
         | UserBio of string
@@ -40,6 +41,7 @@ module UpdateProfileInput =
         | PostProcessReply of bool
         | ReplyPromptOptions of Models.ReplyPromptOption.T list
         | ModelName of string
+        | ChatBotPersona of string
         | Combined of Variant list
 
     let validateList (options: string list) : Result<Models.ReplyPromptOption.T list, DomainError> =
@@ -60,7 +62,8 @@ module UpdateProfileInput =
                   input.CustomReplyGuidance |> Option.map CustomReplyGuidance
                   input.PostProcessReply |> Option.map PostProcessReply
                   replyOpts |> Option.map ReplyPromptOptions
-                  input.ModelName |> Option.map ModelName ]
+                  input.ModelName |> Option.map ModelName
+                  input.ChatBotPersona |> Option.map ChatBotPersona ]
                 |> List.choose id
 
             return
@@ -79,6 +82,7 @@ module UpdateProfileInput =
             doc
             |> Bson.field "ReplyPromptOptions" (opts |> List.map Models.ReplyPromptOption.toString)
         | ModelName v -> doc |> Bson.field "ModelName" v
+        | ChatBotPersona v -> doc |> Bson.field "ChatBotPersona" v
         | Combined variants -> variants |> List.fold (fun acc v -> buildUpdateDoc v acc) doc
 
     let rec validateVariant (variant: Variant) : Result<Variant, DomainError> =

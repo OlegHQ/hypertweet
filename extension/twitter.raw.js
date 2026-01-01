@@ -254,7 +254,8 @@ window.__twitter = (function () {
         if (inlineReply) {
           var container = createKeyboardContainer(inlineReply);
           if (container) {
-            callback(container);
+            // Pass insertReply and readPage functions
+            callback(container, insertReply, readPage);
           }
         }
       }

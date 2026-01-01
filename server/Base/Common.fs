@@ -187,3 +187,22 @@ module Validate =
     let chain validators value =
         validators |> List.fold (fun acc v -> Result.bind v acc) (Ok value)
 
+module SSE =
+    let setHeaders (ctx: HttpContext) =
+        ctx.Response.Headers.ContentType <- "text/event-stream"
+        ctx.Response.Headers.CacheControl <- "no-cache"
+
+    let private escape (s: string) =
+        s.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n").Replace("\r", "\\r")
+
+    let writeEvent (ctx: HttpContext) (data: string) =
+        task {
+            do! ctx.Response.WriteAsync (sprintf "data: %s\n\n" data)
+            do! ctx.Response.Body.FlushAsync()
+        }
+
+    let writeJson (ctx: HttpContext) (key: string) (value: string) =
+        writeEvent ctx (sprintf "{\"%s\":\"%s\"}" key (escape value))
+
+    let writeDone (ctx: HttpContext) = writeEvent ctx "[DONE]"
+
