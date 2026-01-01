@@ -42,11 +42,16 @@ module Common =
               "Keep response appropriately sized for the context" ]
 
     let formatSiteContext (page: Page) =
-        TextContent.Concat [
-            TextContent.LabeledText("Site", page.Site)
-            TextContent.NewLine
-            TextContent.LabeledText("URL", page.Url)
-        ]
+        TextContent.Concat
+            [ TextContent.LabeledText("Site", page.Site)
+              TextContent.NewLine
+              TextContent.LabeledText("URL", page.Url) ]
+
+    let formatReplyPromptOption =
+        function
+        | ReplyPromptOption.NoEmojis -> "No emojis"
+        | ReplyPromptOption.NoHashtags -> "No hash tags allowed"
+        | ReplyPromptOption.NoPunctuation -> "loose punctuation"
 
 module Formatters =
     [<Literal>]
@@ -113,16 +118,15 @@ module Formatters =
         formatThreadQuote DefaultMaxTreeDepth DefaultMaxRepliesPerLevel post 0
 
 
-module ReplyPrompt =
-    let private postsEqual (a: Post) (b: Post) =
-        match a.StatusID, b.StatusID with
-        | Some idA, Some idB -> idA = idB
-        | _ ->
-            match a.Url, b.Url with
-            | Some urlA, Some urlB -> urlA = urlB
-            | _ -> a.Text = b.Text
+/// Extracted page context used by both reply and chat prompts
+type PageContext =
+    { ActivePost: string
+      ThreadContext: string option
+      CurrentDraft: string option
+      PlatformGuidelines: string list }
 
-    let make (tone: Tone) (page: Page) userBio customReplyGuidance replyPromptOptions =
+module PageContext =
+    let extract (page: Page) =
         let activePostObj =
             match page.Posts with
             | [ singlePost ] -> Some singlePost
@@ -133,13 +137,6 @@ module ReplyPrompt =
             activePostObj
             |> Option.map Formatters.formatPost
             |> Option.defaultValue "No post content"
-
-        let currentDraft =
-            activePostObj
-            |> Option.bind (fun p -> p.CurrentReplyDraft)
-            |> Option.bind (fun d -> if System.String.IsNullOrWhiteSpace d then None else Some d)
-
-        let platformGuidelines = Common.getPlatformGuidelines (siteOfString page.Site)
 
         let threadContext =
             match activePostObj with
@@ -159,8 +156,34 @@ module ReplyPrompt =
                     | s when System.String.IsNullOrWhiteSpace s -> None
                     | s -> Some s
 
+        let currentDraft =
+            activePostObj
+            |> Option.bind (fun p -> p.CurrentReplyDraft)
+            |> Option.bind (fun d -> if System.String.IsNullOrWhiteSpace d then None else Some d)
+
+        let platformGuidelines = Common.getPlatformGuidelines (siteOfString page.Site)
+
+        { ActivePost = activePost
+          ThreadContext = threadContext
+          CurrentDraft = currentDraft
+          PlatformGuidelines = platformGuidelines }
+
+    let platformContextRich (page: Page) =
+        TextContent.Concat
+            [ TextContent.LabeledText("Site", page.Site)
+              TextContent.NewLine
+              TextContent.LabeledText("URL", page.Url)
+              TextContent.NewLine
+              TextContent.NewLine
+              TextContent.TitledText("Platform Guidelines", TextContent.Empty) ]
+
+
+module ReplyPrompt =
+    let make (tone: Tone) (page: Page) userBio customReplyGuidance replyPromptOptions =
+        let ctx = PageContext.extract page
+
         let taskInstruction =
-            match currentDraft with
+            match ctx.CurrentDraft with
             | Some _ ->
                 "Edit and refine the existing reply draft below to match the specified tone. Write ONLY the revised reply text, nothing else."
             | None -> "Generate a reply to the social media post below. Write ONLY the reply text, nothing else."
@@ -168,17 +191,8 @@ module ReplyPrompt =
         prompt {
             Item.text taskInstruction |> xml "task" |> nl
 
-            Item.rich (
-                TextContent.Concat
-                    [ TextContent.LabeledText("Site", page.Site)
-                      TextContent.NewLine
-                      TextContent.LabeledText("URL", page.Url)
-                      TextContent.NewLine
-                      TextContent.NewLine
-                      TextContent.TitledText("Platform Guidelines", TextContent.Empty) ]
-            )
-
-            Item.list platformGuidelines |> xml "platform" |> nl
+            Item.rich (PageContext.platformContextRich page)
+            Item.list ctx.PlatformGuidelines |> xml "platform" |> nl
 
             userBio |> Option.map (Item.text >> xml "user_bio" >> nl)
 
@@ -191,10 +205,9 @@ module ReplyPrompt =
             |> xml "tone_instruction"
             |> nl
 
-            Item.text activePost |> xml "post_to_reply" |> nl
+            Item.text ctx.ActivePost |> xml "post_to_reply" |> nl
 
-
-            threadContext |> Option.map (Item.text >> xml "thread_context" >> nl)
+            ctx.ThreadContext |> Option.map (Item.text >> xml "thread_context" >> nl)
 
             Item.list (
                 [ "Write ONLY the reply text"
@@ -202,12 +215,7 @@ module ReplyPrompt =
                   "Do not prefix with \"Reply:\" or similar labels"
                   "Match the specified tone exactly"
                   "Be authentic and engaging" ]
-                @ List.map
-                    (function
-                    | ReplyPromptOption.NoEmojis -> "No emojis"
-                    | ReplyPromptOption.NoHashtags -> "No hash tags allowed"
-                    | ReplyPromptOption.NoPunctuation -> "loose punctuation")
-                    replyPromptOptions
+                @ List.map Common.formatReplyPromptOption replyPromptOptions
             )
             |> xml "output_requirements"
             |> nl
@@ -215,32 +223,37 @@ module ReplyPrompt =
             customReplyGuidance
             |> Option.map (Item.text >> xml "user_defined_guidance" >> nl)
 
-            currentDraft |> Option.map (Item.text >> xml "current_draft_to_edit" >> nl)
+            ctx.CurrentDraft |> Option.map (Item.text >> xml "current_draft_to_edit" >> nl)
         }
 
 
 module ChatPrompt =
     let private defaultPersona =
-        "You are an AI assistant helping users craft social media replies. " +
-        "Help critique and improve draft replies. Be concise and actionable."
+        "You are an AI assistant helping users craft social media replies. "
+        + "Help critique and improve draft replies. Be concise and actionable."
 
-    let make (persona: string option) (page: Page) =
-        let site = siteOfString page.Site
-        let platformGuidelines = Common.getPlatformGuidelines site
-        let postText = page.ActivePost |> Option.map (fun p -> p.Text) |> Option.defaultValue ""
+    let private formatChatOption =
+        function
+        | ReplyPromptOption.NoEmojis -> "User prefers no emojis"
+        | ReplyPromptOption.NoHashtags -> "User prefers no hashtags"
+        | ReplyPromptOption.NoPunctuation -> "User prefers loose punctuation"
+
+    let make (persona: string option) (page: Page) userBio replyPromptOptions =
+        let ctx = PageContext.extract page
 
         prompt {
             Item.text (persona |> Option.defaultValue defaultPersona) |> nl
 
-            Item.rich (Common.formatSiteContext page) |> xml "platform" |> nl
-            Item.list platformGuidelines |> xml "platform_guidelines" |> nl
+            Item.rich (PageContext.platformContextRich page)
 
-            Item.text postText |> xml "post_context" |> nl
+            userBio |> Option.map (Item.text >> xml "user_bio" >> nl)
 
-            Item.list [
-                "Help the user craft effective social media responses"
-                "Consider platform character limits and norms"
-                "Be concise and actionable in your suggestions"
-                "Provide specific improvements, not vague advice"
-            ] |> xml "guidelines"
+            Item.text ctx.ActivePost |> xml "post_to_reply" |> nl
+
+            ctx.ThreadContext |> Option.map (Item.text >> xml "thread_context" >> nl)
+
+            ctx.CurrentDraft |> Option.map (Item.text >> xml "current_draft" >> nl)
+
+            Item.list (List.map formatChatOption replyPromptOptions) |> xml "guidelines"
         }
+

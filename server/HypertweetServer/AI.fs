@@ -112,6 +112,10 @@ module Service =
     let applyPostProcess (reply: string) =
         reply
             .Replace("—", ", ")
+            .Replace("’", "'")
+            .Replace("“", "\"")
+            .Replace("”", "\"")
+            .Replace("…", "...")
             .Replace(
                 """, "\"")
             .Replace(""",
@@ -197,13 +201,18 @@ module Handlers =
                 |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
 
             let persona = profile |> Option.bind (fun p -> p.ChatBotPersona)
+            let userBio = profile |> Option.bind (fun p -> p.UserBio)
+
+            let replyPromptOptions =
+                profile |> Option.map ReplyPromptOption.fromProfile |> Option.defaultValue []
 
             let model =
                 profile
                 |> Option.map (fun p -> p.ModelName)
                 |> Option.defaultValue ModelConfig.defaultModel
 
-            let systemPrompt = Chat.buildSystemPrompt persona req.PageContext
+            let systemPrompt =
+                Chat.buildSystemPrompt persona req.PageContext userBio replyPromptOptions
 
             let messages =
                 [| yield ChatMessage.CreateSystemMessage systemPrompt :> ChatMessage
@@ -258,3 +267,4 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
+
