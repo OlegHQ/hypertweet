@@ -231,78 +231,10 @@ window.__reddit = (function () {
     });
   }
 
-  function insertReply(text) {
-    log('Inserting reply: "' + text.substring(0, 50) + '..."');
-
-    var composer = document.querySelector(COMPOSER_SELECTOR);
-    if (!composer) {
-      warn('Composer not found');
-      return false;
-    }
-
-    var textbox = composer.querySelector(
-      'div[contenteditable="true"][role="textbox"]'
+  function insertReply() {
+    throw new Error(
+      'Direct text insertion is not supported on Reddit. Use the suggestion display instead.'
     );
-    if (!textbox) {
-      warn('Textbox not found in composer');
-      return false;
-    }
-
-    log('Textbox found, inserting text...');
-
-    try {
-      // Focus the textbox first
-      textbox.focus();
-
-      var selection = window.getSelection();
-      if (!selection) {
-        warn('Could not get window selection');
-        return false;
-      }
-
-      // Position cursor and select all content
-      var range = document.createRange();
-      range.selectNodeContents(textbox);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-
-      // Select all existing content
-      document.execCommand('selectAll', false, undefined);
-
-      // Build HTML content for multi-line support (Lexical uses paragraphs)
-      var lines = text.split('\n');
-      var htmlParts = [];
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        // Escape HTML entities
-        var escaped = line
-          .replace(/&/g, '&amp;')
-          .replace(/</g, '&lt;')
-          .replace(/>/g, '&gt;');
-        htmlParts.push('<p>' + (escaped || '<br>') + '</p>');
-      }
-      var htmlContent = htmlParts.join('');
-
-      // Use execCommand to insert - this properly updates Lexical state
-      var success = document.execCommand('insertHTML', false, htmlContent);
-      if (!success) {
-        // Fallback to insertText for single-line
-        warn('insertHTML failed, trying insertText');
-        success = document.execCommand('insertText', false, text);
-      }
-
-      if (!success) {
-        warn('Failed to insert text using execCommand');
-        return false;
-      }
-
-      log('Reply inserted successfully');
-      return true;
-    } catch (error) {
-      warn('Failed to insert reply:', error);
-      return false;
-    }
   }
 
   var CONTAINER_CLASS = 'hypertweet-keyboard';

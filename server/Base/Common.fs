@@ -54,6 +54,7 @@ module HttpCtx =
                 match err with
                 | ValidationError(field, message) ->
                     RequestErrors.BAD_REQUEST {| Error = message; Field = field |} next ctx
+                | RateLimited err -> RequestErrors.TOO_MANY_REQUESTS {| Error = err |} next ctx
                 | NotFound entity -> RequestErrors.NOT_FOUND {| Error = $"{entity} not found" |} next ctx
                 | Conflict message -> RequestErrors.CONFLICT {| Error = message |} next ctx
                 | Unauthorized -> RequestErrors.UNAUTHORIZED "Bearer" "api" {| Error = "Unauthorized" |} next ctx
@@ -64,7 +65,6 @@ module HttpCtx =
 module Jwt =
     open System
     open System.Text
-    open System.Security.Claims
     open System.IdentityModel.Tokens.Jwt
     open Microsoft.IdentityModel.Tokens
     open System.Security.Cryptography
@@ -152,10 +152,10 @@ module Db =
     let createTtlIndexIfNotExists<'T> (field: string) (col: IMongoCollection<'T>) =
         tryDb (fun () ->
             async {
-                let indexKeys = Builders<'T>.IndexKeys.Ascending(field)
+                let indexKeys = Builders<'T>.IndexKeys.Ascending field
                 let indexOptions = CreateIndexOptions(ExpireAfter = System.TimeSpan.Zero)
                 let indexModel = CreateIndexModel<'T>(indexKeys, indexOptions)
-                do! col.Indexes.CreateOneAsync(indexModel) |> Async.AwaitTask |> Async.Ignore
+                do! col.Indexes.CreateOneAsync indexModel |> Async.AwaitTask |> Async.Ignore
             })
 
 module Validate =

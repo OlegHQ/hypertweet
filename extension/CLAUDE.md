@@ -40,7 +40,9 @@ ui/
 **Button sizes**: `sm`, `default`, `lg`
 
 ```tsx
-<Button variant="ghost" size="sm">Cancel</Button>
+<Button variant="ghost" size="sm">
+  Cancel
+</Button>
 ```
 
 **Modal**: Uses React Portal to `#hypertweet-modal-root`, injects its own styles via `injectModalStyles()`.
@@ -69,6 +71,7 @@ Located in `ui/tokens.ts`:
 3. Use Framer Motion for animations (`motion.div`, `whileTap`, etc.)
 
 Example style block:
+
 ```ts
 .ht-new-component {
   background: ${tokens.colors.card} !important;
@@ -105,24 +108,33 @@ Content scripts use `apiProxy.ts` to avoid mixed content issues (HTTP API from H
 import { api } from './apiProxy';
 
 // Auth
-api.login({ Email, Password })    // returns TokenRes
-api.register({ Email, Password }) // returns { message }
-api.saveTokens(tokenRes)          // stores tokens in chrome.storage
-api.clearTokens()                 // removes tokens
+api.login({ Email, Password }); // returns TokenRes
+api.register({ Email, Password }); // returns { message }
+api.saveTokens(tokenRes); // stores tokens in chrome.storage
+api.clearTokens(); // removes tokens
 
 // Tones (protected - require auth)
-api.listTones()                   // returns Tone[]
-api.createTone({ Title, Instruction })
-api.updateTone(id)({ Title, Instruction })
-api.deleteTone(id)()
-api.toggleTone(id, enable)()
+api.listTones(); // returns Tone[]
+api.createTone({ Title, Instruction });
+api.updateTone(id)({ Title, Instruction });
+api.deleteTone(id)();
+api.toggleTone(id, enable)();
 ```
 
 ### API Response Types (PascalCase)
 
 ```ts
-interface TokenRes { AccessToken: string; RefreshToken: string; ExpiresIn: number }
-interface Tone { Id: string; Title: string; Instruction: string; IsDefault: boolean }
+interface TokenRes {
+  AccessToken: string;
+  RefreshToken: string;
+  ExpiresIn: number;
+}
+interface Tone {
+  Id: string;
+  Title: string;
+  Instruction: string;
+  IsDefault: boolean;
+}
 ```
 
 ## React Query
@@ -158,6 +170,7 @@ export function useTones(enabled: boolean) {
 ```
 
 Usage:
+
 ```tsx
 const { data: tones = [], isLoading, error } = useTones(!!token);
 ```
@@ -169,7 +182,7 @@ Use `useMutation` inline or in hooks:
 ```tsx
 const loginMutation = useMutation({
   mutationFn: async () => {
-    const result = await api.login({ Email, Password }) as TokenRes;
+    const result = (await api.login({ Email, Password })) as TokenRes;
     await api.saveTokens(result);
     return result;
   },
@@ -181,7 +194,7 @@ const loginMutation = useMutation({
 loginMutation.mutate();
 
 // Check state:
-loginMutation.isPending
+loginMutation.isPending;
 ```
 
 ### Invalidating/Clearing Cache

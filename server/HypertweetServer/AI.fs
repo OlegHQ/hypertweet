@@ -15,36 +15,44 @@ module AI =
 
     let private openRouterEndpoint = Uri "https://openrouter.ai/api/v1"
 
-    let getCompletion2 (apiKey: string) (models: string list) (prompt: string) =
-        task {
-            match models with
-            | x :: xs -> Ok()
-            | [] -> Error(InternalError("exhausted all fallbacks"))
-        // let! res = getCompletion apiKey
-
-        }
-
     let getCompletion (apiKey: string) (modelId: string) (prompt: string) =
-        task {
-            try
-                let credential = ApiKeyCredential apiKey
-                let options = OpenAI.OpenAIClientOptions(Endpoint = openRouterEndpoint)
-                let client = ChatClient(modelId, credential, options)
+        let getCompletionBase (apiKey: string) (modelId: string) (prompt: string) =
+            task {
+                try
+                    let credential = ApiKeyCredential apiKey
+                    let options = OpenAI.OpenAIClientOptions(Endpoint = openRouterEndpoint)
+                    let client = ChatClient(modelId, credential, options)
 
-                let messages = [| ChatMessage.CreateUserMessage prompt :> ChatMessage |]
-                let! response = client.CompleteChatAsync messages
+                    let messages = [| ChatMessage.CreateUserMessage prompt :> ChatMessage |]
+                    let! response = client.CompleteChatAsync messages
 
-                return
-                    response.Value.Content
-                    |> Seq.tryHead
-                    |> Option.map (fun c -> c.Text)
-                    |> Option.defaultValue ""
-                    |> Ok
-            with
-            | :? ClientResultException as ex when ex.Status = 429 ->
-                return Error(RateLimited $"Rate limited on {modelId}")
-            | ex -> return Error(InternalError $"AI completion failed: {ex.Message}")
-        }
+                    return
+                        response.Value.Content
+                        |> Seq.tryHead
+                        |> Option.map (fun c -> c.Text)
+                        |> Option.defaultValue ""
+                        |> Ok
+                with
+                | :? ClientResultException as ex when ex.Status = 429 ->
+                    return Error(RateLimited $"Rate limited on {modelId}")
+                | ex -> return Error(InternalError $"AI completion failed: {ex.Message}")
+            }
+
+        let rec getCompletionWithFallbacks (apiKey: string) (models: string list) (prompt: string) =
+            task {
+                match models with
+                | x :: xs ->
+                    let! cmp = getCompletionBase apiKey x prompt
+
+                    match cmp with
+                    | Error(RateLimited _) -> return! getCompletionWithFallbacks apiKey xs prompt
+                    | Ok x -> return Ok x
+                    | Error other -> return Error other
+                | [] -> return Error(InternalError "exhausted all fallbacks")
+            }
+
+        let allModels = [ modelId ] @ ModelConfig.fallbackModels |> List.distinct
+        getCompletionWithFallbacks apiKey allModels prompt
 
 module Service =
     open HypertweetServer

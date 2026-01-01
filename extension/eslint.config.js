@@ -24,6 +24,7 @@ export default [
         process: 'readonly',
         fetch: 'readonly',
         React: 'readonly',
+        navigator: 'readonly',
       },
     },
     plugins: {

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { InsertTextCallback } from './base';
 import type { Page } from './models';
@@ -34,6 +34,9 @@ export function Keyboard({
   const [showLogin, setShowLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
+  const [redditSuggestion, setRedditSuggestion] = useState<string | null>(null);
+  const suggestionRef = useRef<HTMLDivElement>(null);
+  const isReddit = siteType === 'reddit';
   const { data: tones = [], isLoading: tonesLoading } = useTones(!!token);
   const { data: modelsData } = useModels(!!token);
   const { data: profile } = useProfile(!!token);
@@ -105,7 +108,11 @@ export function Keyboard({
       })) as {
         Reply: string;
       };
-      insertText(result.Reply);
+      if (isReddit) {
+        setRedditSuggestion(result.Reply);
+      } else {
+        insertText(result.Reply);
+      }
     } catch (error) {
       console.error('Failed to generate reply:', error);
       const message =
@@ -114,6 +121,21 @@ export function Keyboard({
     } finally {
       setLoadingTone(null);
     }
+  };
+
+  const handleCopySuggestion = async (): Promise<void> => {
+    if (!suggestionRef.current) return;
+    const text = suggestionRef.current.innerText;
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
+
+  const handleClearSuggestion = (): void => {
+    setRedditSuggestion(null);
   };
 
   if (isLoading) {
@@ -220,6 +242,61 @@ export function Keyboard({
             </button>
           </div>
         </div>
+        {isReddit && redditSuggestion !== null && (
+          <div className="ht-suggestion-container">
+            <div className="ht-suggestion-header">
+              <span className="ht-suggestion-label">Generated Reply</span>
+              <div className="ht-suggestion-actions">
+                <button
+                  className="ht-icon-btn"
+                  title="Copy to clipboard"
+                  onClick={() => void handleCopySuggestion()}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                  </svg>
+                </button>
+                <button
+                  className="ht-icon-btn"
+                  title="Clear"
+                  onClick={handleClearSuggestion}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div
+              ref={suggestionRef}
+              className="ht-suggestion-content"
+              contentEditable
+              suppressContentEditableWarning
+            >
+              {redditSuggestion}
+            </div>
+          </div>
+        )}
         {(() => {
           const enabledTones = tones.filter(t => t.Enabled !== false);
           if (tonesLoading) {

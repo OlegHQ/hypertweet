@@ -919,6 +919,62 @@ export function injectGlobalStyles(siteType?: SiteType): void {
     .ht-settings-content::-webkit-scrollbar-thumb:hover {
       background: var(${cssVars.mutedForeground}) !important;
     }
+
+    /* Reddit suggestion display */
+    .ht-suggestion-container {
+      margin-bottom: ${tokens.spacing[2]} !important;
+      padding: ${tokens.spacing[2]} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+    }
+    .ht-suggestion-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      margin-bottom: ${tokens.spacing[2]} !important;
+    }
+    .ht-suggestion-label {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-suggestion-actions {
+      display: flex !important;
+      gap: 2px !important;
+    }
+    .ht-suggestion-content {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.sm} !important;
+      padding: ${tokens.spacing[2]} !important;
+      min-height: 60px !important;
+      max-height: 150px !important;
+      overflow-y: auto !important;
+      white-space: pre-wrap !important;
+      word-break: break-word !important;
+      line-height: 1.5 !important;
+      outline: none !important;
+      cursor: text !important;
+    }
+    .ht-suggestion-content:focus {
+      border-color: var(${cssVars.ring}) !important;
+      box-shadow: 0 0 0 2px var(${cssVars.background}), 0 0 0 4px var(${cssVars.ring}) !important;
+    }
+    .ht-suggestion-content::-webkit-scrollbar {
+      width: 6px !important;
+    }
+    .ht-suggestion-content::-webkit-scrollbar-track {
+      background: transparent !important;
+    }
+    .ht-suggestion-content::-webkit-scrollbar-thumb {
+      background: var(${cssVars.border}) !important;
+      border-radius: 3px !important;
+    }
   `;
   document.head.appendChild(style);
 }

@@ -9,6 +9,10 @@ open MongoDB.Bson
 type ModelDef = { ModelName: string }
 
 module ModelConfig =
+    let fallbackModels =
+        [ "xiaomi/mimo-v2-flash:free"
+          "cognitivecomputations/dolphin-mistral-24b-venice-edition:free" ]
+
     let allModels =
         [ "xiaomi/mimo-v2-flash:free"
           "tngtech/deepseek-r1t-chimera:free"
