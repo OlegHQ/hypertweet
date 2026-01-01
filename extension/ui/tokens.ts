@@ -1,38 +1,80 @@
-// shadcn-inspired design tokens
+// Dark theme colors (current defaults)
+export const darkColors = {
+  primary: '#2563EB',
+  primaryHover: '#1D4ED8',
+  primaryForeground: '#FFFFFF',
+  background: '#09090B',
+  card: '#18181B',
+  cardHover: '#27272A',
+  muted: '#27272A',
+  mutedForeground: '#A1A1AA',
+  foreground: '#FAFAFA',
+  foregroundSecondary: '#A1A1AA',
+  border: '#27272A',
+  input: '#27272A',
+  ring: '#2563EB',
+  destructive: '#EF4444',
+  destructiveForeground: '#FAFAFA',
+  success: '#22C55E',
+  overlay: 'rgba(0, 0, 0, 0.8)',
+  sidebarGradientEnd: '#131316',
+  hoverOverlay: 'rgba(255, 255, 255, 0.05)',
+  activeOverlay: 'rgba(255, 255, 255, 0.08)',
+  toggleKnob: '#FAFAFA',
+} as const;
+
+// Light theme colors
+export const lightColors = {
+  primary: '#2563EB',
+  primaryHover: '#1D4ED8',
+  primaryForeground: '#FFFFFF',
+  background: '#FFFFFF',
+  card: '#FAFAFA',
+  cardHover: '#F4F4F5',
+  muted: '#F4F4F5',
+  mutedForeground: '#71717A',
+  foreground: '#09090B',
+  foregroundSecondary: '#71717A',
+  border: '#E4E4E7',
+  input: '#E4E4E7',
+  ring: '#2563EB',
+  destructive: '#EF4444',
+  destructiveForeground: '#FFFFFF',
+  success: '#22C55E',
+  overlay: 'rgba(0, 0, 0, 0.5)',
+  sidebarGradientEnd: '#E4E4E7',
+  hoverOverlay: 'rgba(0, 0, 0, 0.03)',
+  activeOverlay: 'rgba(0, 0, 0, 0.05)',
+  toggleKnob: '#FFFFFF',
+} as const;
+
+// CSS variable names for theming
+export const cssVars = {
+  primary: '--ht-primary',
+  primaryHover: '--ht-primary-hover',
+  primaryForeground: '--ht-primary-fg',
+  background: '--ht-bg',
+  card: '--ht-card',
+  cardHover: '--ht-card-hover',
+  muted: '--ht-muted',
+  mutedForeground: '--ht-muted-fg',
+  foreground: '--ht-fg',
+  foregroundSecondary: '--ht-fg-secondary',
+  border: '--ht-border',
+  input: '--ht-input',
+  ring: '--ht-ring',
+  destructive: '--ht-destructive',
+  destructiveForeground: '--ht-destructive-fg',
+  success: '--ht-success',
+  overlay: '--ht-overlay',
+  sidebarGradientEnd: '--ht-sidebar-gradient-end',
+  hoverOverlay: '--ht-hover-overlay',
+  activeOverlay: '--ht-active-overlay',
+  toggleKnob: '--ht-toggle-knob',
+} as const;
+
+// Non-color tokens
 export const tokens = {
-  colors: {
-    // Primary - clean blue like shadcn
-    primary: '#2563EB',
-    primaryHover: '#1D4ED8',
-    primaryForeground: '#FFFFFF',
-
-    // Backgrounds - proper dark theme
-    background: '#09090B',
-    card: '#18181B',
-    cardHover: '#27272A',
-
-    // Muted
-    muted: '#27272A',
-    mutedForeground: '#A1A1AA',
-
-    // Text
-    foreground: '#FAFAFA',
-    foregroundSecondary: '#A1A1AA',
-
-    // Borders
-    border: '#27272A',
-    input: '#27272A',
-    ring: '#2563EB',
-
-    // Semantic
-    destructive: '#EF4444',
-    destructiveForeground: '#FAFAFA',
-    success: '#22C55E',
-
-    // Overlay
-    overlay: 'rgba(0, 0, 0, 0.8)',
-  },
-
   spacing: {
     1: '4px',
     2: '8px',

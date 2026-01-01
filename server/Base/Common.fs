@@ -12,6 +12,7 @@ type DomainError =
     | NotFound of entity: string
     | Conflict of message: string
     | Unauthorized
+    | RateLimited of message: string
     | InternalError of message: string
 
 
@@ -185,3 +186,4 @@ module Validate =
 
     let chain validators value =
         validators |> List.fold (fun acc v -> Result.bind v acc) (Ok value)
+

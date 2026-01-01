@@ -1,9 +1,50 @@
-import { tokens } from './tokens';
+import { tokens, darkColors, lightColors, cssVars } from './tokens';
+import { detectTheme, type Theme, type SiteType } from './theme';
 
 const STYLES_ID = 'hypertweet-styles';
+const THEME_VARS_ID = 'hypertweet-theme-vars';
 
-export function injectGlobalStyles(): void {
-  if (document.getElementById(STYLES_ID)) return;
+type ColorKey = keyof typeof cssVars;
+type Colors = Record<ColorKey, string>;
+
+function generateThemeVars(colors: Colors): string {
+  return (Object.keys(cssVars) as ColorKey[])
+    .map(key => `${cssVars[key]}: ${colors[key]} !important;`)
+    .join('\n    ');
+}
+
+export function setTheme(theme: Theme): void {
+  const colors = theme === 'dark' ? darkColors : lightColors;
+
+  let themeStyle = document.getElementById(
+    THEME_VARS_ID
+  ) as HTMLStyleElement | null;
+  if (!themeStyle) {
+    themeStyle = document.createElement('style');
+    themeStyle.id = THEME_VARS_ID;
+    document.head.appendChild(themeStyle);
+  }
+
+  themeStyle.textContent = `
+    :root {
+      ${generateThemeVars(colors)}
+    }
+  `;
+}
+
+export function injectGlobalStyles(siteType?: SiteType): void {
+  if (document.getElementById(STYLES_ID)) {
+    if (siteType) {
+      setTheme(detectTheme(siteType));
+    }
+    return;
+  }
+
+  if (siteType) {
+    setTheme(detectTheme(siteType));
+  } else {
+    setTheme('dark');
+  }
 
   const style = document.createElement('style');
   style.id = STYLES_ID;
@@ -32,28 +73,28 @@ export function injectGlobalStyles(): void {
       opacity: 0.5 !important;
     }
     .ht-btn-default {
-      background: ${tokens.colors.primary} !important;
-      color: ${tokens.colors.primaryForeground} !important;
-      border: 1px solid ${tokens.colors.primary} !important;
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
+      border: 1px solid var(${cssVars.primary}) !important;
     }
     .ht-btn-default:hover {
-      background: ${tokens.colors.primaryHover} !important;
+      background: var(${cssVars.primaryHover}) !important;
     }
     .ht-btn-secondary {
-      background: ${tokens.colors.muted} !important;
-      color: ${tokens.colors.foreground} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.muted}) !important;
+      color: var(${cssVars.foreground}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
     }
     .ht-btn-secondary:hover {
-      background: ${tokens.colors.cardHover} !important;
+      background: var(${cssVars.cardHover}) !important;
     }
     .ht-btn-ghost {
       background: transparent !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       border: 1px solid transparent !important;
     }
     .ht-btn-ghost:hover {
-      background: ${tokens.colors.muted} !important;
+      background: var(${cssVars.muted}) !important;
     }
     .ht-btn-sm {
       height: 32px !important;
@@ -75,7 +116,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-input {
       height: 36px !important;
@@ -83,39 +124,39 @@ export function injectGlobalStyles(): void {
       padding: 0 ${tokens.spacing[3]} !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.foreground} !important;
-      background: ${tokens.colors.background} !important;
-      border: 1px solid ${tokens.colors.input} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.input}) !important;
       border-radius: ${tokens.radius.md} !important;
       outline: none !important;
       transition: all ${tokens.transition.fast} !important;
       box-sizing: border-box !important;
     }
     .ht-input:focus {
-      border-color: ${tokens.colors.ring} !important;
-      box-shadow: 0 0 0 2px ${tokens.colors.background}, 0 0 0 4px ${tokens.colors.ring} !important;
+      border-color: var(${cssVars.ring}) !important;
+      box-shadow: 0 0 0 2px var(${cssVars.background}), 0 0 0 4px var(${cssVars.ring}) !important;
     }
     .ht-input::placeholder {
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
     }
     .ht-input-error {
-      border-color: ${tokens.colors.destructive} !important;
+      border-color: var(${cssVars.destructive}) !important;
     }
     .ht-input-error-text {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.destructive} !important;
+      color: var(${cssVars.destructive}) !important;
       margin: 0 !important;
     }
 
     /* Card styles */
     .ht-card {
-      background: ${tokens.colors.card} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.card}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.lg} !important;
       padding: ${tokens.spacing[4]} !important;
       font-family: ${tokens.font.sans} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       box-sizing: border-box !important;
     }
 
@@ -135,14 +176,14 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.xl} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
       line-height: ${tokens.font.lineHeight.tight} !important;
     }
     .ht-form-description {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       margin: 0 !important;
     }
     .ht-form-fields {
@@ -161,21 +202,52 @@ export function injectGlobalStyles(): void {
     .ht-loading {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
     }
 
     /* Keyboard header */
     .ht-keyboard-header {
       display: flex !important;
       align-items: center !important;
-      justify-content: space-between !important;
+      gap: ${tokens.spacing[2]} !important;
       margin-bottom: ${tokens.spacing[2]} !important;
     }
     .ht-keyboard-title {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.xs} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
+    }
+    .ht-keyboard-model {
+      flex: 1 !important;
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+    .ht-model-select {
+      height: 24px !important;
+      padding: 0 ${tokens.spacing[6]} 0 ${tokens.spacing[2]} !important;
+      font-family: ${tokens.font.sans} !important;
+      font-size: 11px !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.sm} !important;
+      outline: none !important;
+      cursor: pointer !important;
+      appearance: none !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23A1A1AA' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 4px center !important;
+      transition: all ${tokens.transition.fast} !important;
+      box-sizing: border-box !important;
+      max-width: 140px !important;
+    }
+    .ht-model-select:hover {
+      border-color: var(${cssVars.ring}) !important;
+    }
+    .ht-model-select:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
     }
     .ht-keyboard-actions {
       display: flex !important;
@@ -193,13 +265,13 @@ export function injectGlobalStyles(): void {
       background: transparent !important;
       border: none !important;
       border-radius: ${tokens.radius.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       cursor: pointer !important;
       transition: all ${tokens.transition.fast} !important;
     }
     .ht-icon-btn:hover {
-      background: ${tokens.colors.muted} !important;
-      color: ${tokens.colors.foreground} !important;
+      background: var(${cssVars.muted}) !important;
+      color: var(${cssVars.foreground}) !important;
     }
 
     /* Tones grid */
@@ -216,9 +288,9 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: 11px !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
-      background: ${tokens.colors.muted} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.sm} !important;
       cursor: pointer !important;
       transition: all ${tokens.transition.fast} !important;
@@ -226,14 +298,14 @@ export function injectGlobalStyles(): void {
       line-height: 1.2 !important;
     }
     .ht-tone-btn:hover {
-      background: ${tokens.colors.cardHover} !important;
-      border-color: ${tokens.colors.ring} !important;
+      background: var(${cssVars.cardHover}) !important;
+      border-color: var(${cssVars.ring}) !important;
     }
     .ht-tones-loading,
     .ht-tones-empty {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.xs} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       text-align: center !important;
       padding: ${tokens.spacing[2]} !important;
     }
@@ -241,7 +313,7 @@ export function injectGlobalStyles(): void {
     /* Tabs */
     .ht-tabs {
       display: flex !important;
-      border-bottom: 1px solid ${tokens.colors.border} !important;
+      border-bottom: 1px solid var(${cssVars.border}) !important;
       margin-bottom: ${tokens.spacing[4]} !important;
       gap: 0 !important;
     }
@@ -250,7 +322,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       background: transparent !important;
       border: none !important;
       border-bottom: 2px solid transparent !important;
@@ -259,11 +331,11 @@ export function injectGlobalStyles(): void {
       margin-bottom: -1px !important;
     }
     .ht-tab:hover {
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-tab-active {
-      color: ${tokens.colors.primary} !important;
-      border-bottom-color: ${tokens.colors.primary} !important;
+      color: var(${cssVars.primary}) !important;
+      border-bottom-color: var(${cssVars.primary}) !important;
     }
 
     /* Select */
@@ -276,7 +348,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-select {
       height: 36px !important;
@@ -284,9 +356,9 @@ export function injectGlobalStyles(): void {
       padding: 0 ${tokens.spacing[8]} 0 ${tokens.spacing[3]} !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.foreground} !important;
-      background: ${tokens.colors.background} !important;
-      border: 1px solid ${tokens.colors.input} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.input}) !important;
       border-radius: ${tokens.radius.md} !important;
       outline: none !important;
       cursor: pointer !important;
@@ -298,7 +370,7 @@ export function injectGlobalStyles(): void {
       box-sizing: border-box !important;
     }
     .ht-select:focus {
-      border-color: ${tokens.colors.ring} !important;
+      border-color: var(${cssVars.ring}) !important;
     }
 
     /* Textarea */
@@ -311,7 +383,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-textarea {
       min-height: 80px !important;
@@ -319,9 +391,9 @@ export function injectGlobalStyles(): void {
       padding: ${tokens.spacing[3]} !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.foreground} !important;
-      background: ${tokens.colors.background} !important;
-      border: 1px solid ${tokens.colors.input} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.input}) !important;
       border-radius: ${tokens.radius.md} !important;
       outline: none !important;
       resize: vertical !important;
@@ -329,15 +401,15 @@ export function injectGlobalStyles(): void {
       transition: all ${tokens.transition.fast} !important;
     }
     .ht-textarea:focus {
-      border-color: ${tokens.colors.ring} !important;
+      border-color: var(${cssVars.ring}) !important;
     }
     .ht-textarea-error {
-      border-color: ${tokens.colors.destructive} !important;
+      border-color: var(${cssVars.destructive}) !important;
     }
     .ht-textarea-error-text {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.destructive} !important;
+      color: var(${cssVars.destructive}) !important;
       margin: 0 !important;
     }
 
@@ -352,8 +424,8 @@ export function injectGlobalStyles(): void {
       align-items: center !important;
       justify-content: space-between !important;
       padding: ${tokens.spacing[3]} !important;
-      background: ${tokens.colors.muted} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.md} !important;
     }
     .ht-tone-item-info {
@@ -367,7 +439,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       white-space: nowrap !important;
       overflow: hidden !important;
       text-overflow: ellipsis !important;
@@ -387,8 +459,8 @@ export function injectGlobalStyles(): void {
       font-size: ${tokens.font.size.xs} !important;
       font-weight: ${tokens.font.weight.medium} !important;
       padding: 2px 6px !important;
-      background: ${tokens.colors.primary} !important;
-      color: ${tokens.colors.primaryForeground} !important;
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
       border-radius: ${tokens.radius.sm} !important;
       white-space: nowrap !important;
     }
@@ -398,14 +470,15 @@ export function injectGlobalStyles(): void {
       position: relative !important;
       width: 36px !important;
       height: 20px !important;
-      background: ${tokens.colors.muted} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: 10px !important;
       cursor: pointer !important;
       transition: all ${tokens.transition.fast} !important;
       padding: 0 !important;
       appearance: none !important;
       outline: none !important;
+      flex-shrink: 0 !important;
     }
     .ht-toggle::after {
       content: '' !important;
@@ -414,16 +487,17 @@ export function injectGlobalStyles(): void {
       left: 2px !important;
       width: 14px !important;
       height: 14px !important;
-      background: ${tokens.colors.foreground} !important;
+      background: var(${cssVars.mutedForeground}) !important;
       border-radius: 50% !important;
       transition: all ${tokens.transition.fast} !important;
     }
     .ht-toggle-checked {
-      background: ${tokens.colors.primary} !important;
-      border-color: ${tokens.colors.primary} !important;
+      background: var(${cssVars.primary}) !important;
+      border-color: var(${cssVars.primary}) !important;
     }
     .ht-toggle-checked::after {
       left: 18px !important;
+      background: var(${cssVars.toggleKnob}) !important;
     }
 
     /* Settings modal header */
@@ -437,7 +511,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.lg} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
     }
 
@@ -455,23 +529,23 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
     }
 
     /* Divider */
     .ht-divider {
       height: 1px !important;
-      background: ${tokens.colors.border} !important;
+      background: var(${cssVars.border}) !important;
       margin: ${tokens.spacing[4]} 0 !important;
       border: none !important;
     }
 
     /* Destructive button variant */
     .ht-btn-destructive {
-      background: ${tokens.colors.destructive} !important;
-      color: ${tokens.colors.destructiveForeground} !important;
-      border: 1px solid ${tokens.colors.destructive} !important;
+      background: var(${cssVars.destructive}) !important;
+      color: var(${cssVars.destructiveForeground}) !important;
+      border: 1px solid var(${cssVars.destructive}) !important;
     }
     .ht-btn-destructive:hover {
       background: #DC2626 !important;
@@ -482,7 +556,7 @@ export function injectGlobalStyles(): void {
     .ht-success-text {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.success} !important;
+      color: var(${cssVars.success}) !important;
       margin: 0 !important;
     }
 
@@ -497,13 +571,13 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.destructive} !important;
+      color: var(${cssVars.destructive}) !important;
       margin: 0 0 ${tokens.spacing[2]} 0 !important;
     }
     .ht-danger-zone-description {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       margin: 0 0 ${tokens.spacing[3]} 0 !important;
     }
 
@@ -524,35 +598,41 @@ export function injectGlobalStyles(): void {
       display: flex !important;
       gap: ${tokens.spacing[1]} !important;
       padding: ${tokens.spacing[1]} !important;
-      background: ${tokens.colors.muted} !important;
+      background: var(${cssVars.muted}) !important;
       border-radius: ${tokens.radius.md} !important;
       margin-bottom: ${tokens.spacing[3]} !important;
     }
     .ht-subtab {
       flex: 1 !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
       padding: ${tokens.spacing[2]} !important;
       font-family: ${tokens.font.sans} !important;
-      font-size: ${tokens.font.size.xs} !important;
+      font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       background: transparent !important;
       border: none !important;
       border-radius: ${tokens.radius.sm} !important;
       cursor: pointer !important;
       transition: all ${tokens.transition.fast} !important;
       text-align: center !important;
+      line-height: 1 !important;
+      height: 32px !important;
+      box-sizing: border-box !important;
     }
     .ht-subtab:hover {
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-subtab-active {
-      background: ${tokens.colors.card} !important;
-      color: ${tokens.colors.foreground} !important;
+      background: var(${cssVars.card}) !important;
+      color: var(${cssVars.foreground}) !important;
     }
 
     /* Accordion tone item for default tones */
     .ht-tone-accordion {
-      border: 1px solid ${tokens.colors.border} !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.md} !important;
       overflow: hidden !important;
       margin-bottom: ${tokens.spacing[2]} !important;
@@ -562,34 +642,34 @@ export function injectGlobalStyles(): void {
       align-items: center !important;
       justify-content: space-between !important;
       padding: ${tokens.spacing[3]} !important;
-      background: ${tokens.colors.muted} !important;
+      background: var(${cssVars.muted}) !important;
       cursor: pointer !important;
       transition: background ${tokens.transition.fast} !important;
       gap: ${tokens.spacing[2]} !important;
     }
     .ht-tone-accordion-header:hover {
-      background: ${tokens.colors.cardHover} !important;
+      background: var(${cssVars.cardHover}) !important;
     }
     .ht-tone-accordion-title {
       flex: 1 !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       text-align: left !important;
     }
     .ht-tone-accordion-title-disabled {
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
     }
     .ht-tone-accordion-content {
       padding: ${tokens.spacing[3]} !important;
-      background: ${tokens.colors.background} !important;
-      border-top: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.background}) !important;
+      border-top: 1px solid var(${cssVars.border}) !important;
     }
     .ht-tone-accordion-instruction {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       white-space: pre-wrap !important;
       margin: 0 !important;
       line-height: 1.5 !important;
@@ -597,7 +677,7 @@ export function injectGlobalStyles(): void {
     .ht-tone-accordion-chevron {
       width: 16px !important;
       height: 16px !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       transition: transform ${tokens.transition.fast} !important;
       flex-shrink: 0 !important;
     }
@@ -611,8 +691,8 @@ export function injectGlobalStyles(): void {
       align-items: flex-start !important;
       justify-content: space-between !important;
       padding: ${tokens.spacing[3]} !important;
-      background: ${tokens.colors.muted} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.md} !important;
       gap: ${tokens.spacing[3]} !important;
     }
@@ -626,13 +706,13 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.medium} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
     }
     .ht-toggle-row-description {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.xs} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       margin: 0 !important;
       line-height: 1.4 !important;
     }
@@ -649,21 +729,21 @@ export function injectGlobalStyles(): void {
       gap: ${tokens.spacing[2]} !important;
       cursor: pointer !important;
       padding: ${tokens.spacing[2]} ${tokens.spacing[3]} !important;
-      background: ${tokens.colors.muted} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.muted}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.md} !important;
       transition: all ${tokens.transition.fast} !important;
     }
     .ht-checkbox-item:hover {
-      background: ${tokens.colors.cardHover} !important;
-      border-color: ${tokens.colors.ring} !important;
+      background: var(${cssVars.cardHover}) !important;
+      border-color: var(${cssVars.ring}) !important;
     }
     .ht-checkbox {
       width: 16px !important;
       height: 16px !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.sm} !important;
-      background: ${tokens.colors.background} !important;
+      background: var(${cssVars.background}) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -671,13 +751,13 @@ export function injectGlobalStyles(): void {
       transition: all ${tokens.transition.fast} !important;
     }
     .ht-checkbox-checked {
-      background: ${tokens.colors.primary} !important;
-      border-color: ${tokens.colors.primary} !important;
+      background: var(${cssVars.primary}) !important;
+      border-color: var(${cssVars.primary}) !important;
     }
     .ht-checkbox-label {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       flex: 1 !important;
     }
 
@@ -688,17 +768,17 @@ export function injectGlobalStyles(): void {
       gap: ${tokens.spacing[1]} !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.xs} !important;
-      color: ${tokens.colors.success} !important;
+      color: var(${cssVars.success}) !important;
     }
     .ht-saving-indicator {
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
     }
 
     /* Section description */
     .ht-section-description {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       margin: 0 0 ${tokens.spacing[3]} 0 !important;
     }
 
@@ -712,23 +792,23 @@ export function injectGlobalStyles(): void {
     .ht-settings-sidebar {
       width: 200px !important;
       flex-shrink: 0 !important;
-      border-right: 1px solid ${tokens.colors.border} !important;
+      border-right: 1px solid var(${cssVars.border}) !important;
       padding: ${tokens.spacing[3]} !important;
-      background: linear-gradient(180deg, ${tokens.colors.card} 0%, #131316 100%) !important;
+      background: linear-gradient(180deg, var(${cssVars.card}) 0%, var(${cssVars.sidebarGradientEnd}) 100%) !important;
       display: flex !important;
       flex-direction: column !important;
       border-radius: ${tokens.radius.xl} 0 0 ${tokens.radius.xl} !important;
     }
     .ht-settings-sidebar-header {
       padding: ${tokens.spacing[3]} ${tokens.spacing[3]} ${tokens.spacing[4]} !important;
-      border-bottom: 1px solid ${tokens.colors.border} !important;
+      border-bottom: 1px solid var(${cssVars.border}) !important;
       margin-bottom: ${tokens.spacing[3]} !important;
     }
     .ht-settings-sidebar-title {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.base} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
       letter-spacing: -0.01em !important;
     }
@@ -746,7 +826,7 @@ export function injectGlobalStyles(): void {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       font-weight: ${tokens.font.weight.normal} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       background: transparent !important;
       border: none !important;
       border-radius: ${tokens.radius.md} !important;
@@ -757,12 +837,12 @@ export function injectGlobalStyles(): void {
       position: relative !important;
     }
     .ht-settings-menu-item:hover {
-      color: ${tokens.colors.foreground} !important;
-      background: rgba(255, 255, 255, 0.05) !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.hoverOverlay}) !important;
     }
     .ht-settings-menu-item-active {
-      color: ${tokens.colors.foreground} !important;
-      background: rgba(255, 255, 255, 0.08) !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.activeOverlay}) !important;
       font-weight: ${tokens.font.weight.medium} !important;
     }
     .ht-settings-menu-item-active::before {
@@ -773,7 +853,7 @@ export function injectGlobalStyles(): void {
       transform: translateY(-50%) !important;
       width: 3px !important;
       height: 16px !important;
-      background: ${tokens.colors.primary} !important;
+      background: var(${cssVars.primary}) !important;
       border-radius: 0 2px 2px 0 !important;
     }
 
@@ -784,22 +864,22 @@ export function injectGlobalStyles(): void {
       flex-direction: column !important;
       min-width: 0 !important;
       overflow: hidden !important;
-      background: ${tokens.colors.card} !important;
+      background: var(${cssVars.card}) !important;
     }
     .ht-settings-main-header {
       display: flex !important;
       align-items: center !important;
       justify-content: space-between !important;
       padding: ${tokens.spacing[4]} ${tokens.spacing[5]} !important;
-      border-bottom: 1px solid ${tokens.colors.border} !important;
+      border-bottom: 1px solid var(${cssVars.border}) !important;
       flex-shrink: 0 !important;
-      background: ${tokens.colors.card} !important;
+      background: var(${cssVars.card}) !important;
     }
     .ht-settings-main-title {
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.base} !important;
       font-weight: ${tokens.font.weight.semibold} !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       margin: 0 !important;
       letter-spacing: -0.01em !important;
     }
@@ -813,13 +893,13 @@ export function injectGlobalStyles(): void {
       background: transparent !important;
       border: none !important;
       border-radius: ${tokens.radius.md} !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       cursor: pointer !important;
       transition: all 150ms ease !important;
     }
     .ht-settings-close-btn:hover {
-      background: rgba(255, 255, 255, 0.08) !important;
-      color: ${tokens.colors.foreground} !important;
+      background: var(${cssVars.activeOverlay}) !important;
+      color: var(${cssVars.foreground}) !important;
     }
     .ht-settings-content {
       flex: 1 !important;
@@ -833,11 +913,11 @@ export function injectGlobalStyles(): void {
       background: transparent !important;
     }
     .ht-settings-content::-webkit-scrollbar-thumb {
-      background: ${tokens.colors.border} !important;
+      background: var(${cssVars.border}) !important;
       border-radius: 3px !important;
     }
     .ht-settings-content::-webkit-scrollbar-thumb:hover {
-      background: ${tokens.colors.mutedForeground} !important;
+      background: var(${cssVars.mutedForeground}) !important;
     }
   `;
   document.head.appendChild(style);

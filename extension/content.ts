@@ -10,6 +10,7 @@ import { ToastProvider } from './ui/toast';
 import type { InsertTextCallback } from './base';
 
 const router = new Router();
+const siteType = router.getSiteTypeString();
 const socialPage = router.getSocialPage();
 const roots = new Map<HTMLElement, Root>();
 
@@ -39,6 +40,7 @@ function renderKeyboard(
           React.createElement(Keyboard, {
             insertText,
             readPage: () => socialPage.readPage(),
+            siteType,
           })
         )
       )

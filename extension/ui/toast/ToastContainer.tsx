@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence } from 'framer-motion';
 import { Toast } from './Toast';
-import { tokens } from '../tokens';
+import { tokens, cssVars } from '../tokens';
 import type { Toast as ToastType } from './types';
 
 interface ToastContainerProps {
@@ -36,26 +36,26 @@ function injectToastStyles(): void {
       align-items: flex-start !important;
       gap: 12px !important;
       padding: 12px 16px !important;
-      background: ${tokens.colors.card} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      background: var(${cssVars.card}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
       border-radius: ${tokens.radius.lg} !important;
       box-shadow: ${tokens.shadow.lg} !important;
       min-width: 300px !important;
       max-width: 400px !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       font-family: ${tokens.font.sans} !important;
       font-size: ${tokens.font.size.sm} !important;
       line-height: ${tokens.font.lineHeight.normal} !important;
     }
     .ht-toast-default {
-      border-color: ${tokens.colors.border} !important;
+      border-color: var(${cssVars.border}) !important;
     }
     .ht-toast-error {
-      border-color: ${tokens.colors.destructive} !important;
+      border-color: var(${cssVars.destructive}) !important;
       background: rgba(239, 68, 68, 0.1) !important;
     }
     .ht-toast-success {
-      border-color: ${tokens.colors.success} !important;
+      border-color: var(${cssVars.success}) !important;
       background: rgba(34, 197, 94, 0.1) !important;
     }
     .ht-toast-icon {
@@ -66,13 +66,13 @@ function injectToastStyles(): void {
       margin-top: 2px !important;
     }
     .ht-toast-icon-default {
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
     }
     .ht-toast-icon-error {
-      color: ${tokens.colors.destructive} !important;
+      color: var(${cssVars.destructive}) !important;
     }
     .ht-toast-icon-success {
-      color: ${tokens.colors.success} !important;
+      color: var(${cssVars.success}) !important;
     }
     .ht-toast-content {
       flex: 1 !important;
@@ -82,14 +82,14 @@ function injectToastStyles(): void {
       font-weight: ${tokens.font.weight.medium} !important;
       margin: 0 0 2px 0 !important;
       padding: 0 !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       font-size: ${tokens.font.size.sm} !important;
       line-height: ${tokens.font.lineHeight.tight} !important;
     }
     .ht-toast-message {
       margin: 0 !important;
       padding: 0 !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       font-size: ${tokens.font.size.sm} !important;
       line-height: ${tokens.font.lineHeight.normal} !important;
     }
@@ -100,7 +100,7 @@ function injectToastStyles(): void {
       padding: 4px !important;
       margin: -4px -4px -4px 0 !important;
       cursor: pointer !important;
-      color: ${tokens.colors.mutedForeground} !important;
+      color: var(${cssVars.mutedForeground}) !important;
       border-radius: ${tokens.radius.sm} !important;
       display: flex !important;
       align-items: center !important;
@@ -108,8 +108,8 @@ function injectToastStyles(): void {
       transition: color ${tokens.transition.fast}, background ${tokens.transition.fast} !important;
     }
     .ht-toast-close:hover {
-      color: ${tokens.colors.foreground} !important;
-      background: ${tokens.colors.muted} !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.muted}) !important;
     }
   `;
   document.head.appendChild(style);

@@ -15,6 +15,15 @@ module AI =
 
     let private openRouterEndpoint = Uri "https://openrouter.ai/api/v1"
 
+    let getCompletion2 (apiKey: string) (models: string list) (prompt: string) =
+        task {
+            match models with
+            | x :: xs -> Ok()
+            | [] -> Error(InternalError("exhausted all fallbacks"))
+        // let! res = getCompletion apiKey
+
+        }
+
     let getCompletion (apiKey: string) (modelId: string) (prompt: string) =
         task {
             try
@@ -31,8 +40,10 @@ module AI =
                     |> Option.map (fun c -> c.Text)
                     |> Option.defaultValue ""
                     |> Ok
-            with ex ->
-                return Error(InternalError $"AI completion failed: {ex.Message}")
+            with
+            | :? ClientResultException as ex when ex.Status = 429 ->
+                return Error(RateLimited $"Rate limited on {modelId}")
+            | ex -> return Error(InternalError $"AI completion failed: {ex.Message}")
         }
 
 module Service =
@@ -68,7 +79,10 @@ module Service =
     let applyPostProcess (reply: string) =
         reply
             .Replace("—", ", ")
+            .Replace("“", "\"")
+            .Replace("”", "\"")
             .Replace(
+
                 """, "\"")
             .Replace(""",
                 "\""

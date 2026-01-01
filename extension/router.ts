@@ -10,10 +10,14 @@ export enum SiteType {
 }
 
 export class Router {
-  public getSocialPage(): SocialPage {
-    const siteType = this.getSiteType();
+  private siteType: SiteType;
 
-    switch (siteType) {
+  constructor() {
+    this.siteType = this.detectSiteType();
+  }
+
+  public getSocialPage(): SocialPage {
+    switch (this.siteType) {
       case SiteType.Twitter:
         return new TwitterSocialPage();
       case SiteType.Reddit:
@@ -21,11 +25,22 @@ export class Router {
       case SiteType.LinkedIn:
         return new LinkedInSocialPage();
       default:
-        throw new Error(`Unsupported site: ${siteType}`);
+        throw new Error(`Unsupported site: ${this.siteType}`);
     }
   }
 
-  private getSiteType(): SiteType {
+  public getSiteTypeString(): 'twitter' | 'reddit' | 'linkedin' {
+    switch (this.siteType) {
+      case SiteType.Twitter:
+        return 'twitter';
+      case SiteType.Reddit:
+        return 'reddit';
+      case SiteType.LinkedIn:
+        return 'linkedin';
+    }
+  }
+
+  private detectSiteType(): SiteType {
     const { hostname } = window.location;
 
     if (hostname.includes('x.com') || hostname.includes('twitter.com')) {

@@ -199,7 +199,9 @@ window.__reddit = (function () {
         if (composer) {
           log('Composer detected');
           activePost = mainPost;
-          var textbox = composer.querySelector('div[contenteditable="true"][role="textbox"]');
+          var textbox = composer.querySelector(
+            'div[contenteditable="true"][role="textbox"]'
+          );
           if (textbox) {
             var draftText = textbox.textContent.trim();
             if (draftText) {
@@ -249,60 +251,50 @@ window.__reddit = (function () {
     log('Textbox found, inserting text...');
 
     try {
-      // Clear existing content
-      textbox.innerHTML = '';
-
-      // Split text into lines for proper paragraph structure
-      var lines = text.split('\n');
-
-      for (var i = 0; i < lines.length; i++) {
-        var line = lines[i];
-        var paragraph = document.createElement('p');
-        paragraph.className = 'first:mt-0 last:mb-0';
-        paragraph.setAttribute('dir', 'ltr');
-
-        if (line.trim()) {
-          var span = document.createElement('span');
-          span.setAttribute('data-lexical-text', 'true');
-          span.textContent = line;
-          paragraph.appendChild(span);
-        } else {
-          paragraph.innerHTML = '<br>';
-        }
-
-        textbox.appendChild(paragraph);
-      }
-
-      // If text is empty, add a single paragraph with placeholder
-      if (!text.trim()) {
-        var emptyParagraph = document.createElement('p');
-        emptyParagraph.className = 'first:mt-0 last:mb-0';
-        emptyParagraph.innerHTML = '<br>';
-        textbox.appendChild(emptyParagraph);
-      }
-
-      // Trigger input event to notify Reddit's JavaScript
-      var inputEvent = new InputEvent('input', {
-        bubbles: true,
-        composed: true,
-        inputType: 'insertText',
-        data: text,
-      });
-      textbox.dispatchEvent(inputEvent);
-
-      // Focus the textbox
+      // Focus the textbox first
       textbox.focus();
 
-      // Place cursor at the end
-      var range = document.createRange();
       var selection = window.getSelection();
-      if (textbox.lastChild) {
-        range.selectNodeContents(textbox.lastChild);
-        range.collapse(false);
-        if (selection) {
-          selection.removeAllRanges();
-          selection.addRange(range);
-        }
+      if (!selection) {
+        warn('Could not get window selection');
+        return false;
+      }
+
+      // Position cursor and select all content
+      var range = document.createRange();
+      range.selectNodeContents(textbox);
+      range.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      // Select all existing content
+      document.execCommand('selectAll', false, undefined);
+
+      // Build HTML content for multi-line support (Lexical uses paragraphs)
+      var lines = text.split('\n');
+      var htmlParts = [];
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        // Escape HTML entities
+        var escaped = line
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        htmlParts.push('<p>' + (escaped || '<br>') + '</p>');
+      }
+      var htmlContent = htmlParts.join('');
+
+      // Use execCommand to insert - this properly updates Lexical state
+      var success = document.execCommand('insertHTML', false, htmlContent);
+      if (!success) {
+        // Fallback to insertText for single-line
+        warn('insertHTML failed, trying insertText');
+        success = document.execCommand('insertText', false, text);
+      }
+
+      if (!success) {
+        warn('Failed to insert text using execCommand');
+        return false;
       }
 
       log('Reply inserted successfully');

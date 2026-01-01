@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Input } from './Input';
 import { Button } from './Button';
@@ -12,6 +12,10 @@ interface AccountTabProps {
 export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
   const queryClient = useQueryClient();
 
+  // Beta mode state
+  const [betaMode, setBetaMode] = useState(false);
+  const [betaLoading, setBetaLoading] = useState(true);
+
   // Password change state
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -20,6 +24,20 @@ export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
 
   // Delete account state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  // Load beta mode on mount
+  useEffect(() => {
+    void (api.getBetaMode() as Promise<boolean>).then(enabled => {
+      setBetaMode(enabled);
+      setBetaLoading(false);
+    });
+  }, []);
+
+  const handleBetaToggle = (): void => {
+    const newValue = !betaMode;
+    setBetaMode(newValue);
+    void (api.setBetaMode(newValue) as Promise<void>);
+  };
 
   const updatePasswordMutation = useMutation({
     mutationFn: async () => {
@@ -63,6 +81,26 @@ export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
 
   return (
     <div>
+      {/* Beta Channel Section */}
+      <div className="ht-section">
+        <div className="ht-toggle-row">
+          <div className="ht-toggle-row-content">
+            <p className="ht-toggle-row-label">Beta Channel</p>
+            <p className="ht-toggle-row-description">
+              Use the beta API endpoint for testing new features
+            </p>
+          </div>
+          <button
+            type="button"
+            className={`ht-toggle ${betaMode ? 'ht-toggle-checked' : ''}`}
+            onClick={handleBetaToggle}
+            disabled={betaLoading}
+          />
+        </div>
+      </div>
+
+      <hr className="ht-divider" />
+
       {/* Security Section */}
       <div className="ht-section">
         <h3 className="ht-section-title">Change Password</h3>

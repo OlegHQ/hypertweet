@@ -1,8 +1,15 @@
 import { useState, useEffect } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { InsertTextCallback } from './base';
 import type { Page } from './models';
+import type { ProfileRes } from './api';
+import type { SiteType } from './ui/theme';
 import { useAuth } from './ui/hooks/useAuth';
 import { useTones } from './ui/hooks/useTones';
+import { useModels } from './ui/hooks/useModels';
+import { useProfile } from './ui/hooks/useProfile';
+import { useTheme } from './ui/hooks/useTheme';
+import { useToast } from './ui/hooks/useToast';
 import { Button } from './ui/components/Button';
 import { Card } from './ui/components/Card';
 import { Modal } from './ui/components/Modal';
@@ -14,21 +21,66 @@ import { api } from './apiProxy';
 interface KeyboardProps {
   insertText: InsertTextCallback;
   readPage: () => Promise<Page>;
+  siteType: SiteType;
 }
 
 export function Keyboard({
   insertText,
   readPage,
+  siteType,
 }: KeyboardProps): React.ReactElement {
+  const queryClient = useQueryClient();
   const { token, isLoading, login, logout } = useAuth();
   const [showLogin, setShowLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
   const { data: tones = [], isLoading: tonesLoading } = useTones(!!token);
+  const { data: modelsData } = useModels(!!token);
+  const { data: profile } = useProfile(!!token);
+  const toast = useToast();
+
+  useTheme(siteType);
 
   useEffect(() => {
-    injectGlobalStyles();
-  }, []);
+    injectGlobalStyles(siteType);
+  }, [siteType]);
+
+  const updateModelMutation = useMutation({
+    mutationFn: (modelName: string) =>
+      api.updateProfile({ ModelName: modelName }),
+    onMutate: async modelName => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previous = queryClient.getQueryData<ProfileRes>(['profile']);
+      if (previous) {
+        queryClient.setQueryData<ProfileRes>(['profile'], {
+          ...previous,
+          ModelName: modelName,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['profile'], context.previous);
+      }
+      toast.error('Failed to update model');
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    updateModelMutation.mutate(e.target.value);
+  };
+
+  const modelOptions =
+    modelsData?.AllModels.map(m => ({
+      value: m.ModelName,
+      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    })) ?? [];
+
+  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
 
   const handleLoginSuccess = (newToken: string): void => {
     login(newToken);
@@ -56,6 +108,9 @@ export function Keyboard({
       insertText(result.Reply);
     } catch (error) {
       console.error('Failed to generate reply:', error);
+      const message =
+        error instanceof Error ? error.message : 'Failed to generate reply';
+      toast.error(message);
     } finally {
       setLoadingTone(null);
     }
@@ -106,6 +161,23 @@ export function Keyboard({
       <Card style={{ padding: '8px' }}>
         <div className="ht-keyboard-header">
           <span className="ht-keyboard-title">Hypertweet</span>
+          <div className="ht-keyboard-model">
+            {modelOptions.length > 0 && (
+              <select
+                className="ht-model-select"
+                value={currentModel}
+                onChange={handleModelChange}
+                disabled={updateModelMutation.isPending}
+                title="AI Model"
+              >
+                {modelOptions.map(opt => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
           <div className="ht-keyboard-actions">
             <button
               className="ht-icon-btn"

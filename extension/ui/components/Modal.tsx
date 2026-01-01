@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { tokens } from '../tokens';
+import { tokens, cssVars } from '../tokens';
 
 interface ModalProps {
   isOpen: boolean;
@@ -43,7 +43,7 @@ function injectModalStyles(): void {
       bottom: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      background: ${tokens.colors.overlay} !important;
+      background: var(${cssVars.overlay}) !important;
       display: flex !important;
       align-items: center !important;
       justify-content: center !important;
@@ -53,16 +53,16 @@ function injectModalStyles(): void {
       padding: 0 !important;
     }
     .ht-modal-content {
-      background: ${tokens.colors.card} !important;
+      background: var(${cssVars.card}) !important;
       border-radius: ${tokens.radius.lg} !important;
-      border: 1px solid ${tokens.colors.border} !important;
+      border: 1px solid var(${cssVars.border}) !important;
       box-shadow: ${tokens.shadow.xl} !important;
       padding: ${tokens.spacing[6]} !important;
       width: 100% !important;
       max-width: 400px !important;
       margin: ${tokens.spacing[4]} !important;
       box-sizing: border-box !important;
-      color: ${tokens.colors.foreground} !important;
+      color: var(${cssVars.foreground}) !important;
       font-family: ${tokens.font.sans} !important;
     }
     .ht-modal-content-wide {

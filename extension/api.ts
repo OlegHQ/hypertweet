@@ -1,12 +1,26 @@
 import type { Page } from './models';
 
-// const BASE_URL = 'http://olegs-mac-mini:5001';
-// const BASE_URL = 'http://olegs-macbook-air:5001';
-const BASE_URL = 'https://hypertweet.microapps.space/';
-const _BETA = 'https://hypertweet-beta.microapps.space/';
+const PROD_URL = 'https://hypertweet.microapps.space';
+const BETA_URL = 'https://hypertweet-beta.microapps.space';
 const TOKEN_KEY = 'hypertweet.token';
 const REFRESH_KEY = 'hypertweet.refresh';
 const EXPIRES_KEY = 'hypertweet.expires';
+const BETA_KEY = 'hypertweet.beta';
+
+async function getBaseUrl(): Promise<string> {
+  const stored = await chrome.storage.local.get([BETA_KEY]);
+  const useBeta = (stored[BETA_KEY] as boolean) || false;
+  return useBeta ? BETA_URL : PROD_URL;
+}
+
+export async function getBetaMode(): Promise<boolean> {
+  const stored = await chrome.storage.local.get([BETA_KEY]);
+  return (stored[BETA_KEY] as boolean) || false;
+}
+
+export async function setBetaMode(enabled: boolean): Promise<void> {
+  await chrome.storage.local.set({ [BETA_KEY]: enabled });
+}
 
 async function getValidToken(): Promise<string | null> {
   const stored = await chrome.storage.local.get([
@@ -22,7 +36,8 @@ async function getValidToken(): Promise<string | null> {
   // Refresh 60s before expiry
   if (Date.now() < expiresAt - 60000) return accessToken;
 
-  const res = await fetch(BASE_URL + '/auth/refresh', {
+  const baseUrl = await getBaseUrl();
+  const res = await fetch(baseUrl + '/auth/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ RefreshToken: refreshToken }),
@@ -64,7 +79,8 @@ function make<Req, Res>(method: string, path: string, auth = false) {
       if (token) headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const res = await fetch(BASE_URL + path, {
+    const baseUrl = await getBaseUrl();
+    const res = await fetch(baseUrl + path, {
       method,
       headers,
       ...(body ? { body: JSON.stringify(body) } : {}),
