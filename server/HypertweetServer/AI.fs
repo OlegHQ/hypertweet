@@ -114,6 +114,7 @@ module Service =
             .Replace("—", ", ")
             .Replace("’", "'")
             .Replace("“", "\"")
+            .Replace("‘", "'")
             .Replace("”", "\"")
             .Replace("…", "...")
             .Replace(
