@@ -127,13 +127,59 @@ window.__linkedin = (function () {
       return null;
     }
 
-    // Find the closest article element to this specific editor
+    // Find the main post (article)
     var articleElement = editor.closest(ARTICLE_SELECTOR);
     if (!articleElement) {
       return null;
     }
 
-    return extractPostFromElement(articleElement);
+    var mainPost = extractPostFromElement(articleElement);
+    if (!mainPost) {
+      return null;
+    }
+
+    // Find the comment box container (using existing selectors from createKeyboardContainer)
+    var boxContainer = editor.closest('.comments-comment-box--cr');
+    if (!boxContainer) {
+      boxContainer = editor.closest('.comments-comment-box');
+    }
+    if (!boxContainer) {
+      // No comment box = replying to main post
+      return mainPost;
+    }
+
+    // The parent of the comment box contains the comment context
+    var contextElement = boxContainer.parentElement;
+    if (!contextElement || contextElement === articleElement) {
+      return mainPost;
+    }
+
+    // Clone and extract text, excluding comment boxes, editors, and our keyboard UI
+    var clone = contextElement.cloneNode(true);
+    var toRemove = clone.querySelectorAll(
+      '.comments-comment-box, .comments-comment-box--cr, .comments-comment-box__form, ' +
+        EDITOR_SELECTOR +
+        ', .hypertweet-keyboard'
+    );
+    for (var i = 0; i < toRemove.length; i++) {
+      if (toRemove[i].parentNode) {
+        toRemove[i].parentNode.removeChild(toRemove[i]);
+      }
+    }
+
+    var contextText = clone.textContent.trim();
+    if (contextText && contextText.length > 10) {
+      mainPost.Replies = [
+        {
+          Author: { Name: '', UserName: '' },
+          Text: contextText,
+          Replies: [],
+        },
+      ];
+      log('Context captured: ' + contextText.substring(0, 50) + '...');
+    }
+
+    return mainPost;
   }
 
   function findActivePost() {
