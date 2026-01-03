@@ -5,15 +5,11 @@ open System.ClientModel
 open OpenAI.Chat
 open FsToolkit.ErrorHandling
 open Giraffe
-open Microsoft.AspNetCore.Http
 open Base
 open Base.Common
-open Base.PromptDsl
-open Base.PromptDsl.Dsl
-open Base.PromptDsl.Domain
 open HypertweetServer.Models
 
-module ModelConfig = HypertweetServer.Profiles.ModelConfig
+module ModelConfig = Profiles.ModelConfig
 
 module AIClient =
     let private endpoint = Uri "https://openrouter.ai/api/v1"
@@ -40,21 +36,6 @@ module AIClient =
                 return Error(RateLimited $"Rate limited on {modelId}")
             | ex -> return Error(InternalError $"AI completion failed: {ex.Message}")
         }
-
-    let completeWithFallbacks apiKey models messages =
-        let rec loop =
-            function
-            | [] -> task { return Error(InternalError "exhausted all fallbacks") }
-            | model :: rest ->
-                task {
-                    let! result = complete apiKey model messages
-
-                    match result with
-                    | Error(RateLimited _) -> return! loop rest
-                    | other -> return other
-                }
-
-        loop models
 
     let stream apiKey modelId (messages: ChatMessage array) onToken =
         task {
@@ -142,10 +123,7 @@ module Service =
                 Prompts.ReplyPrompt.make tone page userBio customReplyGuidance replyPromptOptions
 
             let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
-            let models = [ model ] @ ModelConfig.fallbackModels |> List.distinct
-
-            let! completion, timeSpent =
-                TracingUtils.measureTask (fun () -> AIClient.completeWithFallbacks llmApiKey models messages)
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> AIClient.complete llmApiKey model messages)
 
             let! completion =
                 completion
