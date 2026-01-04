@@ -64,13 +64,11 @@ module AIClient =
 module Service =
     open HypertweetServer.Tones
 
-    let private resolveModelInputs logger db toneId userId =
+    let private resolveBaseModelInputs logger db userId =
         taskResult {
             let! user = DataAccess.user db userId
             let! profile = DataAccess.profile db userId
             logger |> Log.info "loading tones..."
-            let! userTones = DataAccess.userTones db userId
-            logger |> Log.info "tones are loaded"
             let! user = user |> Result.requireSome (NotFound "User")
 
             let model =
@@ -78,6 +76,14 @@ module Service =
                 | Some profile -> profile.ModelName
                 | _ -> ModelConfig.defaultModel
 
+            return model, user, profile
+        }
+
+    let private resolveModelInputs logger db toneId userId =
+        taskResult {
+            let! model, user, profile = resolveBaseModelInputs logger db userId
+            let! userTones = DataAccess.userTones db userId
+            logger |> Log.info "tones are loaded"
             let dps = Handlers.makeResolvedTones user userTones
 
             let! tone =
@@ -106,6 +112,30 @@ module Service =
             .Replace("'", "'")
             .Replace("'", "'")
 
+
+    let refineMessage logger db llmApiKey userId postMessage draftReply instruction =
+        taskResult {
+            let! model, user, _ = resolveBaseModelInputs logger db userId
+
+
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> AIClient.complete llmApiKey model messages)
+
+
+            let! evt =
+                Tracing.saveRefineEvent
+                    db
+                    instruction
+                    model
+                    postMessage
+                    draftReply
+                    user
+                    { TimeTookMs = int timeSpent.TotalMilliseconds
+                      Reply = completion }
+
+            return
+                { EventId = evt.Id.ToString()
+                  Reply = completion }
+        }
 
     let generateReply logger db llmApiKey (page: Page) toneId userId =
         taskResult {
@@ -152,6 +182,12 @@ module Chat =
 
 module Handlers =
     type ReplyRequest = { ToneId: string; Page: Page }
+
+    type RefineRequest =
+        { Platform: string
+          OriginalPost: string
+          DraftReply: string
+          RefineInstruction: string }
 
     [<CLIMutable>]
     type ChatMessageReq = { Role: string; Content: string }
@@ -235,6 +271,18 @@ module Handlers =
         }
         |> HttpCtx.errHandle next ctx
 
+    let refine db llmApiKey next ctx =
+        taskResult {
+            let userId = HttpCtx.getUserId ctx
+            let! req = HttpCtx.bindJson<RefineRequest> ctx
+            let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
+            let logger = Log.http ctx
+            logger |> Log.info "Generating reply"
+            let! reply = Service.generateReply logger db llmApiKey req.Page req.ToneId userId
+            return! json reply next ctx
+        }
+        |> HttpCtx.errHandle next ctx
+
     let reply db llmApiKey next ctx =
         taskResult {
             let userId = HttpCtx.getUserId ctx
@@ -246,4 +294,3 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
-

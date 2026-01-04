@@ -30,6 +30,30 @@ module TracingEvents =
 
     let makeUser (u: Models.User) = { UserId = u.Id; Email = u.Email }
 
+    module RefineEvent =
+        type Input =
+            { Prompt: string
+              Model: string
+              Post: string
+              DraftReply: string }
+
+        type Result = { Reply: string; TimeTookMs: int }
+
+        let makeInput prompt model post draftReply =
+            { Prompt = prompt
+              Model = model
+              Post = post
+              DraftReply = draftReply }
+
+        let makeEvt id user input createdAt deleteAt result =
+            { Id = id
+              Type = "ReplyEvent"
+              User = user
+              Input = input
+              CreatedAt = createdAt
+              DeleteAt = deleteAt
+              Result = result }
+
     module ReplyEvent =
         type Tone = { ToneId: string; ToneName: string }
 
@@ -87,6 +111,24 @@ module TracingEvents =
               DeleteAt = deleteAt
               Result = result }
 
+let saveRefineEvent db prompt model post draftReply user (result: TracingEvents.RefineEvent.Result) =
+    taskResult {
+        let createdUtc = System.DateTime.UtcNow
+        let deleteAt = createdUtc.AddDays(float ttlDays)
+
+        let evt =
+            TracingEvents.RefineEvent.makeEvt
+                (newObjectId ())
+                (Some(TracingEvents.makeUser user))
+                (TracingEvents.RefineEvent.makeInput prompt model post draftReply)
+                createdUtc
+                deleteAt
+                result
+
+        let col = Base.Common.Db.collection db tracingCollection
+        do! col |> Base.Common.Db.insertOne evt
+        return evt
+    }
 
 let saveLLMReplyEvent db prompt tone model page user (result: TracingEvents.ReplyEvent.Result) =
     taskResult {
@@ -125,3 +167,4 @@ let saveChatEvent db systemPrompt messages model page user (result: TracingEvent
         do! col |> Base.Common.Db.insertOne evt
         return evt
     }
+

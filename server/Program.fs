@@ -26,7 +26,7 @@ let main args =
     Log.Information "Generating database indexes..."
 
     match DataAccess.generateIndexes db |> Async.AwaitTask |> Async.RunSynchronously with
-    | Ok () -> Log.Information "Database indexes generated"
+    | Ok() -> Log.Information "Database indexes generated"
     | Error err -> Log.Error("Failed to generate indexes: {Error}", err)
 
     let routes =
@@ -46,6 +46,7 @@ let main args =
                         POST >=> route "/profile/update" >=> Profiles.Handlers.updateProfile db
                         GET >=> route "/profile" >=> Profiles.Handlers.getProfile db
                         DELETE >=> route "/users" >=> Profiles.Handlers.deleteMe db
+                        POST >=> route "/ai/refine" >=> AI.Handlers.refine db config.LlmApiKey
                         POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.LlmApiKey
                         POST >=> route "/ai/chat" >=> AI.Handlers.chat db config.LlmApiKey
                         GET >=> route "/profile/available-models" >=> Profiles.Handlers.listModels
@@ -89,3 +90,4 @@ let main args =
     app.UseGiraffe routes
     app.Run "http://0.0.0.0:5001"
     0
+

@@ -6,7 +6,7 @@ import { useToast } from '../hooks/useToast';
 import type { Page } from '../../models';
 import type { ChatStreamEvent } from '../../api';
 
-interface Message {
+export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
@@ -16,14 +16,21 @@ interface ChatModalProps {
   isOpen: boolean;
   onClose: () => void;
   readPage: () => Promise<Page>;
+  insertText: (text: string) => void;
+  isReddit: boolean;
+  messages: Message[];
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
 export function ChatModal({
   isOpen,
   onClose,
   readPage,
+  insertText,
+  isReddit,
+  messages,
+  setMessages,
 }: ChatModalProps): React.ReactElement {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
   const [pageContext, setPageContext] = useState<Page | null>(null);
@@ -36,8 +43,6 @@ export function ChatModal({
   useEffect(() => {
     if (isOpen) {
       void readPage().then(setPageContext);
-      // Reset messages on open for fresh conversation
-      setMessages([]);
     }
   }, [isOpen, readPage]);
 
@@ -122,6 +127,20 @@ export function ChatModal({
       toast.success('Copied to clipboard');
     } catch {
       toast.error('Failed to copy');
+    }
+  };
+
+  const handleInsertReply = async (content: string): Promise<void> => {
+    if (isReddit) {
+      try {
+        await navigator.clipboard.writeText(content);
+        toast.success('Copied to clipboard');
+      } catch {
+        toast.error('Failed to copy');
+      }
+    } else {
+      insertText(content);
+      toast.success('Reply inserted');
     }
   };
 
@@ -227,7 +246,12 @@ export function ChatModal({
                 </div>
                 <div className="ht-chat-message-content">
                   {message.content ? (
-                    <Markdown>{message.content}</Markdown>
+                    <Markdown
+                      onInsertReply={text => void handleInsertReply(text)}
+                      isReddit={isReddit}
+                    >
+                      {message.content}
+                    </Markdown>
                   ) : isStreaming && message.role === 'assistant' ? (
                     <span className="ht-chat-streaming">
                       <span className="ht-chat-streaming-dot" />

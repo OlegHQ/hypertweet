@@ -1253,6 +1253,45 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       background: var(${cssVars.mutedForeground}) !important;
       color: var(${cssVars.background}) !important;
     }
+
+    /* Reply block styles */
+    .ht-reply-block {
+      background: color-mix(in srgb, var(${cssVars.primary}) 10%, transparent) !important;
+      border: 1px solid var(${cssVars.primary}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      padding: ${tokens.spacing[3]} !important;
+      margin: ${tokens.spacing[2]} 0 !important;
+      position: relative !important;
+    }
+    .ht-reply-block-content {
+      white-space: pre-wrap !important;
+      font-family: inherit !important;
+      color: var(${cssVars.foreground}) !important;
+      padding-right: 64px !important;
+    }
+    .ht-reply-block-btn {
+      position: absolute !important;
+      top: ${tokens.spacing[2]} !important;
+      right: ${tokens.spacing[2]} !important;
+      display: flex !important;
+      align-items: center !important;
+      gap: ${tokens.spacing[1]} !important;
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
+      border: none !important;
+      border-radius: ${tokens.radius.sm} !important;
+      padding: ${tokens.spacing[1]} ${tokens.spacing[2]} !important;
+      font-size: 12px !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      cursor: pointer !important;
+      transition: opacity 150ms !important;
+    }
+    .ht-reply-block-btn:hover {
+      opacity: 0.9 !important;
+    }
+    .ht-reply-block-btn svg {
+      flex-shrink: 0 !important;
+    }
   `;
   document.head.appendChild(style);
 }

@@ -15,7 +15,7 @@ import { Card } from './ui/components/Card';
 import { Modal } from './ui/components/Modal';
 import { AuthForm } from './ui/components/AuthForm';
 import { SettingsModal } from './ui/components/SettingsModal';
-import { ChatModal } from './ui/components/ChatModal';
+import { ChatModal, type Message } from './ui/components/ChatModal';
 import { injectGlobalStyles } from './ui/styles';
 import { api } from './apiProxy';
 
@@ -35,6 +35,7 @@ export function Keyboard({
   const [showLogin, setShowLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
   const [redditSuggestion, setRedditSuggestion] = useState<string | null>(null);
   const suggestionRef = useRef<HTMLDivElement>(null);
@@ -137,6 +138,27 @@ export function Keyboard({
     setRedditSuggestion(null);
   };
 
+  const handleCopyPrompt = async (): Promise<void> => {
+    try {
+      const page = await readPage();
+      const post = page.ActivePost;
+      if (!post) {
+        toast.error('No active post found');
+        return;
+      }
+
+      let prompt = `<platform>${siteType}</platform>\n<post>${post.Text}</post>`;
+      if (post.CurrentReplyDraft) {
+        prompt += `\n<reply_draft>${post.CurrentReplyDraft}</reply_draft>`;
+      }
+
+      await navigator.clipboard.writeText(prompt);
+      toast.success('Copied to clipboard');
+    } catch {
+      toast.error('Failed to copy');
+    }
+  };
+
   if (isLoading) {
     return (
       <Card
@@ -216,6 +238,27 @@ export function Keyboard({
                 strokeLinejoin="round"
               >
                 <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </button>
+            <button
+              className="ht-icon-btn"
+              title="Copy for AI"
+              onClick={() => void handleCopyPrompt()}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                <polyline points="14 2 14 8 20 8" />
+                <line x1="16" y1="13" x2="8" y2="13" />
+                <line x1="16" y1="17" x2="8" y2="17" />
               </svg>
             </button>
             <button
@@ -349,6 +392,10 @@ export function Keyboard({
         isOpen={showChat}
         onClose={() => setShowChat(false)}
         readPage={readPage}
+        insertText={insertText}
+        isReddit={isReddit}
+        messages={chatMessages}
+        setMessages={setChatMessages}
       />
     </>
   );

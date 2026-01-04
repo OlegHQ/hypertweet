@@ -254,6 +254,11 @@ module ChatPrompt =
 
             ctx.CurrentDraft |> Option.map (Item.text >> xml "current_draft" >> nl)
 
-            Item.list (List.map formatChatOption replyPromptOptions) |> xml "guidelines"
+            Item.list (List.map formatChatOption replyPromptOptions) |> xml "guidelines" |> nl
+
+            Item.list
+                [ "When providing a ready-to-use reply, wrap it in a ```reply code block"
+                  "Only use ```reply for final, ready-to-paste text - not for examples or drafts being discussed" ]
+            |> xml "output_format"
         }
 
