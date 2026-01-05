@@ -229,6 +229,20 @@ export const generateReply = make<ReplyRequest, ReplyResult>(
   true
 );
 
+// AI Refine (protected)
+export interface RefineRequest {
+  Platform: string;
+  OriginalPost: string;
+  DraftReply: string;
+  RefineInstruction: string;
+}
+
+export const refineReply = make<RefineRequest, ReplyResult>(
+  'POST',
+  '/ai/refine',
+  true
+);
+
 // Chat types
 export interface ChatMessageReq {
   Role: 'user' | 'assistant';

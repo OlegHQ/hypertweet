@@ -76,7 +76,7 @@ function injectModalStyles(): void {
       border-radius: ${tokens.radius.xl} !important;
     }
     .ht-modal-content-chat {
-      max-width: 600px !important;
+      max-width: 800px !important;
       height: 80vh !important;
       max-height: 700px !important;
       padding: 0 !important;

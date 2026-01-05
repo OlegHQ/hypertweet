@@ -1002,6 +1002,18 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       display: flex !important;
       gap: ${tokens.spacing[1]} !important;
     }
+    .ht-chat-model-selector {
+      flex: 1 !important;
+      max-width: 200px !important;
+      margin: 0 ${tokens.spacing[3]} !important;
+    }
+    .ht-chat-model-selector .ht-select-wrapper {
+      margin: 0 !important;
+    }
+    .ht-chat-model-selector .ht-select {
+      font-size: 12px !important;
+      padding: ${tokens.spacing[1]} ${tokens.spacing[2]} !important;
+    }
     .ht-chat-messages {
       flex: 1 !important;
       overflow-y: auto !important;
@@ -1291,6 +1303,54 @@ export function injectGlobalStyles(siteType?: SiteType): void {
     }
     .ht-reply-block-btn svg {
       flex-shrink: 0 !important;
+    }
+
+    /* Edit inline input styles */
+    .ht-edit-container {
+      display: flex !important;
+      gap: ${tokens.spacing[1]} !important;
+      margin-top: ${tokens.spacing[2]} !important;
+      padding-top: ${tokens.spacing[2]} !important;
+      border-top: 1px solid var(${cssVars.border}) !important;
+    }
+    .ht-edit-input {
+      flex: 1 !important;
+      padding: ${tokens.spacing[1]} ${tokens.spacing[2]} !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.sm} !important;
+      font-size: 13px !important;
+      font-family: inherit !important;
+      background: var(${cssVars.background}) !important;
+      color: var(${cssVars.foreground}) !important;
+      outline: none !important;
+    }
+    .ht-edit-input:focus {
+      border-color: var(${cssVars.primary}) !important;
+    }
+    .ht-edit-input:disabled {
+      opacity: 0.6 !important;
+    }
+    .ht-edit-btn {
+      padding: ${tokens.spacing[1]} ${tokens.spacing[2]} !important;
+      border: none !important;
+      border-radius: ${tokens.radius.sm} !important;
+      font-size: 13px !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      cursor: pointer !important;
+      background: var(${cssVars.primary}) !important;
+      color: var(${cssVars.primaryForeground}) !important;
+      transition: opacity 150ms !important;
+    }
+    .ht-edit-btn:hover {
+      opacity: 0.9 !important;
+    }
+    .ht-edit-btn:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+    }
+    .ht-edit-btn-cancel {
+      background: var(${cssVars.muted}) !important;
+      color: var(${cssVars.foreground}) !important;
     }
   `;
   document.head.appendChild(style);

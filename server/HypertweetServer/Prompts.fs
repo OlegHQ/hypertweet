@@ -262,3 +262,38 @@ module ChatPrompt =
             |> xml "output_format"
         }
 
+
+module RefinePrompt =
+    let make platform originalPost draftReply instruction userBio customReplyGuidance replyPromptOptions =
+        let site = siteOfString platform
+        let platformGuidelines = Common.getPlatformGuidelines site
+
+        prompt {
+            Item.text
+                "Refine the reply draft according to the user's instruction. The instruction must be followed exactly. Write ONLY the refined reply text, nothing else."
+            |> xml "task"
+            |> nl
+
+            Item.list platformGuidelines |> xml "platform_guidelines" |> nl
+
+            userBio |> Option.map (Item.text >> xml "user_bio" >> nl)
+
+            Item.text originalPost |> xml "original_post" |> nl
+
+            Item.text draftReply |> xml "current_draft" |> nl
+
+            Item.text instruction |> xml "refine_instruction" |> nl
+
+            Item.list
+                ([ "Write ONLY the refined reply text"
+                   "Follow the refine instruction exactly"
+                   "Do not include any meta-commentary or explanations"
+                   "Do not prefix with labels like 'Refined:' or 'Reply:'"
+                   "Preserve the original meaning unless instructed otherwise" ]
+                 @ List.map Common.formatReplyPromptOption replyPromptOptions)
+            |> xml "output_requirements"
+            |> nl
+
+            customReplyGuidance |> Option.map (Item.text >> xml "user_defined_guidance")
+        }
+

@@ -101,6 +101,7 @@ module Service =
             .Replace("—", ", ")
             .Replace("’", "'")
             .Replace("“", "\"")
+            .Replace(" ", " ")
             .Replace("‘", "'")
             .Replace("”", "\"")
             .Replace("…", "...")
@@ -113,18 +114,44 @@ module Service =
             .Replace("'", "'")
 
 
-    let refineMessage logger db llmApiKey userId postMessage draftReply instruction =
+    let refineMessage logger db llmApiKey userId platform postMessage draftReply instruction =
         taskResult {
-            let! model, user, _ = resolveBaseModelInputs logger db userId
+            let! model, user, profile = resolveBaseModelInputs logger db userId
 
+            let userBio = profile |> Option.bind (fun x -> x.UserBio)
+            let customReplyGuidance = profile |> Option.bind (fun x -> x.CustomReplyGuidance)
+
+            let replyPromptOptions =
+                profile
+                |> Option.map (fun x -> x.ReplyPromptOptions)
+                |> Option.defaultValue []
+                |> List.choose ReplyPromptOption.tryParse
+
+            let postProcessReply =
+                profile |> Option.bind (fun x -> x.PostProcessReply) |> Option.defaultValue true
+
+            let promptText =
+                Prompts.RefinePrompt.make
+                    platform
+                    postMessage
+                    draftReply
+                    instruction
+                    userBio
+                    customReplyGuidance
+                    replyPromptOptions
+
+            let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
 
             let! completion, timeSpent = TracingUtils.measureTask (fun () -> AIClient.complete llmApiKey model messages)
 
+            let! completion =
+                completion
+                |> Result.map (fun x -> if postProcessReply then applyPostProcess x else x)
 
             let! evt =
                 Tracing.saveRefineEvent
                     db
-                    instruction
+                    promptText
                     model
                     postMessage
                     draftReply
@@ -277,8 +304,19 @@ module Handlers =
             let! req = HttpCtx.bindJson<RefineRequest> ctx
             let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
             let logger = Log.http ctx
-            logger |> Log.info "Generating reply"
-            let! reply = Service.generateReply logger db llmApiKey req.Page req.ToneId userId
+            logger |> Log.info "Refining reply"
+
+            let! reply =
+                Service.refineMessage
+                    logger
+                    db
+                    llmApiKey
+                    userId
+                    req.Platform
+                    req.OriginalPost
+                    req.DraftReply
+                    req.RefineInstruction
+
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
@@ -294,3 +332,4 @@ module Handlers =
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx
+

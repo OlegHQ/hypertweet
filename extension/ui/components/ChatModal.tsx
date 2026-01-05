@@ -1,10 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal } from './Modal';
 import { Markdown } from './Markdown';
-import { streamChatProxy } from '../../apiProxy';
+import { Select } from './Select';
+import { streamChatProxy, api } from '../../apiProxy';
 import { useToast } from '../hooks/useToast';
+import { useModels } from '../hooks/useModels';
+import { useProfile } from '../hooks/useProfile';
 import type { Page } from '../../models';
-import type { ChatStreamEvent } from '../../api';
+import type { ChatStreamEvent, ProfileRes } from '../../api';
 
 export interface Message {
   id: string;
@@ -38,6 +42,47 @@ export function ChatModal({
   const disconnectRef = useRef<(() => void) | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const toast = useToast();
+  const queryClient = useQueryClient();
+
+  // Model selection
+  const { data: modelsData } = useModels(isOpen);
+  const { data: profile } = useProfile(isOpen);
+
+  const updateModelMutation = useMutation({
+    mutationFn: (modelName: string) =>
+      api.updateProfile({ ModelName: modelName }),
+    onMutate: async modelName => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previous = queryClient.getQueryData<ProfileRes>(['profile']);
+      if (previous) {
+        queryClient.setQueryData<ProfileRes>(['profile'], {
+          ...previous,
+          ModelName: modelName,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['profile'], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
+  const modelOptions =
+    modelsData?.AllModels.map(m => ({
+      value: m.ModelName,
+      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    })) ?? [];
+
+  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
+
+  const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
+    updateModelMutation.mutate(e.target.value);
+  };
 
   // Load page context on open
   useEffect(() => {
@@ -162,6 +207,16 @@ export function ChatModal({
       <div className="ht-chat-container">
         <div className="ht-chat-header">
           <h2 className="ht-chat-title">Chat</h2>
+          {modelOptions.length > 0 && (
+            <div className="ht-chat-model-selector">
+              <Select
+                options={modelOptions}
+                value={currentModel}
+                onChange={handleModelChange}
+                disabled={isStreaming || updateModelMutation.isPending}
+              />
+            </div>
+          )}
           <div className="ht-chat-actions">
             <button
               className="ht-icon-btn"

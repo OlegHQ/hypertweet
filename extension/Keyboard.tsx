@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { InsertTextCallback } from './base';
 import type { Page } from './models';
-import type { ProfileRes, ReplyResult } from './api';
+import type { ProfileRes, ReplyResult, RefineRequest } from './api';
 import type { SiteType } from './ui/theme';
 import { useAuth } from './ui/hooks/useAuth';
 import { useTones } from './ui/hooks/useTones';
@@ -37,8 +37,12 @@ export function Keyboard({
   const [showChat, setShowChat] = useState(false);
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
-  const [redditSuggestion, setRedditSuggestion] = useState<string | null>(null);
-  const suggestionRef = useRef<HTMLDivElement>(null);
+  const [lastReply, setLastReply] = useState<string | null>(null);
+  const [lastPageContext, setLastPageContext] = useState<Page | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [refineInstruction, setRefineInstruction] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
+  const refineInputRef = useRef<HTMLInputElement>(null);
   const isReddit = siteType === 'reddit';
   const { data: tones = [], isLoading: tonesLoading } = useTones(!!token);
   const { data: modelsData } = useModels(!!token);
@@ -109,11 +113,9 @@ export function Keyboard({
         ToneId: tone.Id,
         Page: page,
       })) as ReplyResult;
-      if (isReddit) {
-        setRedditSuggestion(result.Reply);
-      } else {
-        insertText(result.Reply);
-      }
+      setLastReply(result.Reply);
+      setLastPageContext(page);
+      insertText(result.Reply);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to generate reply';
@@ -123,19 +125,66 @@ export function Keyboard({
     }
   };
 
-  const handleCopySuggestion = async (): Promise<void> => {
-    if (!suggestionRef.current) return;
-    const text = suggestionRef.current.innerText;
+  const handleEditClick = async (): Promise<void> => {
+    // Always read current draft from platform to capture user edits
+    const page = await readPage();
+    const draft = page.ActivePost?.CurrentReplyDraft;
+
+    if (!draft?.trim()) {
+      toast.error('No reply to edit');
+      return;
+    }
+
+    setLastReply(draft);
+    setLastPageContext(page);
+    setIsEditing(true);
+    window.setTimeout(() => refineInputRef.current?.focus(), 0);
+  };
+
+  const handleEditCancel = (): void => {
+    setIsEditing(false);
+    setRefineInstruction('');
+  };
+
+  const handleRefine = async (): Promise<void> => {
+    if (
+      !refineInstruction.trim() ||
+      isRefining ||
+      !lastPageContext ||
+      !lastReply
+    )
+      return;
+
+    setIsRefining(true);
     try {
-      await navigator.clipboard.writeText(text);
-      toast.success('Copied to clipboard');
-    } catch {
-      toast.error('Failed to copy');
+      const result = (await api.refineReply({
+        Platform: lastPageContext.Site,
+        OriginalPost: lastPageContext.ActivePost?.Text ?? '',
+        DraftReply: lastReply,
+        RefineInstruction: refineInstruction.trim(),
+      } as RefineRequest)) as ReplyResult;
+      setLastReply(result.Reply);
+      insertText(result.Reply);
+      setIsEditing(false);
+      setRefineInstruction('');
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'Failed to refine reply';
+      toast.error(message);
+    } finally {
+      setIsRefining(false);
     }
   };
 
-  const handleClearSuggestion = (): void => {
-    setRedditSuggestion(null);
+  const handleRefineKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>
+  ): void => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      void handleRefine();
+    } else if (e.key === 'Escape') {
+      handleEditCancel();
+    }
   };
 
   const handleCopyPrompt = async (): Promise<void> => {
@@ -224,6 +273,26 @@ export function Keyboard({
           <div className="ht-keyboard-actions">
             <button
               className="ht-icon-btn"
+              title="Edit reply"
+              onClick={() => void handleEditClick()}
+              disabled={isEditing || isRefining}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+            <button
+              className="ht-icon-btn"
               title="Chat"
               onClick={() => setShowChat(true)}
             >
@@ -302,59 +371,31 @@ export function Keyboard({
             </button>
           </div>
         </div>
-        {isReddit && redditSuggestion !== null && (
-          <div className="ht-suggestion-container">
-            <div className="ht-suggestion-header">
-              <span className="ht-suggestion-label">Generated Reply</span>
-              <div className="ht-suggestion-actions">
-                <button
-                  className="ht-icon-btn"
-                  title="Copy to clipboard"
-                  onClick={() => void handleCopySuggestion()}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                  </svg>
-                </button>
-                <button
-                  className="ht-icon-btn"
-                  title="Clear"
-                  onClick={handleClearSuggestion}
-                >
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <line x1="18" y1="6" x2="6" y2="18" />
-                    <line x1="6" y1="6" x2="18" y2="18" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-            <div
-              ref={suggestionRef}
-              className="ht-suggestion-content"
-              contentEditable
-              suppressContentEditableWarning
+        {isEditing && (
+          <div className="ht-edit-container">
+            <input
+              ref={refineInputRef}
+              className="ht-edit-input"
+              placeholder="How should I refine the reply?"
+              value={refineInstruction}
+              onChange={e => setRefineInstruction(e.target.value)}
+              onKeyDown={handleRefineKeyDown}
+              disabled={isRefining}
+            />
+            <button
+              className="ht-edit-btn"
+              onClick={() => void handleRefine()}
+              disabled={!refineInstruction.trim() || isRefining}
             >
-              {redditSuggestion}
-            </div>
+              {isRefining ? '...' : 'Go'}
+            </button>
+            <button
+              className="ht-edit-btn ht-edit-btn-cancel"
+              onClick={handleEditCancel}
+              disabled={isRefining}
+            >
+              ✕
+            </button>
           </div>
         )}
         {(() => {
