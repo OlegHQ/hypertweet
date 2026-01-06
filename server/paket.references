@@ -1,0 +1,12 @@
+FsToolkit.ErrorHandling
+Google.GenAI
+OpenAI
+Serilog
+Serilog.AspNetCore
+Serilog.Sinks.Console
+MongoDB.Driver
+MongoDB.Driver.Core
+Giraffe
+BCrypt.Net-Next
+System.IdentityModel.Tokens.Jwt
+Microsoft.AspNetCore.Authentication.JwtBearer

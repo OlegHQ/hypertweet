@@ -1,4 +1,4 @@
-.PHONY: build publish deploy redeploy clean
+.PHONY: build publish deploy redeploy clean restore paket-install paket-update
 
 # Build configuration
 RUNTIME := linux-arm64
@@ -6,10 +6,21 @@ OUTPUT := ./publish
 DEPLOY_DIR := /var/www/hypertweet
 SERVICE := hypertweet.service
 
-build:
+# Paket commands
+paket-install:
+	dotnet tool restore
+	dotnet paket install
+
+paket-update:
+	dotnet paket update
+
+restore:
+	dotnet paket restore
+
+build: restore
 	dotnet build -c Release
 
-publish:
+publish: restore
 	dotnet publish -c Release -r $(RUNTIME) --self-contained true -p:PublishSingleFile=true -o $(OUTPUT)
 
 deploy:
@@ -21,4 +32,5 @@ redeploy: publish deploy
 
 clean:
 	rm -rf $(OUTPUT)
+	rm -rf paket-files
 	dotnet clean

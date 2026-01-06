@@ -9,6 +9,7 @@ let newId () = Guid.NewGuid().ToString()
 type Profile =
     { Id: string
       ModelName: string
+      ChatModel: string option
       UserBio: string option
       CustomReplyGuidance: string option
       PostProcessReply: bool option

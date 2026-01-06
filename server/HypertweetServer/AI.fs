@@ -3,15 +3,19 @@ module HypertweetServer.AI
 open System
 open System.ClientModel
 open OpenAI.Chat
+open Google.GenAI
+open Google.GenAI.Types
 open FsToolkit.ErrorHandling
 open Giraffe
 open Base
 open Base.Common
 open HypertweetServer.Models
+open ClaudeAgentSdk
 
 module ModelConfig = Profiles.ModelConfig
 
-module AIClient =
+
+module OpenAIClient =
     let private endpoint = Uri "https://openrouter.ai/api/v1"
 
     let private makeClient apiKey modelId =
@@ -60,6 +64,129 @@ module AIClient =
                 return Error(RateLimited $"Rate limited on {modelId}")
             | ex -> return Error(InternalError $"Stream failed: {ex.Message}")
         }
+
+module GoogleAIClient =
+    let private makeClient apiKey = new Client(apiKey = apiKey)
+
+    let private convertRole (msg: ChatMessage) =
+        match msg with
+        | :? SystemChatMessage -> "user"
+        | :? UserChatMessage -> "user"
+        | :? AssistantChatMessage -> "model"
+        | _ -> "user"
+
+    let private getMessageText (msg: ChatMessage) =
+        msg.Content
+        |> Seq.tryHead
+        |> Option.map (fun p -> p.Text)
+        |> Option.defaultValue ""
+
+    let private toGoogleContents (messages: ChatMessage array) =
+        messages
+        |> Array.map (fun msg ->
+            let part = Part(Text = getMessageText msg)
+            Content(Role = convertRole msg, Parts = ResizeArray [ part ]))
+        |> Array.toList
+        |> ResizeArray
+
+    let private extractText (response: GenerateContentResponse) =
+        response.Candidates
+        |> Option.ofObj
+        |> Option.bind (fun candidates -> candidates |> Seq.tryHead)
+        |> Option.bind (fun candidate -> candidate.Content |> Option.ofObj)
+        |> Option.bind (fun content -> content.Parts |> Option.ofObj)
+        |> Option.bind (fun parts -> parts |> Seq.tryHead)
+        |> Option.bind (fun part -> part.Text |> Option.ofObj)
+        |> Option.defaultValue ""
+
+    let complete apiKey modelId (messages: ChatMessage array) =
+        task {
+            try
+                let client = makeClient apiKey
+                let contents = toGoogleContents messages
+                let! response = client.Models.GenerateContentAsync(modelId, contents, null)
+                let text = extractText response
+                return Ok text
+            with
+            | ex when ex.Message.Contains "429" -> return Error(RateLimited $"Rate limited on {modelId}")
+            | ex -> return Error(InternalError $"AI completion failed: {ex.Message}")
+        }
+
+    let stream apiKey modelId (messages: ChatMessage array) onToken =
+        task {
+            try
+                let client = makeClient apiKey
+                let contents = toGoogleContents messages
+                let responses = client.Models.GenerateContentStreamAsync(modelId, contents, null)
+
+                let enumerator = responses.GetAsyncEnumerator()
+                let mutable hasMore = true
+
+                while hasMore do
+                    let! next = enumerator.MoveNextAsync()
+                    hasMore <- next
+
+                    if hasMore then
+                        let text = extractText enumerator.Current
+
+                        if not (String.IsNullOrEmpty text) then
+                            do! onToken text
+
+                return Ok()
+            with
+            | ex when ex.Message.Contains "429" -> return Error(RateLimited $"Rate limited on {modelId}")
+            | ex -> return Error(InternalError $"Stream failed: {ex.Message}")
+        }
+
+module ClaudeClient =
+    let private messagesToPrompt (messages: ChatMessage array) =
+        messages
+        |> Array.map (fun msg ->
+            let role =
+                match msg with
+                | :? SystemChatMessage -> "System"
+                | :? UserChatMessage -> "User"
+                | :? AssistantChatMessage -> "Assistant"
+                | _ -> "User"
+
+            let text =
+                msg.Content
+                |> Seq.tryHead
+                |> Option.map (fun p -> p.Text)
+                |> Option.defaultValue ""
+
+            $"{role}: {text}")
+        |> String.concat "\n\n"
+
+    let complete (_apiKey: string) (modelId: string) (messages: ChatMessage array) =
+        task {
+            try
+                let prompt = messagesToPrompt messages
+
+                let options =
+                    { Options.defaults with
+                        Model = Some modelId }
+
+                let! result = Sdk.queryText prompt options
+
+                match result with
+                | Ok text -> return Ok(Option.defaultValue "" text)
+                | Error err ->
+                    match err with
+                    | SdkError.Timeout _ -> return Error(RateLimited $"Timeout on {modelId}")
+                    | SdkError.ProcessFailed(_, stderr) -> return Error(InternalError $"Claude failed: {stderr}")
+                    | _ -> return Error(InternalError $"Claude completion failed: {err}")
+            with ex ->
+                return Error(InternalError $"Claude completion failed: {ex.Message}")
+        }
+
+let getAIClientHandlers model =
+    if ModelConfig.isClaudeModel model then
+        None, ClaudeClient.complete
+    elif ModelConfig.isGoogleModel model then
+        ((Some GoogleAIClient.stream), GoogleAIClient.complete)
+    else
+        Some OpenAIClient.stream, OpenAIClient.complete
 
 module Service =
     open HypertweetServer.Tones
@@ -142,7 +269,9 @@ module Service =
 
             let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
 
-            let! completion, timeSpent = TracingUtils.measureTask (fun () -> AIClient.complete llmApiKey model messages)
+            let _, complete = getAIClientHandlers model
+
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete llmApiKey model messages)
 
             let! completion =
                 completion
@@ -180,7 +309,10 @@ module Service =
                 Prompts.ReplyPrompt.make tone page userBio customReplyGuidance replyPromptOptions
 
             let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
-            let! completion, timeSpent = TracingUtils.measureTask (fun () -> AIClient.complete llmApiKey model messages)
+
+            let _, complete = getAIClientHandlers model
+
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete llmApiKey model messages)
 
             let! completion =
                 completion
@@ -232,7 +364,6 @@ module Handlers =
 
     let chat db llmApiKey next ctx =
         taskResult {
-            let! apiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<ChatRequest> ctx |> Task.map validateChat
 
@@ -250,8 +381,17 @@ module Handlers =
 
             let model =
                 profile
-                |> Option.map (fun p -> p.ModelName)
+                |> Option.bind (fun p ->
+                    match p.ChatModel with
+                    | Some chatModel -> Some chatModel
+                    | None -> Some p.ModelName)
                 |> Option.defaultValue ModelConfig.defaultModel
+
+            let! apiKey =
+                if ModelConfig.isClaudeModel model then
+                    Ok ""
+                else
+                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
 
             let systemPrompt =
                 Chat.buildSystemPrompt persona req.PageContext userBio replyPromptOptions
@@ -272,11 +412,27 @@ module Handlers =
             let responseBuilder = System.Text.StringBuilder()
             let startTime = DateTime.UtcNow
 
+            let streamOpt, complete = getAIClientHandlers model
+
             let! _ =
-                AIClient.stream apiKey model messages (fun token ->
-                    let processed = Service.applyPostProcess token
-                    responseBuilder.Append processed |> ignore
-                    SSE.writeJson ctx "token" processed)
+                match streamOpt with
+                | Some stream ->
+                    stream apiKey model messages (fun token ->
+                        let processed = Service.applyPostProcess token
+                        responseBuilder.Append processed |> ignore
+                        SSE.writeJson ctx "token" processed)
+                | None ->
+                    task {
+                        let! result = complete apiKey model messages
+
+                        match result with
+                        | Ok text ->
+                            let processed = Service.applyPostProcess text
+                            responseBuilder.Append processed |> ignore
+                            do! SSE.writeJson ctx "token" processed
+                            return Ok()
+                        | Error e -> return Error e
+                    }
 
             let elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds |> int
 
@@ -302,15 +458,27 @@ module Handlers =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<RefineRequest> ctx
-            let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
             let logger = Log.http ctx
             logger |> Log.info "Refining reply"
+
+            let! profile = DataAccess.profile db userId
+
+            let model =
+                profile
+                |> Option.map (fun p -> p.ModelName)
+                |> Option.defaultValue ModelConfig.defaultModel
+
+            let! apiKey =
+                if ModelConfig.isClaudeModel model then
+                    Ok ""
+                else
+                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
 
             let! reply =
                 Service.refineMessage
                     logger
                     db
-                    llmApiKey
+                    apiKey
                     userId
                     req.Platform
                     req.OriginalPost
@@ -325,10 +493,23 @@ module Handlers =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<ReplyRequest> ctx
-            let! llmApiKey = llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
             let logger = Log.http ctx
             logger |> Log.info "Generating reply"
-            let! reply = Service.generateReply logger db llmApiKey req.Page req.ToneId userId
+
+            let! profile = DataAccess.profile db userId
+
+            let model =
+                profile
+                |> Option.map (fun p -> p.ModelName)
+                |> Option.defaultValue ModelConfig.defaultModel
+
+            let! apiKey =
+                if ModelConfig.isClaudeModel model then
+                    Ok ""
+                else
+                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
+
+            let! reply = Service.generateReply logger db apiKey req.Page req.ToneId userId
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx

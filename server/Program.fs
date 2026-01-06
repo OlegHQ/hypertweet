@@ -7,7 +7,6 @@ open Microsoft.AspNetCore.Authentication.JwtBearer
 open Microsoft.Extensions.DependencyInjection
 open Microsoft.IdentityModel.Tokens
 open Giraffe
-open Base
 open Base.Common
 open HypertweetServer
 open Serilog

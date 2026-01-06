@@ -9,10 +9,6 @@ open MongoDB.Bson
 type ModelDef = { ModelName: string }
 
 module ModelConfig =
-    let fallbackModels =
-        [ "xiaomi/mimo-v2-flash:free"
-          "cognitivecomputations/dolphin-mistral-24b-venice-edition:free" ]
-
     let allModels =
         [ "xiaomi/mimo-v2-flash:free"
           "tngtech/deepseek-r1t-chimera:free"
@@ -21,9 +17,17 @@ module ModelConfig =
           "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
           "meta-llama/llama-3.1-405b-instruct:free"
           "openai/gpt-oss-120b:free"
-          "openai/gpt-oss-20b:free" ]
+          "openai/gpt-oss-20b:free"
+          "gemini-3-pro-preview"
+          "gemini-3-flash-preview"
+          "claude-sonnet-4-5-20250929"
+          "claude-haiku-4-5-20251001"
+          "claude-opus-4-5-20251101" ]
 
     let defaultModel = "xiaomi/mimo-v2-flash:free"
+
+    let isClaudeModel (model: string) = model.StartsWith "claude-"
+    let isGoogleModel (model: string) = model.StartsWith "gemini-"
 
 
 module UpdateProfileInput =
@@ -33,6 +37,7 @@ module UpdateProfileInput =
           PostProcessReply: bool option
           ReplyPromptOptions: string list option
           ModelName: string option
+          ChatModel: string option
           ChatBotPersona: string option }
 
     type Variant =
@@ -41,6 +46,7 @@ module UpdateProfileInput =
         | PostProcessReply of bool
         | ReplyPromptOptions of Models.ReplyPromptOption.T list
         | ModelName of string
+        | ChatModel of string
         | ChatBotPersona of string
         | Combined of Variant list
 
@@ -63,6 +69,7 @@ module UpdateProfileInput =
                   input.PostProcessReply |> Option.map PostProcessReply
                   replyOpts |> Option.map ReplyPromptOptions
                   input.ModelName |> Option.map ModelName
+                  input.ChatModel |> Option.map ChatModel
                   input.ChatBotPersona |> Option.map ChatBotPersona ]
                 |> List.choose id
 
@@ -82,6 +89,7 @@ module UpdateProfileInput =
             doc
             |> Bson.field "ReplyPromptOptions" (opts |> List.map Models.ReplyPromptOption.toString)
         | ModelName v -> doc |> Bson.field "ModelName" v
+        | ChatModel v -> doc |> Bson.field "ChatModel" v
         | ChatBotPersona v -> doc |> Bson.field "ChatBotPersona" v
         | Combined variants -> variants |> List.fold (fun acc v -> buildUpdateDoc v acc) doc
 
@@ -89,6 +97,8 @@ module UpdateProfileInput =
         match variant with
         | ModelName m when not (List.contains m ModelConfig.allModels) ->
             Error(ValidationError("ModelName", "Model is invalid"))
+        | ChatModel m when not (List.contains m ModelConfig.allModels) ->
+            Error(ValidationError("ChatModel", "Chat model is invalid"))
         | Combined variants -> variants |> List.traverseResultM validateVariant |> Result.map Combined
         | other -> Ok other
 

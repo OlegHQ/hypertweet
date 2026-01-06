@@ -1,6 +1,23 @@
-obj
-bin
-.envrc
-publish
+# Build outputs
+obj/
+bin/
+publish/
 
+# Paket
+.paket/
+paket-files/
+libs/
+
+# Local environment
+.envrc
+
+# IDE
+.idea/
+.vs/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
 

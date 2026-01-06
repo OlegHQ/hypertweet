@@ -24,17 +24,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="FsToolkit.ErrorHandling" Version="5.1.0" />
-    <PackageReference Include="OpenAI" Version="2.8.0" />
-    <PackageReference Include="Serilog" Version="4.1.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
-    <PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-    <PackageReference Include="MongoDB.Driver" Version="2.28.0" />
-    <PackageReference Include="MongoDB.Driver.Core" Version="2.28.0" />
-    <PackageReference Include="Giraffe" Version="7.0.2" />
-    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.0" />
+    <ProjectReference Include="libs/claude-agent-sdk-fsharp/src/ClaudeAgentSdk/ClaudeAgentSdk.fsproj" />
   </ItemGroup>
+
+  <Import Project=".paket\Paket.Restore.targets" />
 
 </Project>
