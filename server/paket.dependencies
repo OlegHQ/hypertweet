@@ -8,6 +8,7 @@ nuget OpenAI 2.8.0
 nuget Serilog 4.1.0
 nuget Serilog.AspNetCore 8.0.3
 nuget Serilog.Sinks.Console 6.0.0
+nuget MongoDB.Bson 2.28.0
 nuget MongoDB.Driver 2.28.0
 nuget MongoDB.Driver.Core 2.28.0
 nuget Giraffe 7.0.2

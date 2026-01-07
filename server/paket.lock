@@ -91,7 +91,7 @@ NUGET
       Microsoft.NETCore.Platforms (>= 1.1)
       Microsoft.NETCore.Targets (>= 1.1)
       System.Runtime (>= 4.3)
-    MongoDB.Bson (3.5.2)
+    MongoDB.Bson (2.28)
       System.Memory (>= 4.5.5)
       System.Runtime.CompilerServices.Unsafe (>= 5.0)
     MongoDB.Driver (2.28)

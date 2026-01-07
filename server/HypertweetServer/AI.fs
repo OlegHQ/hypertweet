@@ -15,12 +15,22 @@ open ClaudeAgentSdk
 module ModelConfig = Profiles.ModelConfig
 
 
-module OpenAIClient =
-    let private endpoint = Uri "https://openrouter.ai/api/v1"
+type ProviderKey =
+    | Groq of string
+    | OpenRouter of string
+    | GoogleKey of string
+    | ClaudeKey
 
+module OpenAIClient =
     let private makeClient apiKey modelId =
-        let cred = ApiKeyCredential apiKey
-        let opts = OpenAI.OpenAIClientOptions(Endpoint = endpoint)
+        let key, endpoint =
+            match apiKey with
+            | Groq value -> value, "https://api.groq.com/openai/v1"
+            | OpenRouter value -> value, "https://openrouter.ai/api/v1"
+            | _ -> "", ""
+
+        let cred = ApiKeyCredential key
+        let opts = OpenAI.OpenAIClientOptions(Endpoint = Uri endpoint)
         ChatClient(modelId, cred, opts)
 
     let complete apiKey modelId (messages: ChatMessage array) =
@@ -158,7 +168,7 @@ module ClaudeClient =
             $"{role}: {text}")
         |> String.concat "\n\n"
 
-    let complete (_apiKey: string) (modelId: string) (messages: ChatMessage array) =
+    let complete modelId (messages: ChatMessage array) =
         task {
             try
                 let prompt = messagesToPrompt messages
@@ -180,13 +190,25 @@ module ClaudeClient =
                 return Error(InternalError $"Claude completion failed: {ex.Message}")
         }
 
-let getAIClientHandlers model =
-    if ModelConfig.isClaudeModel model then
-        None, ClaudeClient.complete
-    elif ModelConfig.isGoogleModel model then
-        ((Some GoogleAIClient.stream), GoogleAIClient.complete)
+
+let getKey (apiKeys: Config.LlmApiKeys) model =
+    if ModelConfig.isGoogleModel model then
+        apiKeys.GoogleAI |> Option.map (fun x -> GoogleKey x)
+    elif ModelConfig.isGroqModel model then
+        apiKeys.Groq |> Option.map (fun x -> Groq x)
+    elif ModelConfig.isClaudeModel model then
+        Some ClaudeKey
     else
-        Some OpenAIClient.stream, OpenAIClient.complete
+        apiKeys.OpenRouter |> Option.map (fun x -> OpenRouter x)
+
+
+let getAIClientHandlers key =
+    match key with
+    | ClaudeKey -> None, Some ClaudeClient.complete
+    | GoogleKey k -> Some(GoogleAIClient.stream k), Some(GoogleAIClient.complete k)
+    | OpenRouter _
+    | Groq _ -> Some(OpenAIClient.stream key), Some(OpenAIClient.complete key)
+
 
 module Service =
     open HypertweetServer.Tones
@@ -241,7 +263,7 @@ module Service =
             .Replace("'", "'")
 
 
-    let refineMessage logger db llmApiKey userId platform postMessage draftReply instruction =
+    let refineMessage logger db apiKeys userId platform postMessage draftReply instruction =
         taskResult {
             let! model, user, profile = resolveBaseModelInputs logger db userId
 
@@ -269,9 +291,17 @@ module Service =
 
             let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
 
-            let _, complete = getAIClientHandlers model
+            let! providerKey =
+                getKey apiKeys model
+                |> Result.requireSome (InternalError $"No API key configured for model: {model}")
 
-            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete llmApiKey model messages)
+            let _, completeOpt = getAIClientHandlers providerKey
+
+            let! complete =
+                completeOpt
+                |> Result.requireSome (InternalError $"No completion handler for model: {model}")
+
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete model messages)
 
             let! completion =
                 completion
@@ -293,7 +323,7 @@ module Service =
                   Reply = completion }
         }
 
-    let generateReply logger db llmApiKey (page: Page) toneId userId =
+    let generateReply logger db apiKeys (page: Page) toneId userId =
         taskResult {
             let! tone, model, user, profile = resolveModelInputs logger db toneId userId
             let userBio = profile |> Option.bind (fun x -> x.UserBio)
@@ -310,9 +340,17 @@ module Service =
 
             let messages = [| ChatMessage.CreateUserMessage promptText :> ChatMessage |]
 
-            let _, complete = getAIClientHandlers model
+            let! providerKey =
+                getKey apiKeys model
+                |> Result.requireSome (InternalError $"No API key configured for model: {model}")
 
-            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete llmApiKey model messages)
+            let _, completeOpt = getAIClientHandlers providerKey
+
+            let! complete =
+                completeOpt
+                |> Result.requireSome (InternalError $"No completion handler for model: {model}")
+
+            let! completion, timeSpent = TracingUtils.measureTask (fun () -> complete model messages)
 
             let! completion =
                 completion
@@ -362,7 +400,7 @@ module Handlers =
         else
             Ok req
 
-    let chat db llmApiKey next ctx =
+    let chat db apiKeys next ctx =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<ChatRequest> ctx |> Task.map validateChat
@@ -387,11 +425,9 @@ module Handlers =
                     | None -> Some p.ModelName)
                 |> Option.defaultValue ModelConfig.defaultModel
 
-            let! apiKey =
-                if ModelConfig.isClaudeModel model then
-                    Ok ""
-                else
-                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
+            let! providerKey =
+                getKey apiKeys model
+                |> Result.requireSome (InternalError $"No API key configured for model: {model}")
 
             let systemPrompt =
                 Chat.buildSystemPrompt persona req.PageContext userBio replyPromptOptions
@@ -412,27 +448,31 @@ module Handlers =
             let responseBuilder = System.Text.StringBuilder()
             let startTime = DateTime.UtcNow
 
-            let streamOpt, complete = getAIClientHandlers model
+            let streamOpt, completeOpt = getAIClientHandlers providerKey
 
             let! _ =
                 match streamOpt with
                 | Some stream ->
-                    stream apiKey model messages (fun token ->
+                    stream model messages (fun token ->
                         let processed = Service.applyPostProcess token
                         responseBuilder.Append processed |> ignore
                         SSE.writeJson ctx "token" processed)
                 | None ->
-                    task {
-                        let! result = complete apiKey model messages
+                    match completeOpt with
+                    | Some complete ->
+                        task {
+                            let! result = complete model messages
 
-                        match result with
-                        | Ok text ->
-                            let processed = Service.applyPostProcess text
-                            responseBuilder.Append processed |> ignore
-                            do! SSE.writeJson ctx "token" processed
-                            return Ok()
-                        | Error e -> return Error e
-                    }
+                            match result with
+                            | Ok text ->
+                                let processed = Service.applyPostProcess text
+                                responseBuilder.Append processed |> ignore
+                                do! SSE.writeJson ctx "token" processed
+                                return Ok()
+                            | Error e -> return Error e
+                        }
+                    | None ->
+                        task { return Error(InternalError $"No handler available for model: {model}") }
 
             let elapsed = (DateTime.UtcNow - startTime).TotalMilliseconds |> int
 
@@ -454,31 +494,18 @@ module Handlers =
         }
         |> HttpCtx.errHandle next ctx
 
-    let refine db llmApiKey next ctx =
+    let refine db apiKeys next ctx =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<RefineRequest> ctx
             let logger = Log.http ctx
             logger |> Log.info "Refining reply"
 
-            let! profile = DataAccess.profile db userId
-
-            let model =
-                profile
-                |> Option.map (fun p -> p.ModelName)
-                |> Option.defaultValue ModelConfig.defaultModel
-
-            let! apiKey =
-                if ModelConfig.isClaudeModel model then
-                    Ok ""
-                else
-                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
-
             let! reply =
                 Service.refineMessage
                     logger
                     db
-                    apiKey
+                    apiKeys
                     userId
                     req.Platform
                     req.OriginalPost
@@ -489,27 +516,14 @@ module Handlers =
         }
         |> HttpCtx.errHandle next ctx
 
-    let reply db llmApiKey next ctx =
+    let reply db apiKeys next ctx =
         taskResult {
             let userId = HttpCtx.getUserId ctx
             let! req = HttpCtx.bindJson<ReplyRequest> ctx
             let logger = Log.http ctx
             logger |> Log.info "Generating reply"
 
-            let! profile = DataAccess.profile db userId
-
-            let model =
-                profile
-                |> Option.map (fun p -> p.ModelName)
-                |> Option.defaultValue ModelConfig.defaultModel
-
-            let! apiKey =
-                if ModelConfig.isClaudeModel model then
-                    Ok ""
-                else
-                    llmApiKey |> Result.requireSome (InternalError "LLM API KEY not configured")
-
-            let! reply = Service.generateReply logger db apiKey req.Page req.ToneId userId
+            let! reply = Service.generateReply logger db apiKeys req.Page req.ToneId userId
             return! json reply next ctx
         }
         |> HttpCtx.errHandle next ctx

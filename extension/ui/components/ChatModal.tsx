@@ -49,15 +49,15 @@ export function ChatModal({
   const { data: profile } = useProfile(isOpen);
 
   const updateModelMutation = useMutation({
-    mutationFn: (modelName: string) =>
-      api.updateProfile({ ModelName: modelName }),
-    onMutate: async modelName => {
+    mutationFn: (chatModel: string) =>
+      api.updateProfile({ ChatModel: chatModel }),
+    onMutate: async chatModel => {
       await queryClient.cancelQueries({ queryKey: ['profile'] });
       const previous = queryClient.getQueryData<ProfileRes>(['profile']);
       if (previous) {
         queryClient.setQueryData<ProfileRes>(['profile'], {
           ...previous,
-          ModelName: modelName,
+          ChatModel: chatModel,
         });
       }
       return { previous };
@@ -78,7 +78,8 @@ export function ChatModal({
       label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
     })) ?? [];
 
-  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
+  const currentModel =
+    profile?.ChatModel ?? profile?.ModelName ?? modelOptions[0]?.value ?? '';
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     updateModelMutation.mutate(e.target.value);

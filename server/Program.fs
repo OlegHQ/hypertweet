@@ -45,9 +45,9 @@ let main args =
                         POST >=> route "/profile/update" >=> Profiles.Handlers.updateProfile db
                         GET >=> route "/profile" >=> Profiles.Handlers.getProfile db
                         DELETE >=> route "/users" >=> Profiles.Handlers.deleteMe db
-                        POST >=> route "/ai/refine" >=> AI.Handlers.refine db config.LlmApiKey
-                        POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.LlmApiKey
-                        POST >=> route "/ai/chat" >=> AI.Handlers.chat db config.LlmApiKey
+                        POST >=> route "/ai/refine" >=> AI.Handlers.refine db config.ApiKeys
+                        POST >=> route "/ai/reply" >=> AI.Handlers.reply db config.ApiKeys
+                        POST >=> route "/ai/chat" >=> AI.Handlers.chat db config.ApiKeys
                         GET >=> route "/profile/available-models" >=> Profiles.Handlers.listModels
                         GET >=> route "/tones" >=> Tones.Handlers.list db
                         POST >=> route "/tones" >=> Tones.Handlers.create db

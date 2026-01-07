@@ -16,8 +16,10 @@ module ModelConfig =
           "deepseek/deepseek-r1-0528:free"
           "cognitivecomputations/dolphin-mistral-24b-venice-edition:free"
           "meta-llama/llama-3.1-405b-instruct:free"
-          "openai/gpt-oss-120b:free"
-          "openai/gpt-oss-20b:free"
+          // "openai/gpt-oss-120b:free"
+          // "openai/gpt-oss-20b:free"
+          "openai/gpt-oss-120b"
+          "openai/gpt-oss-20b"
           "gemini-3-pro-preview"
           "gemini-3-flash-preview"
           "claude-sonnet-4-5-20250929"
@@ -26,6 +28,7 @@ module ModelConfig =
 
     let defaultModel = "xiaomi/mimo-v2-flash:free"
 
+    let isGroqModel (model: string) = model.StartsWith "openai/gpt"
     let isClaudeModel (model: string) = model.StartsWith "claude-"
     let isGoogleModel (model: string) = model.StartsWith "gemini-"
 

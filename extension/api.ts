@@ -170,6 +170,7 @@ interface UpdateProfileReq {
   PostProcessReply?: boolean;
   ReplyPromptOptions?: string[];
   ModelName?: string;
+  ChatModel?: string;
   ChatBotPersona?: string;
 }
 interface UpdatePasswordReq {
@@ -178,6 +179,7 @@ interface UpdatePasswordReq {
 export interface ProfileRes {
   Id: string;
   ModelName: string;
+  ChatModel?: string;
   UserBio?: string;
   CustomReplyGuidance?: string;
   PostProcessReply?: boolean;

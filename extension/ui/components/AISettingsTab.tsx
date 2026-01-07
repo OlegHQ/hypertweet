@@ -200,7 +200,7 @@ export function AISettingsTab(): React.ReactElement {
     <div>
       {/* Model Selection */}
       <div className="ht-section">
-        <h3 className="ht-section-title">AI Model</h3>
+        <h3 className="ht-section-title">Reply Model</h3>
         {modelsLoading || profileLoading ? (
           <p className="ht-loading">Loading models...</p>
         ) : (

@@ -1,14 +1,18 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Textarea } from './Textarea';
+import { Select } from './Select';
 import { api } from '../../apiProxy';
 import { useProfile } from '../hooks/useProfile';
+import { useModels } from '../hooks/useModels';
 import { useAuth } from '../hooks/useAuth';
+import type { ProfileRes } from '../../api';
 
 export function ChatSettingsTab(): React.ReactElement {
   const queryClient = useQueryClient();
   const { token } = useAuth();
-  const { data: profile } = useProfile(!!token);
+  const { data: profile, isLoading: profileLoading } = useProfile(!!token);
+  const { data: modelsData, isLoading: modelsLoading } = useModels(!!token);
 
   const [persona, setPersona] = useState('');
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>(
@@ -41,6 +45,45 @@ export function ChatSettingsTab(): React.ReactElement {
     },
   });
 
+  const updateChatModelMutation = useMutation({
+    mutationFn: (chatModel: string) =>
+      api.updateProfile({ ChatModel: chatModel }),
+    onMutate: async chatModel => {
+      await queryClient.cancelQueries({ queryKey: ['profile'] });
+      const previous = queryClient.getQueryData<ProfileRes>(['profile']);
+      if (previous) {
+        queryClient.setQueryData<ProfileRes>(['profile'], {
+          ...previous,
+          ChatModel: chatModel,
+        });
+      }
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['profile'], context.previous);
+      }
+    },
+    onSettled: () => {
+      void queryClient.invalidateQueries({ queryKey: ['profile'] });
+    },
+  });
+
+  const modelOptions =
+    modelsData?.AllModels.map(m => ({
+      value: m.ModelName,
+      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    })) ?? [];
+
+  const currentChatModel =
+    profile?.ChatModel ?? profile?.ModelName ?? modelOptions[0]?.value ?? '';
+
+  const handleChatModelChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ): void => {
+    updateChatModelMutation.mutate(e.target.value);
+  };
+
   const debouncedSave = useCallback(
     (data: { ChatBotPersona: string }) => {
       if (saveTimerRef.current) {
@@ -62,6 +105,26 @@ export function ChatSettingsTab(): React.ReactElement {
 
   return (
     <div>
+      {/* Chat Model Selection */}
+      <div className="ht-section">
+        <h3 className="ht-section-title">Chat Model</h3>
+        <p className="ht-section-description">
+          Select the AI model for chat conversations.
+        </p>
+        {modelsLoading || profileLoading ? (
+          <p className="ht-loading">Loading models...</p>
+        ) : (
+          <Select
+            options={modelOptions}
+            value={currentChatModel}
+            onChange={handleChatModelChange}
+            disabled={updateChatModelMutation.isPending}
+          />
+        )}
+      </div>
+
+      <hr className="ht-divider" />
+
       <div className="ht-section">
         <div className="ht-section-header">
           <h3 className="ht-section-title">Chat Persona</h3>
