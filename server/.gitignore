@@ -1,23 +1,27 @@
 # Build outputs
-obj/
 bin/
-publish/
-
-# Paket
-.paket/
-paket-files/
-libs/
 
 # Local environment
 .envrc
+.env
 
 # IDE
 .idea/
 .vs/
 *.user
 *.suo
+.vscode/
 
 # OS
 .DS_Store
 Thumbs.db
+
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
 

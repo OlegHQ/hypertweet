@@ -1,36 +1,31 @@
-.PHONY: build publish deploy redeploy clean restore paket-install paket-update
+.PHONY: build run test clean fmt lint deploy
 
 # Build configuration
-RUNTIME := linux-arm64
-OUTPUT := ./publish
+OUTPUT := ./bin/server
 DEPLOY_DIR := /var/www/hypertweet
 SERVICE := hypertweet.service
 
-# Paket commands
-paket-install:
-	dotnet tool restore
-	dotnet paket install
+# Go commands
+build:
+	go build -o $(OUTPUT) ./cmd/server
 
-paket-update:
-	dotnet paket update
+run:
+	go run ./cmd/server
 
-restore:
-	dotnet paket restore
+test:
+	go test ./...
 
-build: restore
-	dotnet build -c Release
+fmt:
+	go fmt ./...
 
-publish: restore
-	dotnet publish -c Release -r $(RUNTIME) --self-contained true -p:PublishSingleFile=true -o $(OUTPUT)
-
-deploy:
-	sudo systemctl stop $(SERVICE)
-	sudo cp -r $(OUTPUT)/* $(DEPLOY_DIR)/
-	sudo systemctl start $(SERVICE)
-
-redeploy: publish deploy
+lint:
+	go vet ./...
 
 clean:
-	rm -rf $(OUTPUT)
-	rm -rf paket-files
-	dotnet clean
+	rm -rf bin/
+
+# Deployment
+deploy: build
+	sudo systemctl stop $(SERVICE) || true
+	sudo cp $(OUTPUT) $(DEPLOY_DIR)/
+	sudo systemctl start $(SERVICE)

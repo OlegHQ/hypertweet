@@ -1,298 +1,222 @@
-# F# Web API Architecture Guide
+# Go Web API Architecture Guide
 
-Minimal boilerplate F# web API. No unnecessary abstraction layers.
+Minimal boilerplate Go web API using standard library. Feature-based package structure.
 
 ## Commands
 
-- `dotnet build` - Build
-- `dotnet run` - Run server
+- `make build` - Build server binary to `./bin/server`
+- `make run` - Run server directly with `go run`
+- `make test` - Run all tests
+- `make fmt` - Format code
+- `make lint` - Run go vet
 
 ## Architecture
 
 ```
-src/
-  Shared/                    # Foundation (no deps)
-    Errors.fs                # DomainError discriminated union
-    Config.fs                # AppConfig record + loader
-    Http.fs                  # HTTP helpers, error handling
-    Db.fs                    # Database helpers
-    Validate.fs              # Validation combinators
+cmd/
+  server/
+    main.go              # Entry point, wiring, routes
 
-  Domain/                    # Pure entities (depends on: Shared)
-    Models.fs                # Domain types
-    DataAccess.fs            # Collection accessors, common queries
+internal/
+  config/
+    config.go            # Environment config loading
 
-  Infrastructure/            # External services (depends on: Shared, Domain)
-    Jwt.fs                   # Token generation
+  db/
+    mongo.go             # MongoDB connection
 
-  Features/                  # Vertical slices (depends on: all above)
-    <Feature>/
-      [Types.fs]             # Optional: DTOs and commands (can go in Handlers.fs)
-      Handlers.fs            # Everything: validation, logic, DB ops, types if simple
+  middleware/
+    auth.go              # JWT authentication
+    cors.go              # CORS headers
+    logging.go           # Request logging
 
-Program.fs                   # Composition root, routes
+  shared/
+    errors.go            # DomainError types
+    validate.go          # Validation helpers
+    response.go          # HTTP response helpers
+
+  auth/
+    types.go             # User struct, request/response types
+    errors.go            # ErrUserNotFound, etc.
+    repo.go              # UserRepo - database access
+    service.go           # JWT generation, password hashing
+    handler.go           # HTTP handlers
+
+  profiles/
+    types.go             # Profile struct, model config
+    errors.go            # Domain errors
+    repo.go              # ProfileRepo
+    handler.go           # HTTP handlers
+
+  tones/
+    types.go             # Tone struct, defaults
+    errors.go            # Domain errors
+    repo.go              # ToneRepo
+    handler.go           # HTTP handlers
+
+  ai/
+    types.go             # Page, Post, request/response types
+    errors.go            # AI errors
+    groq.go              # Groq API client
+    prompts.go           # Prompt builders
+    service.go           # AI orchestration
+    handler.go           # HTTP handlers (incl. SSE)
+
+  tracing/
+    types.go             # TraceEvent struct
+    repo.go              # TraceRepo with TTL
 ```
 
-**Key principle:** No Service layer. No Repository layer. Handlers do everything.
+## Key Principles
 
-## Golden Standard: Auth/Handlers.fs
+1. **Feature packages** - Each feature is self-contained
+2. **Single struct for BSON + JSON** - Same type for DB and API
+3. **Explicit dependency injection** - Pass db/config via constructor, no globals
+4. **Error wrapping** - Every error wrapped with context
+5. **slog for logging** - Structured logging
 
-This is the pattern to follow. All logic lives in the handler:
+## Handler Pattern
 
-```fsharp
-module Handlers =
-    // Validation - private, returns Result
-    let private validateLogin (req: LoginRequest) =
-        result {
-            let! email = req.Email |> Validate.email "email"
-            let! password = req.Password |> Validate.notEmpty "password"
-            return { Email = email; Password = password }
-        }
-
-    // Data access helpers - reuse DataAccess or define inline
-    let userByEmail db = DataAccess.userByKey db "Email"
-
-    // Small helper functions - defined right here, not in separate files
-    let createTokenResult config user =
-        let accessToken = Jwt.generateToken config user
-        let refreshToken = Jwt.generateRefreshToken ()
-        { AccessToken = accessToken
-          RefreshToken = refreshToken
-          ExpiresIn = config.JwtExpiryDays * 24 * 60 * 60 }
-
-    // Handler - uses taskResult, does EVERYTHING inline
-    let login config db next ctx =
-        taskResult {
-            let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
-
-            let! user =
-                userByEmail db req.Email
-                |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
-
-            let result = createTokenResult config user
-
-            let expiry = System.DateTime.UtcNow.AddDays 30.0
-            do! updateRefreshToken user.Id result.RefreshToken expiry db
-
-            return! json result next ctx
-        }
-        |> HttpCtx.errHandle next ctx
-```
-
-## What NOT to Do
-
-**Don't create:**
-- `Service.fs` files - put logic in handlers
-- `Repository.fs` files - use `Db` module directly
-- Dependency injection records - pass `db` and `config` as parameters
-- Abstractions for things used once
-
-**Don't:**
-```fsharp
-// BAD: Unnecessary abstraction
-type AuthDeps = {
-    FindUserByEmail: string -> AsyncResult<User option, DomainError>
-    InsertUser: User -> AsyncResult<unit, DomainError>
+```go
+type Handler struct {
+    repo *UserRepo
+    log  *slog.Logger
 }
 
-module Service =
-    let login deps cmd = asyncResult {
-        let! user = deps.FindUserByEmail cmd.Email
-        // ...
+func NewHandler(repo *UserRepo, log *slog.Logger) *Handler {
+    return &Handler{repo: repo, log: log}
+}
+
+func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
+    // 1. Parse
+    req, err := shared.DecodeJSON[CreateRequest](r)
+    if err != nil {
+        shared.HandleError(w, h.log, err)
+        return
     }
 
-module Handlers =
-    let login deps = handler validateLogin (Service.login deps) (fun r -> json r)
+    // 2. Validate
+    if err := shared.ValidateEmail("email", req.Email); err != nil {
+        shared.HandleError(w, h.log, err)
+        return
+    }
+
+    // 3. Execute
+    user, err := h.repo.Insert(ctx, &User{...})
+    if err != nil {
+        shared.HandleError(w, h.log, err)
+        return
+    }
+
+    // 4. Respond
+    shared.RespondJSON(w, http.StatusCreated, user)
+}
 ```
 
-**Do:**
-```fsharp
-// GOOD: Direct, no indirection
-let login config db next ctx =
-    taskResult {
-        let! req = HttpCtx.bindJson<LoginRequest> ctx |> Task.map validateLogin
-        let! user = userByEmail db req.Email |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
-        // ... all logic right here
-        return! json result next ctx
+## Repository Pattern
+
+```go
+type UserRepo struct {
+    coll *mongo.Collection
+}
+
+func NewUserRepo(db *mongo.Database) *UserRepo {
+    return &UserRepo{coll: db.Collection("users")}
+}
+
+func (r *UserRepo) FindByID(ctx context.Context, id string) (*User, error) {
+    var user User
+    err := r.coll.FindOne(ctx, bson.M{"_id": id}).Decode(&user)
+    if errors.Is(err, mongo.ErrNoDocuments) {
+        return nil, ErrUserNotFound  // domain error
     }
-    |> HttpCtx.errHandle next ctx
+    if err != nil {
+        return nil, fmt.Errorf("find user: %w", err)  // wrap with context
+    }
+    return &user, nil
+}
+```
+
+## Error Handling
+
+```go
+// Domain errors in feature/errors.go
+var (
+    ErrUserNotFound = errors.New("user not found")
+    ErrUserAlreadyExists = errors.New("user already exists")
+)
+
+// Wrap errors with context
+return nil, fmt.Errorf("find user %s: %w", id, err)
+
+// Handle in handler
+if errors.Is(err, ErrUserNotFound) {
+    shared.HandleError(w, h.log, shared.NewNotFoundError("user"))
+    return
+}
 ```
 
 ## Adding a New Feature
 
-**IMPORTANT: Use `module` syntax, NOT `namespace`**
-
-1. **Feature file** - Single file with everything:
-   ```fsharp
-   module HypertweetServer.Thing
-
-   open Giraffe
-   open FsToolkit.ErrorHandling
-   open Base
-   open Base.Common
-   open HypertweetServer.Models
-
-   // Types - DTOs at the top
-   [<CLIMutable>]
-   type CreateRequest = { Name: string; Value: int }
-
-   type ThingResponse = { Id: string; Name: string }
-
-   // Validation - private, returns Result
-   let private validateCreate (req: CreateRequest) =
-       result {
-           let! name = req.Name |> Validate.notEmpty "name"
-           let! value = req.Value |> Validate.positive "value"
-           return name, value
-       }
-
-   // Data access helpers (if needed beyond DataAccess module)
-   let thingCol db = Db.collection<Thing> db "things"
-
-   // Handlers module - all logic inline
-   module Handlers =
-       let create db next ctx =
-           taskResult {
-               let! req = HttpCtx.bindJson<CreateRequest> ctx |> Task.map validateCreate
-
-               let thing = {
-                   Id = newId ()
-                   Name = fst req
-                   Value = snd req
-                   CreatedAt = System.DateTime.UtcNow
-               }
-
-               do! thingCol db |> Db.insertOne thing
-               return! json { Id = thing.Id; Name = thing.Name } next ctx
-           }
-           |> HttpCtx.errHandle next ctx
-
-       let get db id next ctx =
-           taskResult {
-               let! thing =
-                   thingCol db
-                   |> Db.findOne (Bson.make () |> Bson.field "_id" id)
-                   |> Async.map (Result.bind (Result.requireSome (NotFound "Thing")))
-
-               return! json thing next ctx
-           }
-           |> HttpCtx.errHandle next ctx
+1. Create package under `internal/`:
+   ```
+   internal/newfeature/
+     types.go     # Structs with bson/json tags
+     errors.go    # Domain errors
+     repo.go      # Database access
+     handler.go   # HTTP handlers
    ```
 
-2. **Wire in Program.fs**:
-   ```fsharp
-   let routes = choose [
-       POST >=> route "/things" >=> ThingHandlers.create db
-       GET >=> routef "/things/%s" (ThingHandlers.get db)
-   ]
+2. Wire in `cmd/server/main.go`:
+   ```go
+   newRepo := newfeature.NewRepo(database)
+   newHandler := newfeature.NewHandler(newRepo, log)
+
+   mux.HandleFunc("GET /new", newHandler.List)
+   mux.HandleFunc("POST /new", newHandler.Create)
    ```
 
-3. **Add to .fsproj**:
-   ```xml
-   <Compile Include="HypertweetServer/Thing.fs" />
-   ```
+## Route Registration (Go 1.22+)
 
-## Style Guide
+```go
+mux := http.NewServeMux()
 
-### Use taskResult from FsToolkit.ErrorHandling
-```fsharp
-let handler db next ctx =
-    taskResult {
-        let! req = HttpCtx.bindJson<Request> ctx |> Task.map validate
-        let! data = someAsyncOp db |> Async.map someResultTransform
-        do! anotherOp data
-        return! json response next ctx
-    }
-    |> HttpCtx.errHandle next ctx
+// Public routes
+mux.HandleFunc("POST /auth/register", authHandler.Register)
+mux.HandleFunc("POST /auth/login", authHandler.Login)
+
+// Protected routes - wrap with auth middleware
+protected := http.NewServeMux()
+protected.HandleFunc("GET /profile", profileHandler.GetProfile)
+protected.HandleFunc("PUT /tones/{id}", toneHandler.Update)
+
+mux.Handle("/", authMiddleware.Protect(protected))
 ```
 
-### Validation with combinators
-```fsharp
-let private validate (req: Request) =
-    result {
-        let! email = req.Email |> Validate.email "email"
-        let! password = req.Password |> Validate.chain [
-            Validate.notEmpty "password"
-            Validate.minLength "password" 8
-        ]
-        return { Email = email; Password = password }
-    }
+## Environment Variables
+
+```bash
+# Required
+MONGODB_URI=mongodb://localhost:27017
+GROQ_API_KEY=your-api-key
+
+# Optional
+PORT=5001
+JWT_SECRET=your-secret-key
 ```
 
-### Result helpers for Option handling
-```fsharp
-// Convert Option to Result with error
-let! user = findUser db id |> Async.map (Result.bind (Result.requireSome (NotFound "User")))
+## Dependencies
 
-// Check something doesn't exist
-let! existing = findByEmail db email
-do! existing |> Result.requireNone (Conflict "Already exists")
-```
+- `go.mongodb.org/mongo-driver` - MongoDB driver
+- `github.com/golang-jwt/jwt/v5` - JWT handling
+- `golang.org/x/crypto` - BCrypt password hashing
+- `github.com/google/uuid` - UUID generation
 
-### DataAccess for shared queries
-```fsharp
-// Domain/DataAccess.fs - collection accessors and common queries
-module DataAccess =
-    let userCol db = Db.collection<User> db "users"
-    let userByKey db key value = userCol db |> Db.findOne (Bson.make () |> Bson.field key value)
-    let user db id = userByKey db "_id" id
-```
+## Code Quality Standards
 
-### Handler-local helpers for feature-specific logic
-```fsharp
-// In Handlers.fs - not in a separate file
-let userByEmail db = DataAccess.userByKey db "Email"
-
-let createTokenResult config user =
-    { AccessToken = Jwt.generateToken config user
-      RefreshToken = Jwt.generateRefreshToken ()
-      ExpiresIn = config.JwtExpiryDays * 24 * 60 * 60 }
-```
-
-## File Order in .fsproj
-
-F# compiles top-to-bottom:
-
-```xml
-<!-- 1. Shared -->
-<Compile Include="src/Shared/Errors.fs" />
-<Compile Include="src/Shared/Config.fs" />
-<Compile Include="src/Shared/Db.fs" />
-<Compile Include="src/Shared/Http.fs" />
-<Compile Include="src/Shared/Validate.fs" />
-
-<!-- 2. Domain -->
-<Compile Include="src/Domain/Models.fs" />
-<Compile Include="src/Domain/DataAccess.fs" />
-
-<!-- 3. Infrastructure -->
-<Compile Include="src/Infrastructure/Jwt.fs" />
-
-<!-- 4. Features (Types.fs before Handlers.fs if present) -->
-<Compile Include="src/Features/Auth/Types.fs" />
-<Compile Include="src/Features/Auth/Handlers.fs" />
-<Compile Include="src/Features/Thing/Handlers.fs" />
-
-<!-- 5. Entry -->
-<Compile Include="Program.fs" />
-```
-
-## Core Errors
-
-```fsharp
-type DomainError =
-    | ValidationError of field: string * message: string
-    | NotFound of entity: string
-    | Conflict of message: string
-    | Unauthorized
-    | InternalError of message: string
-```
-
-## Summary
-
-- **1-2 files per feature**: Handlers.fs (required) + Types.fs (optional)
-- **No Service layer**: Logic lives in handlers
-- **No Repository layer**: Use Db module directly
-- **No dependency records**: Pass db/config as parameters
-- **taskResult**: FsToolkit.ErrorHandling for async+result
-- **Inline helpers**: Define in Handlers.fs, not separate files
+- All code must compile without errors
+- Use `go fmt` before committing
+- Use `go vet` to catch issues
+- Every error must be wrapped with context
+- No global variables - pass dependencies explicitly
