@@ -4,12 +4,12 @@ import { Textarea } from './Textarea';
 import { Button } from './Button';
 
 interface ToneData {
-  Title: string;
-  Instruction: string;
+  title: string;
+  instruction: string;
 }
 
 interface ToneEditorProps {
-  tone?: { Id: string; Title: string; Instruction: string } | null;
+  tone?: { id: string; title: string; instruction: string } | null;
   onSave: (data: ToneData) => void;
   onCancel: () => void;
   isLoading: boolean;
@@ -21,8 +21,8 @@ export function ToneEditor({
   onCancel,
   isLoading,
 }: ToneEditorProps): React.ReactElement {
-  const [title, setTitle] = useState(tone?.Title ?? '');
-  const [instruction, setInstruction] = useState(tone?.Instruction ?? '');
+  const [title, setTitle] = useState(tone?.title ?? '');
+  const [instruction, setInstruction] = useState(tone?.instruction ?? '');
   const [titleError, setTitleError] = useState('');
   const [instructionError, setInstructionError] = useState('');
 
@@ -41,7 +41,7 @@ export function ToneEditor({
 
     if (hasErrors) return;
 
-    onSave({ Title: title.trim(), Instruction: instruction.trim() });
+    onSave({ title: title.trim(), instruction: instruction.trim() });
   };
 
   return (

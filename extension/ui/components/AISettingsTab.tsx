@@ -32,14 +32,14 @@ export function AISettingsTab(): React.ReactElement {
 
   const updateModelMutation = useMutation({
     mutationFn: (modelName: string) =>
-      api.updateProfile({ ModelName: modelName }),
+      api.updateProfile({ modelName: modelName }),
     onMutate: async modelName => {
       await queryClient.cancelQueries({ queryKey: ['profile'] });
       const previous = queryClient.getQueryData<ProfileRes>(['profile']);
       if (previous) {
         queryClient.setQueryData<ProfileRes>(['profile'], {
           ...previous,
-          ModelName: modelName,
+          modelName: modelName,
         });
       }
       return { previous };
@@ -55,16 +55,16 @@ export function AISettingsTab(): React.ReactElement {
   });
 
   const createToneMutation = useMutation({
-    mutationFn: (data: { Title: string; Instruction: string }) =>
+    mutationFn: (data: { title: string; instruction: string }) =>
       api.createTone(data),
     onMutate: async data => {
       await queryClient.cancelQueries({ queryKey: ['tones'] });
       const previous = queryClient.getQueryData<Tone[]>(['tones']);
       const optimisticTone: Tone = {
-        Id: `temp-${Date.now()}`,
-        Title: data.Title,
-        Instruction: data.Instruction,
-        IsDefault: false,
+        id: `temp-${Date.now()}`,
+        title: data.title,
+        instruction: data.instruction,
+        isDefault: false,
       };
       queryClient.setQueryData<Tone[]>(['tones'], old => [
         ...(old ?? []),
@@ -91,13 +91,13 @@ export function AISettingsTab(): React.ReactElement {
       data,
     }: {
       id: string;
-      data: { Title: string; Instruction: string };
+      data: { title: string; instruction: string };
     }) => api.updateTone(id, data),
     onMutate: async ({ id, data }) => {
       await queryClient.cancelQueries({ queryKey: ['tones'] });
       const previous = queryClient.getQueryData<Tone[]>(['tones']);
       queryClient.setQueryData<Tone[]>(['tones'], old =>
-        old?.map(t => (t.Id === id ? { ...t, ...data } : t))
+        old?.map(t => (t.id === id ? { ...t, ...data } : t))
       );
       return { previous };
     },
@@ -121,7 +121,7 @@ export function AISettingsTab(): React.ReactElement {
       await queryClient.cancelQueries({ queryKey: ['tones'] });
       const previous = queryClient.getQueryData<Tone[]>(['tones']);
       queryClient.setQueryData<Tone[]>(['tones'], old =>
-        old?.filter(t => t.Id !== id)
+        old?.filter(t => t.id !== id)
       );
       return { previous };
     },
@@ -145,7 +145,7 @@ export function AISettingsTab(): React.ReactElement {
       await queryClient.cancelQueries({ queryKey: ['tones'] });
       const previous = queryClient.getQueryData<Tone[]>(['tones']);
       queryClient.setQueryData<Tone[]>(['tones'], old =>
-        old?.map(t => (t.Id === id ? { ...t, Enabled: enable } : t))
+        old?.map(t => (t.id === id ? { ...t, enabled: enable } : t))
       );
       return { previous };
     },
@@ -174,27 +174,27 @@ export function AISettingsTab(): React.ReactElement {
   };
 
   const handleSaveTone = (data: {
-    Title: string;
-    Instruction: string;
+    title: string;
+    instruction: string;
   }): void => {
     if (editingTone) {
-      updateToneMutation.mutate({ id: editingTone.Id, data });
+      updateToneMutation.mutate({ id: editingTone.id, data });
     } else {
       createToneMutation.mutate(data);
     }
   };
 
   const handleToggleTone = (tone: Tone, enabled: boolean): void => {
-    toggleToneMutation.mutate({ id: tone.Id, enable: enabled });
+    toggleToneMutation.mutate({ id: tone.id, enable: enabled });
   };
 
   const modelOptions =
-    modelsData?.AllModels.map(m => ({
-      value: m.ModelName,
-      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    modelsData?.allModels.map(m => ({
+      value: m.modelName,
+      label: m.modelName.split('/').pop()?.replace(':free', '') ?? m.modelName,
     })) ?? [];
 
-  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
+  const currentModel = profile?.modelName ?? modelOptions[0]?.value ?? '';
 
   return (
     <div>
@@ -247,10 +247,10 @@ export function AISettingsTab(): React.ReactElement {
       <ConfirmDialog
         isOpen={!!deletingTone}
         title="Delete Tone"
-        message={`Are you sure you want to delete "${deletingTone?.Title}"? This action cannot be undone.`}
+        message={`Are you sure you want to delete "${deletingTone?.title}"? This action cannot be undone.`}
         confirmLabel="Delete"
         onConfirm={() =>
-          deletingTone && deleteToneMutation.mutate(deletingTone.Id)
+          deletingTone && deleteToneMutation.mutate(deletingTone.id)
         }
         onCancel={() => setDeletingTone(null)}
         isLoading={deleteToneMutation.isPending}

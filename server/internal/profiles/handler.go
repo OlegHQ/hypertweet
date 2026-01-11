@@ -61,13 +61,13 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 	updates := bson.M{}
 
 	if req.UserBio != nil {
-		updates["userBio"] = *req.UserBio
+		updates["UserBio"] = *req.UserBio
 	}
 	if req.CustomReplyGuidance != nil {
-		updates["customReplyGuidance"] = *req.CustomReplyGuidance
+		updates["CustomReplyGuidance"] = *req.CustomReplyGuidance
 	}
 	if req.PostProcessReply != nil {
-		updates["postProcessReply"] = *req.PostProcessReply
+		updates["PostProcessReply"] = *req.PostProcessReply
 	}
 	if req.ReplyPromptOptions != nil {
 		for _, opt := range req.ReplyPromptOptions {
@@ -76,24 +76,24 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		updates["replyPromptOptions"] = req.ReplyPromptOptions
+		updates["ReplyPromptOptions"] = req.ReplyPromptOptions
 	}
 	if req.ModelName != nil {
 		if !IsValidModel(*req.ModelName) {
 			shared.HandleError(w, h.log, shared.NewValidationError("modelName", "invalid model"))
 			return
 		}
-		updates["modelName"] = *req.ModelName
+		updates["ModelName"] = *req.ModelName
 	}
 	if req.ChatModel != nil {
 		if !IsValidModel(*req.ChatModel) {
 			shared.HandleError(w, h.log, shared.NewValidationError("chatModel", "invalid model"))
 			return
 		}
-		updates["chatModel"] = *req.ChatModel
+		updates["ChatModel"] = *req.ChatModel
 	}
 	if req.ChatBotPersona != nil {
-		updates["chatBotPersona"] = *req.ChatBotPersona
+		updates["ChatBotPersona"] = *req.ChatBotPersona
 	}
 
 	if len(updates) == 0 {

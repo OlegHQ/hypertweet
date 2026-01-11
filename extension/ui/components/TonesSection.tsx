@@ -26,8 +26,8 @@ export function TonesSection({
   const [activeSubtab, setActiveSubtab] = useState<SubTab>('default');
   const [expandedToneId, setExpandedToneId] = useState<string | null>(null);
 
-  const defaultTones = tones.filter(t => t.IsDefault);
-  const customTones = tones.filter(t => !t.IsDefault);
+  const defaultTones = tones.filter(t => t.isDefault);
+  const customTones = tones.filter(t => !t.isDefault);
 
   const handleExpand = (toneId: string): void => {
     setExpandedToneId(prev => (prev === toneId ? null : toneId));
@@ -65,11 +65,11 @@ export function TonesSection({
           ) : (
             defaultTones.map(tone => (
               <DefaultToneItem
-                key={tone.Id}
+                key={tone.id}
                 tone={tone}
-                isExpanded={expandedToneId === tone.Id}
+                isExpanded={expandedToneId === tone.id}
                 onToggle={enabled => onToggle(tone, enabled)}
-                onExpand={() => handleExpand(tone.Id)}
+                onExpand={() => handleExpand(tone.id)}
               />
             ))
           )}
@@ -90,7 +90,7 @@ export function TonesSection({
             ) : (
               customTones.map(tone => (
                 <ToneItem
-                  key={tone.Id}
+                  key={tone.id}
                   tone={tone}
                   onEdit={() => onEdit(tone)}
                   onDelete={() => onDelete(tone)}

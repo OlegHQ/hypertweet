@@ -50,14 +50,14 @@ export function ChatModal({
 
   const updateModelMutation = useMutation({
     mutationFn: (chatModel: string) =>
-      api.updateProfile({ ChatModel: chatModel }),
+      api.updateProfile({ chatModel: chatModel }),
     onMutate: async chatModel => {
       await queryClient.cancelQueries({ queryKey: ['profile'] });
       const previous = queryClient.getQueryData<ProfileRes>(['profile']);
       if (previous) {
         queryClient.setQueryData<ProfileRes>(['profile'], {
           ...previous,
-          ChatModel: chatModel,
+          chatModel: chatModel,
         });
       }
       return { previous };
@@ -73,13 +73,13 @@ export function ChatModal({
   });
 
   const modelOptions =
-    modelsData?.AllModels.map(m => ({
-      value: m.ModelName,
-      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    modelsData?.allModels.map(m => ({
+      value: m.modelName,
+      label: m.modelName.split('/').pop()?.replace(':free', '') ?? m.modelName,
     })) ?? [];
 
   const currentModel =
-    profile?.ChatModel ?? profile?.ModelName ?? modelOptions[0]?.value ?? '';
+    profile?.chatModel ?? profile?.modelName ?? modelOptions[0]?.value ?? '';
 
   const handleModelChange = (e: React.ChangeEvent<HTMLSelectElement>): void => {
     updateModelMutation.mutate(e.target.value);
@@ -131,12 +131,12 @@ export function ChatModal({
     setIsStreaming(true);
 
     const chatMessages = [...messages, userMessage].map(m => ({
-      Role: m.role as 'user' | 'assistant',
-      Content: m.content,
+      role: m.role as 'user' | 'assistant',
+      content: m.content,
     }));
 
     disconnectRef.current = streamChatProxy(
-      { Messages: chatMessages, PageContext: pageContext },
+      { messages: chatMessages, pageContext: pageContext },
       (event: ChatStreamEvent) => {
         if (event.token) {
           setMessages(prev =>

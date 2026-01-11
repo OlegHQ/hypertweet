@@ -90,20 +90,20 @@ window.__reddit = (function () {
     }
 
     var post = {
-      Author: {
-        Name: author,
-        UserName: author,
+      author: {
+        name: author,
+        userName: author,
       },
-      Text: text,
-      Upvotes: upvotes,
-      IsTopLevel: depth === 0,
-      Replies: [],
+      text: text,
+      upvotes: upvotes,
+      isTopLevel: depth === 0,
+      replies: [],
     };
 
     // Get nested comments
     var nestedComments = extractCommentsAtDepth(el, depth + 1, maxDepth);
     if (nestedComments.length > 0) {
-      post.Replies = nestedComments;
+      post.replies = nestedComments;
     }
 
     return post;
@@ -177,20 +177,20 @@ window.__reddit = (function () {
 
       if (postData) {
         var mainPost = {
-          Author: {
-            Name: postData.author,
-            UserName: postData.author,
+          author: {
+            name: postData.author,
+            userName: postData.author,
           },
-          Text: postData.body || postData.title,
-          Url: postData.url,
-          Replies: [],
+          text: postData.body || postData.title,
+          url: postData.url,
+          replies: [],
         };
 
         // Extract comments
         log('Extracting comments...');
         var comments = extractCommentsAtDepth(document, 0, MAX_COMMENT_DEPTH);
         log('Found ' + comments.length + ' top-level comments');
-        mainPost.Replies = comments;
+        mainPost.replies = comments;
 
         posts.push(mainPost);
 
@@ -205,7 +205,7 @@ window.__reddit = (function () {
           if (textbox) {
             var draftText = textbox.textContent.trim();
             if (draftText) {
-              activePost.CurrentReplyDraft = draftText;
+              activePost.currentReplyDraft = draftText;
               log('Draft text captured: ' + draftText.substring(0, 50));
             }
           }
@@ -215,10 +215,10 @@ window.__reddit = (function () {
       }
 
       var page = {
-        Site: 'reddit.com',
-        Url: window.location.href,
-        Posts: posts,
-        ActivePost: activePost,
+        site: 'reddit.com',
+        url: window.location.href,
+        posts: posts,
+        activePost: activePost,
       };
 
       log(

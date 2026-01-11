@@ -2,13 +2,13 @@ package profiles
 
 type Profile struct {
 	ID                  string   `bson:"_id" json:"id"`
-	ModelName           string   `bson:"modelName" json:"modelName"`
-	ChatModel           *string  `bson:"chatModel,omitempty" json:"chatModel,omitempty"`
-	UserBio             *string  `bson:"userBio,omitempty" json:"userBio,omitempty"`
-	CustomReplyGuidance *string  `bson:"customReplyGuidance,omitempty" json:"customReplyGuidance,omitempty"`
-	PostProcessReply    *bool    `bson:"postProcessReply,omitempty" json:"postProcessReply,omitempty"`
-	ReplyPromptOptions  []string `bson:"replyPromptOptions" json:"replyPromptOptions"`
-	ChatBotPersona      *string  `bson:"chatBotPersona,omitempty" json:"chatBotPersona,omitempty"`
+	ModelName           string   `bson:"ModelName" json:"modelName"`
+	ChatModel           *string  `bson:"ChatModel,omitempty" json:"chatModel,omitempty"`
+	UserBio             *string  `bson:"UserBio,omitempty" json:"userBio,omitempty"`
+	CustomReplyGuidance *string  `bson:"CustomReplyGuidance,omitempty" json:"customReplyGuidance,omitempty"`
+	PostProcessReply    *bool    `bson:"PostProcessReply,omitempty" json:"postProcessReply,omitempty"`
+	ReplyPromptOptions  []string `bson:"ReplyPromptOptions" json:"replyPromptOptions"`
+	ChatBotPersona      *string  `bson:"ChatBotPersona,omitempty" json:"chatBotPersona,omitempty"`
 }
 
 type UpdateProfileRequest struct {

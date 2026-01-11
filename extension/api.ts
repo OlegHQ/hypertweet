@@ -40,23 +40,23 @@ async function getValidToken(): Promise<string | null> {
   const res = await fetch(baseUrl + '/auth/refresh', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ RefreshToken: refreshToken }),
+    body: JSON.stringify({ refreshToken: refreshToken }),
   });
   if (!res.ok) {
     await chrome.storage.local.remove([TOKEN_KEY, REFRESH_KEY, EXPIRES_KEY]);
     return null;
   }
   const data = (await res.json()) as {
-    AccessToken: string;
-    RefreshToken: string;
-    ExpiresIn: number;
+    accessToken: string;
+    refreshToken: string;
+    expiresIn: number;
   };
   await chrome.storage.local.set({
-    [TOKEN_KEY]: data.AccessToken,
-    [REFRESH_KEY]: data.RefreshToken,
-    [EXPIRES_KEY]: Date.now() + data.ExpiresIn * 1000,
+    [TOKEN_KEY]: data.accessToken,
+    [REFRESH_KEY]: data.refreshToken,
+    [EXPIRES_KEY]: Date.now() + data.expiresIn * 1000,
   });
-  return data.AccessToken;
+  return data.accessToken;
 }
 
 class ApiError extends Error {
@@ -99,13 +99,13 @@ function make<Req, Res>(method: string, path: string, auth = false) {
 
 // Auth (public)
 export interface AuthReq {
-  Email: string;
-  Password: string;
+  email: string;
+  password: string;
 }
 export interface TokenRes {
-  AccessToken: string;
-  RefreshToken: string;
-  ExpiresIn: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 
 export const login = make<AuthReq, TokenRes>('POST', '/auth/login');
@@ -115,11 +115,14 @@ export const register = make<AuthReq, { message: string }>(
 );
 
 export async function saveTokens(res: TokenRes): Promise<void> {
+  console.log('[API] saveTokens called with:', res);
+  console.log('[API] Saving token:', res.accessToken?.substring(0, 20) + '...');
   await chrome.storage.local.set({
-    [TOKEN_KEY]: res.AccessToken,
-    [REFRESH_KEY]: res.RefreshToken,
-    [EXPIRES_KEY]: Date.now() + res.ExpiresIn * 1000,
+    [TOKEN_KEY]: res.accessToken,
+    [REFRESH_KEY]: res.refreshToken,
+    [EXPIRES_KEY]: Date.now() + res.expiresIn * 1000,
   });
+  console.log('[API] Tokens saved to storage');
 }
 
 export async function clearTokens(): Promise<void> {
@@ -128,15 +131,15 @@ export async function clearTokens(): Promise<void> {
 
 // Tones (protected)
 export interface Tone {
-  Id: string;
-  Title: string;
-  Instruction: string;
-  IsDefault: boolean;
-  Enabled?: boolean;
+  id: string;
+  title: string;
+  instruction: string;
+  isDefault: boolean;
+  enabled?: boolean;
 }
 interface ToneReq {
-  Title: string;
-  Instruction: string;
+  title: string;
+  instruction: string;
 }
 
 export const listTones = make<undefined, Tone[]>('GET', '/tones', true);
@@ -165,47 +168,47 @@ export async function toggleTone(
 
 // Profile (protected)
 interface UpdateProfileReq {
-  UserBio?: string;
-  CustomReplyGuidance?: string;
-  PostProcessReply?: boolean;
-  ReplyPromptOptions?: string[];
-  ModelName?: string;
-  ChatModel?: string;
-  ChatBotPersona?: string;
+  userBio?: string;
+  customReplyGuidance?: string;
+  postProcessReply?: boolean;
+  replyPromptOptions?: string[];
+  modelName?: string;
+  chatModel?: string;
+  chatBotPersona?: string;
 }
 interface UpdatePasswordReq {
-  NewPassword: string;
+  newPassword: string;
 }
 export interface ProfileRes {
-  Id: string;
-  ModelName: string;
-  ChatModel?: string;
-  UserBio?: string;
-  CustomReplyGuidance?: string;
-  PostProcessReply?: boolean;
-  ReplyPromptOptions?: string[];
-  ChatBotPersona?: string;
+  id: string;
+  modelName: string;
+  chatModel?: string;
+  userBio?: string;
+  customReplyGuidance?: string;
+  postProcessReply?: boolean;
+  replyPromptOptions?: string[];
+  chatBotPersona?: string;
 }
 export interface ModelDef {
-  ModelName: string;
+  modelName: string;
 }
 export interface AvailableModelsRes {
-  DefaultModel: string;
-  AllModels: ModelDef[];
+  defaultModel: string;
+  allModels: ModelDef[];
 }
 
 export const getProfile = make<undefined, ProfileRes>('GET', '/profile', true);
-export const updateProfile = make<UpdateProfileReq, { Message: string }>(
+export const updateProfile = make<UpdateProfileReq, { message: string }>(
   'POST',
   '/profile/update',
   true
 );
-export const updatePassword = make<UpdatePasswordReq, { Message: string }>(
+export const updatePassword = make<UpdatePasswordReq, { message: string }>(
   'POST',
   '/profile/password',
   true
 );
-export const deleteAccount = make<undefined, { Message: string }>(
+export const deleteAccount = make<undefined, { message: string }>(
   'DELETE',
   '/users',
   true
@@ -218,11 +221,11 @@ export const getAvailableModels = make<undefined, AvailableModelsRes>(
 
 // AI Reply (protected)
 export interface ReplyRequest {
-  ToneId: string;
-  Page: Page;
+  toneId: string;
+  page: Page;
 }
 export interface ReplyResult {
-  Reply: string;
+  reply: string;
 }
 
 export const generateReply = make<ReplyRequest, ReplyResult>(
@@ -233,10 +236,10 @@ export const generateReply = make<ReplyRequest, ReplyResult>(
 
 // AI Refine (protected)
 export interface RefineRequest {
-  Platform: string;
-  OriginalPost: string;
-  DraftReply: string;
-  RefineInstruction: string;
+  platform: string;
+  originalPost: string;
+  draftReply: string;
+  refineInstruction: string;
 }
 
 export const refineReply = make<RefineRequest, ReplyResult>(
@@ -247,13 +250,13 @@ export const refineReply = make<RefineRequest, ReplyResult>(
 
 // Chat types
 export interface ChatMessageReq {
-  Role: 'user' | 'assistant';
-  Content: string;
+  role: 'user' | 'assistant';
+  content: string;
 }
 
 export interface ChatRequest {
-  Messages: ChatMessageReq[];
-  PageContext: Page;
+  messages: ChatMessageReq[];
+  pageContext: Page;
 }
 
 export interface ChatStreamEvent {

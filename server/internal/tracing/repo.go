@@ -24,14 +24,14 @@ func NewTraceRepo(db *mongo.Database) *TraceRepo {
 func (r *TraceRepo) EnsureIndexes(ctx context.Context) error {
 	indexes := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "deleteAt", Value: 1}},
+			Keys:    bson.D{{Key: "DeleteAt", Value: 1}},
 			Options: options.Index().SetExpireAfterSeconds(0),
 		},
 		{
-			Keys: bson.D{{Key: "userId", Value: 1}},
+			Keys: bson.D{{Key: "UserId", Value: 1}},
 		},
 		{
-			Keys: bson.D{{Key: "createdAt", Value: -1}},
+			Keys: bson.D{{Key: "CreatedAt", Value: -1}},
 		},
 	}
 	_, err := r.coll.Indexes().CreateMany(ctx, indexes)

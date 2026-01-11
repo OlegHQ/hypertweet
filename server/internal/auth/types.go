@@ -4,12 +4,12 @@ import "time"
 
 type User struct {
 	ID                 string     `bson:"_id" json:"id"`
-	Email              string     `bson:"email" json:"email"`
-	PasswordHash       string     `bson:"passwordHash" json:"-"`
-	DisabledToneIds    []string   `bson:"disabledToneIds" json:"disabledToneIds"`
-	RefreshToken       *string    `bson:"refreshToken,omitempty" json:"-"`
-	RefreshTokenExpiry *time.Time `bson:"refreshTokenExpiry,omitempty" json:"-"`
-	CreatedAt          time.Time  `bson:"createdAt" json:"createdAt"`
+	Email              string     `bson:"Email" json:"email"`
+	PasswordHash       string     `bson:"PasswordHash" json:"-"`
+	DisabledToneIds    []string   `bson:"DisabledToneIds" json:"disabledToneIds"`
+	RefreshToken       *string    `bson:"RefreshToken,omitempty" json:"-"`
+	RefreshTokenExpiry *time.Time `bson:"RefreshTokenExpiry,omitempty" json:"-"`
+	CreatedAt          time.Time  `bson:"CreatedAt" json:"createdAt"`
 }
 
 type RegisterRequest struct {
@@ -32,6 +32,3 @@ type TokenResult struct {
 	ExpiresIn    int    `json:"expiresIn"`
 }
 
-type RefreshResponse struct {
-	Token string `json:"token"`
-}

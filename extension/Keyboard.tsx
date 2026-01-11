@@ -57,14 +57,14 @@ export function Keyboard({
 
   const updateModelMutation = useMutation({
     mutationFn: (modelName: string) =>
-      api.updateProfile({ ModelName: modelName }),
+      api.updateProfile({ modelName: modelName }),
     onMutate: async modelName => {
       await queryClient.cancelQueries({ queryKey: ['profile'] });
       const previous = queryClient.getQueryData<ProfileRes>(['profile']);
       if (previous) {
         queryClient.setQueryData<ProfileRes>(['profile'], {
           ...previous,
-          ModelName: modelName,
+          modelName: modelName,
         });
       }
       return { previous };
@@ -85,12 +85,12 @@ export function Keyboard({
   };
 
   const modelOptions =
-    modelsData?.AllModels.map(m => ({
-      value: m.ModelName,
-      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    modelsData?.allModels.map(m => ({
+      value: m.modelName,
+      label: m.modelName.split('/').pop()?.replace(':free', '') ?? m.modelName,
     })) ?? [];
 
-  const currentModel = profile?.ModelName ?? modelOptions[0]?.value ?? '';
+  const currentModel = profile?.modelName ?? modelOptions[0]?.value ?? '';
 
   const handleLoginSuccess = (newToken: string): void => {
     login(newToken);
@@ -103,19 +103,19 @@ export function Keyboard({
   };
 
   const handleToneClick = async (tone: {
-    Id: string;
-    Title: string;
+    id: string;
+    title: string;
   }): Promise<void> => {
-    setLoadingTone(tone.Id);
+    setLoadingTone(tone.id);
     try {
       const page = await readPage();
       const result = (await api.generateReply({
-        ToneId: tone.Id,
-        Page: page,
+        toneId: tone.id,
+        page: page,
       })) as ReplyResult;
-      setLastReply(result.Reply);
+      setLastReply(result.reply);
       setLastPageContext(page);
-      insertText(result.Reply);
+      insertText(result.reply);
     } catch (error) {
       const message =
         error instanceof Error ? error.message : 'Failed to generate reply';
@@ -128,7 +128,7 @@ export function Keyboard({
   const handleEditClick = async (): Promise<void> => {
     // Always read current draft from platform to capture user edits
     const page = await readPage();
-    const draft = page.ActivePost?.CurrentReplyDraft;
+    const draft = page.activePost?.currentReplyDraft;
 
     if (!draft?.trim()) {
       toast.error('No reply to edit');
@@ -158,13 +158,13 @@ export function Keyboard({
     setIsRefining(true);
     try {
       const result = (await api.refineReply({
-        Platform: lastPageContext.Site,
-        OriginalPost: lastPageContext.ActivePost?.Text ?? '',
-        DraftReply: lastReply,
-        RefineInstruction: refineInstruction.trim(),
+        platform: lastPageContext.site,
+        originalPost: lastPageContext.activePost?.text ?? '',
+        draftReply: lastReply,
+        refineInstruction: refineInstruction.trim(),
       } as RefineRequest)) as ReplyResult;
-      setLastReply(result.Reply);
-      insertText(result.Reply);
+      setLastReply(result.reply);
+      insertText(result.reply);
       setIsEditing(false);
       setRefineInstruction('');
     } catch (error) {
@@ -190,15 +190,15 @@ export function Keyboard({
   const handleCopyPrompt = async (): Promise<void> => {
     try {
       const page = await readPage();
-      const post = page.ActivePost;
+      const post = page.activePost;
       if (!post) {
         toast.error('No active post found');
         return;
       }
 
-      let prompt = `<platform>${siteType}</platform>\n<post>${post.Text}</post>`;
-      if (post.CurrentReplyDraft) {
-        prompt += `\n<reply_draft>${post.CurrentReplyDraft}</reply_draft>`;
+      let prompt = `<platform>${siteType}</platform>\n<post>${post.text}</post>`;
+      if (post.currentReplyDraft) {
+        prompt += `\n<reply_draft>${post.currentReplyDraft}</reply_draft>`;
       }
 
       await navigator.clipboard.writeText(prompt);
@@ -399,7 +399,7 @@ export function Keyboard({
           </div>
         )}
         {(() => {
-          const enabledTones = tones.filter(t => t.Enabled !== false);
+          const enabledTones = tones.filter(t => t.enabled !== false);
           if (tonesLoading) {
             return <div className="ht-tones-loading">Loading tones...</div>;
           }
@@ -410,12 +410,12 @@ export function Keyboard({
             <div className="ht-tones-grid">
               {enabledTones.map(tone => (
                 <button
-                  key={tone.Id}
-                  className={`ht-tone-btn ${loadingTone === tone.Id ? 'ht-tone-btn-loading' : ''}`}
+                  key={tone.id}
+                  className={`ht-tone-btn ${loadingTone === tone.id ? 'ht-tone-btn-loading' : ''}`}
                   onClick={() => void handleToneClick(tone)}
                   disabled={loadingTone !== null}
                 >
-                  {loadingTone === tone.Id ? '...' : tone.Title}
+                  {loadingTone === tone.id ? '...' : tone.title}
                 </button>
               ))}
             </div>

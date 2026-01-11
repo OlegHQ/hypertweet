@@ -182,17 +182,21 @@ if errors.Is(err, ErrUserNotFound) {
 ```go
 mux := http.NewServeMux()
 
+// Health check - use {$} for exact root path only
+mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
+    w.Write([]byte("working"))
+})
+
 // Public routes
 mux.HandleFunc("POST /auth/register", authHandler.Register)
 mux.HandleFunc("POST /auth/login", authHandler.Login)
 
-// Protected routes - wrap with auth middleware
-protected := http.NewServeMux()
-protected.HandleFunc("GET /profile", profileHandler.GetProfile)
-protected.HandleFunc("PUT /tones/{id}", toneHandler.Update)
-
-mux.Handle("/", authMiddleware.Protect(protected))
+// Protected routes - wrap each route individually with auth middleware
+mux.Handle("GET /profile", authMiddleware.Protect(http.HandlerFunc(profileHandler.GetProfile)))
+mux.Handle("PUT /tones/{id}", authMiddleware.Protect(http.HandlerFunc(toneHandler.Update)))
 ```
+
+**IMPORTANT**: Do NOT use a nested ServeMux for protected routes like `mux.Handle("/", authMiddleware.Protect(protected))`. This causes `GET /` to catch all paths. Register each protected route individually.
 
 ## Environment Variables
 
@@ -212,6 +216,52 @@ JWT_SECRET=your-secret-key
 - `github.com/golang-jwt/jwt/v5` - JWT handling
 - `golang.org/x/crypto` - BCrypt password hashing
 - `github.com/google/uuid` - UUID generation
+
+## Critical Gotchas
+
+### BSON Field Names Must Be PascalCase
+
+**This is critical for F# data compatibility.** The existing MongoDB data was created by an F# server that uses PascalCase for BSON field names. All Go structs must use PascalCase BSON tags to read/write existing data correctly.
+
+```go
+// CORRECT - matches existing F# data
+type User struct {
+    ID           string `bson:"_id" json:"id"`
+    Email        string `bson:"Email" json:"email"`        // PascalCase
+    PasswordHash string `bson:"PasswordHash" json:"-"`     // PascalCase
+}
+
+// WRONG - will not find existing data
+type User struct {
+    Email        string `bson:"email" json:"email"`        // camelCase - BREAKS!
+    PasswordHash string `bson:"passwordHash" json:"-"`     // camelCase - BREAKS!
+}
+```
+
+Also use PascalCase in queries and updates:
+```go
+// Queries
+r.coll.FindOne(ctx, bson.M{"Email": email})      // PascalCase
+r.coll.Find(ctx, bson.M{"UserId": userID})       // PascalCase
+
+// Updates
+bson.M{"$set": bson.M{"Title": title}}           // PascalCase
+```
+
+### MongoDB Unique Index with Partial Filter
+
+When creating unique indexes on fields that may be null/missing in existing documents, use a partial filter expression:
+
+```go
+{
+    Keys:    bson.D{{Key: "Email", Value: 1}},
+    Options: options.Index().
+        SetUnique(true).
+        SetPartialFilterExpression(bson.M{"Email": bson.M{"$type": "string"}}),
+}
+```
+
+This prevents `E11000 duplicate key error` on documents with null values.
 
 ## Code Quality Standards
 

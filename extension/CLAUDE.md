@@ -108,32 +108,32 @@ Content scripts use `apiProxy.ts` to avoid mixed content issues (HTTP API from H
 import { api } from './apiProxy';
 
 // Auth
-api.login({ Email, Password }); // returns TokenRes
-api.register({ Email, Password }); // returns { message }
+api.login({ email, password }); // returns TokenRes
+api.register({ email, password }); // returns { message }
 api.saveTokens(tokenRes); // stores tokens in chrome.storage
 api.clearTokens(); // removes tokens
 
 // Tones (protected - require auth)
 api.listTones(); // returns Tone[]
-api.createTone({ Title, Instruction });
-api.updateTone(id)({ Title, Instruction });
-api.deleteTone(id)();
-api.toggleTone(id, enable)();
+api.createTone({ title, instruction });
+api.updateTone(id, { title, instruction });
+api.deleteTone(id);
+api.toggleTone(id, enable);
 ```
 
-### API Response Types (PascalCase)
+### API Response Types (camelCase)
 
 ```ts
 interface TokenRes {
-  AccessToken: string;
-  RefreshToken: string;
-  ExpiresIn: number;
+  accessToken: string;
+  refreshToken: string;
+  expiresIn: number;
 }
 interface Tone {
-  Id: string;
-  Title: string;
-  Instruction: string;
-  IsDefault: boolean;
+  id: string;
+  title: string;
+  instruction: string;
+  isDefault: boolean;
 }
 ```
 
@@ -182,11 +182,11 @@ Use `useMutation` inline or in hooks:
 ```tsx
 const loginMutation = useMutation({
   mutationFn: async () => {
-    const result = (await api.login({ Email, Password })) as TokenRes;
+    const result = (await api.login({ email, password })) as TokenRes;
     await api.saveTokens(result);
     return result;
   },
-  onSuccess: res => onSuccess(res.AccessToken),
+  onSuccess: res => onSuccess(res.accessToken),
   onError: () => setError('Invalid email or password'),
 });
 

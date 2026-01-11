@@ -22,8 +22,10 @@ func NewUserRepo(db *mongo.Database) *UserRepo {
 func (r *UserRepo) EnsureIndexes(ctx context.Context) error {
 	indexes := []mongo.IndexModel{
 		{
-			Keys:    bson.D{{Key: "email", Value: 1}},
-			Options: options.Index().SetUnique(true),
+			Keys: bson.D{{Key: "Email", Value: 1}},
+			Options: options.Index().
+				SetUnique(true).
+				SetPartialFilterExpression(bson.M{"Email": bson.M{"$type": "string"}}),
 		},
 	}
 	_, err := r.coll.Indexes().CreateMany(ctx, indexes)
@@ -47,7 +49,7 @@ func (r *UserRepo) FindByID(ctx context.Context, id string) (*User, error) {
 
 func (r *UserRepo) FindByEmail(ctx context.Context, email string) (*User, error) {
 	var user User
-	err := r.coll.FindOne(ctx, bson.M{"email": email}).Decode(&user)
+	err := r.coll.FindOne(ctx, bson.M{"Email": email}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, ErrUserNotFound
 	}
@@ -59,7 +61,7 @@ func (r *UserRepo) FindByEmail(ctx context.Context, email string) (*User, error)
 
 func (r *UserRepo) FindByRefreshToken(ctx context.Context, token string) (*User, error) {
 	var user User
-	err := r.coll.FindOne(ctx, bson.M{"refreshToken": token}).Decode(&user)
+	err := r.coll.FindOne(ctx, bson.M{"RefreshToken": token}).Decode(&user)
 	if errors.Is(err, mongo.ErrNoDocuments) {
 		return nil, ErrUserNotFound
 	}
@@ -84,8 +86,8 @@ func (r *UserRepo) UpdateRefreshToken(ctx context.Context, userID, refreshToken 
 	_, err := r.coll.UpdateOne(ctx,
 		bson.M{"_id": userID},
 		bson.M{"$set": bson.M{
-			"refreshToken":       refreshToken,
-			"refreshTokenExpiry": expiry,
+			"RefreshToken":       refreshToken,
+			"RefreshTokenExpiry": expiry,
 		}},
 	)
 	if err != nil {
@@ -97,7 +99,7 @@ func (r *UserRepo) UpdateRefreshToken(ctx context.Context, userID, refreshToken 
 func (r *UserRepo) UpdatePassword(ctx context.Context, userID, passwordHash string) error {
 	_, err := r.coll.UpdateOne(ctx,
 		bson.M{"_id": userID},
-		bson.M{"$set": bson.M{"passwordHash": passwordHash}},
+		bson.M{"$set": bson.M{"PasswordHash": passwordHash}},
 	)
 	if err != nil {
 		return fmt.Errorf("update password: %w", err)
@@ -108,7 +110,7 @@ func (r *UserRepo) UpdatePassword(ctx context.Context, userID, passwordHash stri
 func (r *UserRepo) UpdateDisabledToneIds(ctx context.Context, userID string, disabledIds []string) error {
 	_, err := r.coll.UpdateOne(ctx,
 		bson.M{"_id": userID},
-		bson.M{"$set": bson.M{"disabledToneIds": disabledIds}},
+		bson.M{"$set": bson.M{"DisabledToneIds": disabledIds}},
 	)
 	if err != nil {
 		return fmt.Errorf("update disabled tone ids: %w", err)

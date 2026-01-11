@@ -33,19 +33,19 @@ export function ProfileTab(): React.ReactElement {
   // Sync state with profile data
   useEffect(() => {
     if (profile) {
-      setUserBio(profile.UserBio ?? '');
-      setCustomGuidance(profile.CustomReplyGuidance ?? '');
-      setPostProcess(profile.PostProcessReply ?? false);
-      setReplyOptions(profile.ReplyPromptOptions ?? []);
+      setUserBio(profile.userBio ?? '');
+      setCustomGuidance(profile.customReplyGuidance ?? '');
+      setPostProcess(profile.postProcessReply ?? false);
+      setReplyOptions(profile.replyPromptOptions ?? []);
     }
   }, [profile]);
 
   const updateProfileMutation = useMutation({
     mutationFn: (data: {
-      UserBio?: string;
-      CustomReplyGuidance?: string;
-      PostProcessReply?: boolean;
-      ReplyPromptOptions?: string[];
+      userBio?: string;
+      customReplyGuidance?: string;
+      postProcessReply?: boolean;
+      replyPromptOptions?: string[];
     }) => api.updateProfile(data),
     onSuccess: () => {
       setSaveStatus('saved');
@@ -64,10 +64,10 @@ export function ProfileTab(): React.ReactElement {
 
   const debouncedSave = useCallback(
     (data: {
-      UserBio?: string;
-      CustomReplyGuidance?: string;
-      PostProcessReply?: boolean;
-      ReplyPromptOptions?: string[];
+      userBio?: string;
+      customReplyGuidance?: string;
+      postProcessReply?: boolean;
+      replyPromptOptions?: string[];
     }) => {
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current);
@@ -81,23 +81,23 @@ export function ProfileTab(): React.ReactElement {
   );
 
   const handleBioBlur = (): void => {
-    if (userBio !== (profile?.UserBio ?? '')) {
+    if (userBio !== (profile?.userBio ?? '')) {
       debouncedSave({
-        UserBio: userBio,
-        CustomReplyGuidance: customGuidance,
-        PostProcessReply: postProcess,
-        ReplyPromptOptions: replyOptions,
+        userBio: userBio,
+        customReplyGuidance: customGuidance,
+        postProcessReply: postProcess,
+        replyPromptOptions: replyOptions,
       });
     }
   };
 
   const handleGuidanceBlur = (): void => {
-    if (customGuidance !== (profile?.CustomReplyGuidance ?? '')) {
+    if (customGuidance !== (profile?.customReplyGuidance ?? '')) {
       debouncedSave({
-        UserBio: userBio,
-        CustomReplyGuidance: customGuidance,
-        PostProcessReply: postProcess,
-        ReplyPromptOptions: replyOptions,
+        userBio: userBio,
+        customReplyGuidance: customGuidance,
+        postProcessReply: postProcess,
+        replyPromptOptions: replyOptions,
       });
     }
   };
@@ -105,7 +105,7 @@ export function ProfileTab(): React.ReactElement {
   const handlePostProcessToggle = (): void => {
     const newValue = !postProcess;
     setPostProcess(newValue);
-    updateProfileMutation.mutate({ PostProcessReply: newValue });
+    updateProfileMutation.mutate({ postProcessReply: newValue });
   };
 
   const handleReplyOptionToggle = (optionId: string): void => {
@@ -113,7 +113,7 @@ export function ProfileTab(): React.ReactElement {
       ? replyOptions.filter(o => o !== optionId)
       : [...replyOptions, optionId];
     setReplyOptions(newOptions);
-    updateProfileMutation.mutate({ ReplyPromptOptions: newOptions });
+    updateProfileMutation.mutate({ replyPromptOptions: newOptions });
   };
 
   return (

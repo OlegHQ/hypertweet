@@ -14,7 +14,7 @@ export function ToneItem({
   return (
     <div className="ht-tone-item">
       <div className="ht-tone-item-info">
-        <span className="ht-tone-item-title">{tone.Title}</span>
+        <span className="ht-tone-item-title">{tone.title}</span>
       </div>
       <div className="ht-tone-item-actions">
         <button

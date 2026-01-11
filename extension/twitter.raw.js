@@ -89,15 +89,15 @@ window.__twitter = (function () {
     let nextIsReply = checkNextIsReply(tweet);
     return [
       {
-        Author: {
-          Name: name,
-          UserName: userName,
-          IsVerified: isVerified,
+        author: {
+          name: name,
+          userName: userName,
+          isVerified: isVerified,
         },
-        Text: text,
-        Time: time,
-        StatusID: statusID,
-        Replies: [],
+        text: text,
+        time: time,
+        statusId: statusID,
+        replies: [],
       },
       nextIsReply,
     ];
@@ -122,9 +122,9 @@ window.__twitter = (function () {
 
       if (tweets.length > 0) {
         [mainPost] = extractTweetData(tweets[0]);
-        if (mainPost.Text) {
+        if (mainPost.text) {
           posts.push(mainPost);
-          console.log('Main post: "' + mainPost.Text.substring(0, 50) + '..."');
+          console.log('Main post: "' + mainPost.text.substring(0, 50) + '..."');
 
           // Process replies
           if (tweets.length > 1) {
@@ -135,12 +135,12 @@ window.__twitter = (function () {
               let isReplyOfPrevious = nextIsReply;
               let replyData = null;
               [replyData, nextIsReply] = extractTweetData(tweets[i]);
-              if (replyData.Text) {
-                let prev = mainPost.Replies[mainPost.Replies.length - 1];
+              if (replyData.text) {
+                let prev = mainPost.replies[mainPost.replies.length - 1];
                 if (isReplyOfPrevious && prev) {
-                  prev.Replies.push(replyData);
+                  prev.replies.push(replyData);
                 } else {
-                  mainPost.Replies.push(replyData);
+                  mainPost.replies.push(replyData);
                 }
 
                 validReplies++;
@@ -163,7 +163,7 @@ window.__twitter = (function () {
           activePost = posts[0];
           var draftText = replyForm.textContent.trim();
           if (draftText) {
-            activePost.CurrentReplyDraft = draftText;
+            activePost.currentReplyDraft = draftText;
             console.log('Draft text captured: ' + draftText.substring(0, 50));
           }
           console.log('Active post set to first post');
@@ -173,10 +173,10 @@ window.__twitter = (function () {
       }
 
       var page = {
-        Site: 'x.com',
-        Url: window.location.href,
-        Posts: posts,
-        ActivePost: activePost,
+        site: 'x.com',
+        url: window.location.href,
+        posts: posts,
+        activePost: activePost,
       };
 
       console.log(

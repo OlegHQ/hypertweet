@@ -30,7 +30,7 @@ func (r *ToneRepo) FindByID(ctx context.Context, id string) (*Tone, error) {
 }
 
 func (r *ToneRepo) FindByUserID(ctx context.Context, userID string) ([]*Tone, error) {
-	cursor, err := r.coll.Find(ctx, bson.M{"userId": userID})
+	cursor, err := r.coll.Find(ctx, bson.M{"UserId": userID})
 	if err != nil {
 		return nil, fmt.Errorf("find user tones: %w", err)
 	}
@@ -55,8 +55,8 @@ func (r *ToneRepo) Update(ctx context.Context, id, title, instruction string) er
 	result, err := r.coll.UpdateOne(ctx,
 		bson.M{"_id": id},
 		bson.M{"$set": bson.M{
-			"title":       title,
-			"instruction": instruction,
+			"Title":       title,
+			"Instruction": instruction,
 		}},
 	)
 	if err != nil {

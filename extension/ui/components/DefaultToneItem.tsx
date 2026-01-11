@@ -13,7 +13,7 @@ export function DefaultToneItem({
   onToggle,
   onExpand,
 }: DefaultToneItemProps): React.ReactElement {
-  const isEnabled = tone.Enabled !== false;
+  const isEnabled = tone.enabled !== false;
 
   const handleToggleClick = (e: React.MouseEvent): void => {
     e.stopPropagation();
@@ -26,7 +26,7 @@ export function DefaultToneItem({
         <span
           className={`ht-tone-accordion-title ${!isEnabled ? 'ht-tone-accordion-title-disabled' : ''}`}
         >
-          {tone.Title}
+          {tone.title}
         </span>
         <button
           type="button"
@@ -48,7 +48,7 @@ export function DefaultToneItem({
       </div>
       {isExpanded && (
         <div className="ht-tone-accordion-content">
-          <p className="ht-tone-accordion-instruction">{tone.Instruction}</p>
+          <p className="ht-tone-accordion-instruction">{tone.instruction}</p>
         </div>
       )}
     </div>

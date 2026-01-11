@@ -46,12 +46,10 @@ func main() {
 
 	log.Info("generating database indexes...")
 	if err := userRepo.EnsureIndexes(ctx); err != nil {
-		log.Error("failed to create user indexes", "error", err)
-		os.Exit(1)
+		log.Warn("failed to create user indexes (may need data cleanup)", "error", err)
 	}
 	if err := traceRepo.EnsureIndexes(ctx); err != nil {
-		log.Error("failed to create trace indexes", "error", err)
-		os.Exit(1)
+		log.Warn("failed to create trace indexes", "error", err)
 	}
 	log.Info("database indexes generated")
 
@@ -68,32 +66,32 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("GET /", func(w http.ResponseWriter, r *http.Request) {
+	// Health check - exact root path only
+	mux.HandleFunc("GET /{$}", func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("working"))
 	})
 
+	// Public auth routes
 	mux.HandleFunc("POST /auth/register", authHandler.Register)
 	mux.HandleFunc("POST /auth/login", authHandler.Login)
 	mux.HandleFunc("POST /auth/refresh", authHandler.Refresh)
 
-	protected := http.NewServeMux()
-	protected.HandleFunc("GET /profile", profileHandler.GetProfile)
-	protected.HandleFunc("POST /profile/update", profileHandler.UpdateProfile)
-	protected.HandleFunc("POST /profile/password", profileHandler.UpdatePassword)
-	protected.HandleFunc("DELETE /users", profileHandler.DeleteUser)
-	protected.HandleFunc("GET /profile/available-models", profileHandler.ListModels)
+	// Protected routes - wrap each with auth middleware
+	mux.Handle("GET /profile", authMiddleware.Protect(http.HandlerFunc(profileHandler.GetProfile)))
+	mux.Handle("POST /profile/update", authMiddleware.Protect(http.HandlerFunc(profileHandler.UpdateProfile)))
+	mux.Handle("POST /profile/password", authMiddleware.Protect(http.HandlerFunc(profileHandler.UpdatePassword)))
+	mux.Handle("DELETE /users", authMiddleware.Protect(http.HandlerFunc(profileHandler.DeleteUser)))
+	mux.Handle("GET /profile/available-models", authMiddleware.Protect(http.HandlerFunc(profileHandler.ListModels)))
 
-	protected.HandleFunc("GET /tones", toneHandler.List)
-	protected.HandleFunc("POST /tones", toneHandler.Create)
-	protected.HandleFunc("PUT /tones/{id}", toneHandler.Update)
-	protected.HandleFunc("DELETE /tones/{id}", toneHandler.Delete)
-	protected.HandleFunc("POST /tones/{id}/toggle", toneHandler.ToggleDefault)
+	mux.Handle("GET /tones", authMiddleware.Protect(http.HandlerFunc(toneHandler.List)))
+	mux.Handle("POST /tones", authMiddleware.Protect(http.HandlerFunc(toneHandler.Create)))
+	mux.Handle("PUT /tones/{id}", authMiddleware.Protect(http.HandlerFunc(toneHandler.Update)))
+	mux.Handle("DELETE /tones/{id}", authMiddleware.Protect(http.HandlerFunc(toneHandler.Delete)))
+	mux.Handle("POST /tones/{id}/toggle", authMiddleware.Protect(http.HandlerFunc(toneHandler.ToggleDefault)))
 
-	protected.HandleFunc("POST /ai/reply", aiHandler.Reply)
-	protected.HandleFunc("POST /ai/refine", aiHandler.Refine)
-	protected.HandleFunc("POST /ai/chat", aiHandler.Chat)
-
-	mux.Handle("/", authMiddleware.Protect(protected))
+	mux.Handle("POST /ai/reply", authMiddleware.Protect(http.HandlerFunc(aiHandler.Reply)))
+	mux.Handle("POST /ai/refine", authMiddleware.Protect(http.HandlerFunc(aiHandler.Refine)))
+	mux.Handle("POST /ai/chat", authMiddleware.Protect(http.HandlerFunc(aiHandler.Chat)))
 
 	handler := middleware.CORS(mux)
 	handler = middleware.Logging(log)(handler)

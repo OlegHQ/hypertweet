@@ -158,5 +158,5 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, RefreshResponse{Token: tokens.AccessToken})
+	shared.RespondJSON(w, http.StatusOK, tokens)
 }

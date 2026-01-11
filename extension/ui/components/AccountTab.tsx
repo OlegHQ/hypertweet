@@ -49,7 +49,7 @@ export function AccountTab({ onLogout }: AccountTabProps): React.ReactElement {
       if (newPassword !== confirmPassword) {
         throw new Error('Passwords do not match');
       }
-      return api.updatePassword({ NewPassword: newPassword });
+      return api.updatePassword({ newPassword: newPassword });
     },
     onSuccess: () => {
       setNewPassword('');

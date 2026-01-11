@@ -22,28 +22,38 @@ export function AuthForm({
 
   const loginMutation = useMutation({
     mutationFn: async () => {
+      console.log('[AuthForm] Starting login for:', email);
       const result = (await api.login({
-        Email: email,
-        Password: password,
+        email: email,
+        password: password,
       })) as TokenRes;
+      console.log('[AuthForm] Login result:', result);
+      console.log('[AuthForm] Calling saveTokens...');
       await api.saveTokens(result);
+      console.log('[AuthForm] saveTokens completed');
       return result;
     },
-    onSuccess: res => onSuccess(res.AccessToken),
-    onError: () => setError('Invalid email or password'),
+    onSuccess: res => {
+      console.log('[AuthForm] onSuccess, token:', res.accessToken?.substring(0, 20));
+      onSuccess(res.accessToken);
+    },
+    onError: (err) => {
+      console.error('[AuthForm] Login error:', err);
+      setError('Invalid email or password');
+    },
   });
 
   const registerMutation = useMutation({
     mutationFn: async () => {
-      await api.register({ Email: email, Password: password });
+      await api.register({ email: email, password: password });
       const result = (await api.login({
-        Email: email,
-        Password: password,
+        email: email,
+        password: password,
       })) as TokenRes;
       await api.saveTokens(result);
       return result;
     },
-    onSuccess: res => onSuccess(res.AccessToken),
+    onSuccess: res => onSuccess(res.accessToken),
     onError: () => setError('Registration failed. Email may already exist.'),
   });
 
@@ -51,9 +61,14 @@ export function AuthForm({
 
   const handleSubmit = (e: React.FormEvent): void => {
     e.preventDefault();
+    console.log('[AuthForm] handleSubmit called, mode:', mode);
     setError('');
-    if (mode === 'login') loginMutation.mutate();
-    else registerMutation.mutate();
+    if (mode === 'login') {
+      console.log('[AuthForm] Calling loginMutation.mutate()');
+      loginMutation.mutate();
+    } else {
+      registerMutation.mutate();
+    }
   };
 
   const toggleMode = () => {

@@ -24,12 +24,12 @@ export function ChatSettingsTab(): React.ReactElement {
 
   useEffect(() => {
     if (profile) {
-      setPersona(profile.ChatBotPersona ?? '');
+      setPersona(profile.chatBotPersona ?? '');
     }
   }, [profile]);
 
   const updateProfileMutation = useMutation({
-    mutationFn: (data: { ChatBotPersona: string }) => api.updateProfile(data),
+    mutationFn: (data: { chatBotPersona: string }) => api.updateProfile(data),
     onSuccess: () => {
       setSaveStatus('saved');
       if (saveStatusTimerRef.current) {
@@ -47,14 +47,14 @@ export function ChatSettingsTab(): React.ReactElement {
 
   const updateChatModelMutation = useMutation({
     mutationFn: (chatModel: string) =>
-      api.updateProfile({ ChatModel: chatModel }),
+      api.updateProfile({ chatModel: chatModel }),
     onMutate: async chatModel => {
       await queryClient.cancelQueries({ queryKey: ['profile'] });
       const previous = queryClient.getQueryData<ProfileRes>(['profile']);
       if (previous) {
         queryClient.setQueryData<ProfileRes>(['profile'], {
           ...previous,
-          ChatModel: chatModel,
+          chatModel: chatModel,
         });
       }
       return { previous };
@@ -70,13 +70,13 @@ export function ChatSettingsTab(): React.ReactElement {
   });
 
   const modelOptions =
-    modelsData?.AllModels.map(m => ({
-      value: m.ModelName,
-      label: m.ModelName.split('/').pop()?.replace(':free', '') ?? m.ModelName,
+    modelsData?.allModels.map(m => ({
+      value: m.modelName,
+      label: m.modelName.split('/').pop()?.replace(':free', '') ?? m.modelName,
     })) ?? [];
 
   const currentChatModel =
-    profile?.ChatModel ?? profile?.ModelName ?? modelOptions[0]?.value ?? '';
+    profile?.chatModel ?? profile?.modelName ?? modelOptions[0]?.value ?? '';
 
   const handleChatModelChange = (
     e: React.ChangeEvent<HTMLSelectElement>
@@ -85,7 +85,7 @@ export function ChatSettingsTab(): React.ReactElement {
   };
 
   const debouncedSave = useCallback(
-    (data: { ChatBotPersona: string }) => {
+    (data: { chatBotPersona: string }) => {
       if (saveTimerRef.current) {
         window.clearTimeout(saveTimerRef.current);
       }
@@ -98,8 +98,8 @@ export function ChatSettingsTab(): React.ReactElement {
   );
 
   const handleBlur = (): void => {
-    if (persona !== (profile?.ChatBotPersona ?? '')) {
-      debouncedSave({ ChatBotPersona: persona });
+    if (persona !== (profile?.chatBotPersona ?? '')) {
+      debouncedSave({ chatBotPersona: persona });
     }
   };
 

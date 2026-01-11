@@ -1,36 +1,36 @@
 // Interfaces for page data - used by both raw JS and TypeScript
-// PascalCase keys to match server API
+// camelCase keys to match server JSON API
 export interface User {
-  UserName?: string;
-  Email?: string;
-  Name?: string;
-  IsVerified?: boolean;
-  Bio?: string;
-  Location?: string;
-  Website?: string;
-  JoinDate?: string;
-  Following?: number;
-  Followers?: number;
+  userName?: string;
+  email?: string;
+  name?: string;
+  isVerified?: boolean;
+  bio?: string;
+  location?: string;
+  website?: string;
+  joinDate?: string;
+  following?: number;
+  followers?: number;
 }
 
 export interface Post {
-  Author: User;
-  Text: string;
-  CurrentReplyDraft?: string;
-  Replies?: Post[];
-  Time?: string;
-  StatusID?: string;
-  Url?: string;
-  Upvotes?: number;
-  CommentCount?: number;
-  IsTopLevel?: boolean;
+  author: User;
+  text: string;
+  currentReplyDraft?: string;
+  replies?: Post[];
+  time?: string;
+  statusId?: string;
+  url?: string;
+  upvotes?: number;
+  commentCount?: number;
+  isTopLevel?: boolean;
 }
 
 export interface Page {
-  Site: string;
-  Url: string;
-  Posts: Post[];
-  ActivePost?: Post;
+  site: string;
+  url: string;
+  posts: Post[];
+  activePost?: Post;
 }
 
 // Raw API insert callback type - editor-specific insert function

@@ -4,11 +4,11 @@ import "time"
 
 type Tone struct {
 	ID          string    `bson:"_id" json:"id"`
-	UserID      *string   `bson:"userId,omitempty" json:"userId,omitempty"`
-	Title       string    `bson:"title" json:"title"`
-	Instruction string    `bson:"instruction" json:"instruction"`
-	Enabled     *bool     `bson:"enabled,omitempty" json:"enabled,omitempty"`
-	CreatedAt   time.Time `bson:"createdAt" json:"createdAt"`
+	UserID      *string   `bson:"UserId,omitempty" json:"userId,omitempty"`
+	Title       string    `bson:"Title" json:"title"`
+	Instruction string    `bson:"Instruction" json:"instruction"`
+	Enabled     *bool     `bson:"Enabled,omitempty" json:"enabled,omitempty"`
+	CreatedAt   time.Time `bson:"CreatedAt" json:"createdAt"`
 }
 
 type ToneResponse struct {
