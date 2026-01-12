@@ -35,13 +35,13 @@ type ModelsResponse struct {
 }
 
 var AllModels = []string{
+	"openai/gpt-oss-120b",
+	"openai/gpt-oss-20b",
 	"llama-3.3-70b-versatile",
 	"llama-3.1-8b-instant",
-	"mixtral-8x7b-32768",
-	"gemma2-9b-it",
 }
 
-const DefaultModel = "llama-3.3-70b-versatile"
+const DefaultModel = "openai/gpt-oss-120b"
 
 func NewDefaultProfile(userID string) *Profile {
 	postProcess := true
