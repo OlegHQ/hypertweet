@@ -1,20 +1,11 @@
 package shared
 
+import "slices"
+
 func SliceContains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, item)
 }
 
 func SliceRemove(slice []string, item string) []string {
-	result := make([]string, 0, len(slice))
-	for _, s := range slice {
-		if s != item {
-			result = append(result, s)
-		}
-	}
-	return result
+	return slices.DeleteFunc(slice, func(s string) bool { return s == item })
 }

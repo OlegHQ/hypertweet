@@ -34,51 +34,35 @@ func NewService(groq *GroqClient, userRepo *auth.UserRepo, profileRepo *profiles
 }
 
 func (s *Service) GenerateReply(ctx context.Context, userID, toneID string, page Page) (*ReplyResponse, error) {
-	user, profile, err := s.resolveUserProfile(ctx, userID)
+	_, profile, err := s.resolveUserProfile(ctx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	tone, err := s.resolveTone(ctx, userID, toneID, user)
+	tone, err := s.resolveTone(ctx, toneID)
 	if err != nil {
 		return nil, err
 	}
 
-	model := profiles.DefaultModel
-	if profile != nil {
-		model = profile.ModelName
-	}
-
-	var userBio, customGuidance *string
-	var options []string
-	postProcess := true
-	if profile != nil {
-		userBio = profile.UserBio
-		customGuidance = profile.CustomReplyGuidance
-		options = profile.ReplyPromptOptions
-		if profile.PostProcessReply != nil {
-			postProcess = *profile.PostProcessReply
-		}
-	}
-
-	prompt := BuildReplyPrompt(tone, page, userBio, customGuidance, options)
+	ps := extractProfileSettings(profile)
+	prompt := BuildReplyPrompt(tone, page, ps.userBio, ps.customGuidance, ps.options)
 	messages := []Message{{Role: "user", Content: prompt}}
 
 	start := time.Now()
-	completion, err := s.groq.Complete(ctx, model, messages)
+	completion, err := s.groq.Complete(ctx, ps.model, messages)
 	if err != nil {
 		return nil, err
 	}
 	duration := time.Since(start)
 
-	if postProcess {
+	if ps.postProcess {
 		completion = applyPostProcess(completion)
 	}
 
 	event := &tracing.TraceEvent{
 		Type:       "reply",
 		UserID:     userID,
-		Model:      model,
+		Model:      ps.model,
 		Prompt:     prompt,
 		Response:   completion,
 		TimeTookMs: int(duration.Milliseconds()),
@@ -100,41 +84,25 @@ func (s *Service) RefineReply(ctx context.Context, userID, platform, originalPos
 		return nil, err
 	}
 
-	model := profiles.DefaultModel
-	if profile != nil {
-		model = profile.ModelName
-	}
-
-	var userBio, customGuidance *string
-	var options []string
-	postProcess := true
-	if profile != nil {
-		userBio = profile.UserBio
-		customGuidance = profile.CustomReplyGuidance
-		options = profile.ReplyPromptOptions
-		if profile.PostProcessReply != nil {
-			postProcess = *profile.PostProcessReply
-		}
-	}
-
-	prompt := BuildRefinePrompt(platform, originalPost, draftReply, instruction, userBio, customGuidance, options)
+	ps := extractProfileSettings(profile)
+	prompt := BuildRefinePrompt(platform, originalPost, draftReply, instruction, ps.userBio, ps.customGuidance, ps.options)
 	messages := []Message{{Role: "user", Content: prompt}}
 
 	start := time.Now()
-	completion, err := s.groq.Complete(ctx, model, messages)
+	completion, err := s.groq.Complete(ctx, ps.model, messages)
 	if err != nil {
 		return nil, err
 	}
 	duration := time.Since(start)
 
-	if postProcess {
+	if ps.postProcess {
 		completion = applyPostProcess(completion)
 	}
 
 	event := &tracing.TraceEvent{
 		Type:       "refine",
 		UserID:     userID,
-		Model:      model,
+		Model:      ps.model,
 		Prompt:     prompt,
 		Response:   completion,
 		TimeTookMs: int(duration.Milliseconds()),
@@ -156,24 +124,8 @@ func (s *Service) StreamChat(ctx context.Context, userID string, chatReq ChatReq
 		return "", err
 	}
 
-	model := profiles.DefaultModel
-	if profile != nil {
-		if profile.ChatModel != nil {
-			model = *profile.ChatModel
-		} else {
-			model = profile.ModelName
-		}
-	}
-
-	var persona, userBio *string
-	var options []string
-	if profile != nil {
-		persona = profile.ChatBotPersona
-		userBio = profile.UserBio
-		options = profile.ReplyPromptOptions
-	}
-
-	systemPrompt := BuildChatPrompt(persona, chatReq.PageContext, userBio, options)
+	ps := extractProfileSettings(profile)
+	systemPrompt := BuildChatPrompt(ps.persona, chatReq.PageContext, ps.userBio, ps.options)
 
 	messages := []Message{{Role: "system", Content: systemPrompt}}
 	for _, m := range chatReq.Messages {
@@ -187,7 +139,7 @@ func (s *Service) StreamChat(ctx context.Context, userID string, chatReq ChatReq
 	var responseBuilder strings.Builder
 	start := time.Now()
 
-	err = s.groq.Stream(ctx, model, messages, func(token string) error {
+	err = s.groq.Stream(ctx, ps.chatModel, messages, func(token string) error {
 		processed := applyPostProcess(token)
 		responseBuilder.WriteString(processed)
 		return onToken(processed)
@@ -201,7 +153,7 @@ func (s *Service) StreamChat(ctx context.Context, userID string, chatReq ChatReq
 	event := &tracing.TraceEvent{
 		Type:       "chat",
 		UserID:     userID,
-		Model:      model,
+		Model:      ps.chatModel,
 		Prompt:     systemPrompt,
 		Response:   responseBuilder.String(),
 		TimeTookMs: int(duration.Milliseconds()),
@@ -228,7 +180,45 @@ func (s *Service) resolveUserProfile(ctx context.Context, userID string) (*auth.
 	return user, profile, nil
 }
 
-func (s *Service) resolveTone(ctx context.Context, userID, toneID string, user *auth.User) (*tones.Tone, error) {
+type profileSettings struct {
+	model          string
+	userBio        *string
+	customGuidance *string
+	options        []string
+	postProcess    bool
+	chatModel      string
+	persona        *string
+}
+
+func extractProfileSettings(profile *profiles.Profile) profileSettings {
+	s := profileSettings{
+		model:       profiles.DefaultModel,
+		postProcess: true,
+	}
+	if profile == nil {
+		return s
+	}
+
+	s.model = profile.ModelName
+	s.userBio = profile.UserBio
+	s.customGuidance = profile.CustomReplyGuidance
+	s.options = profile.ReplyPromptOptions
+	s.persona = profile.ChatBotPersona
+
+	if profile.PostProcessReply != nil {
+		s.postProcess = *profile.PostProcessReply
+	}
+
+	if profile.ChatModel != nil {
+		s.chatModel = *profile.ChatModel
+	} else {
+		s.chatModel = s.model
+	}
+
+	return s
+}
+
+func (s *Service) resolveTone(ctx context.Context, toneID string) (*tones.Tone, error) {
 	if tones.IsDefaultTone(toneID) {
 		tone := tones.GetDefaultTone(toneID)
 		if tone == nil {
@@ -237,22 +227,19 @@ func (s *Service) resolveTone(ctx context.Context, userID, toneID string, user *
 		return tone, nil
 	}
 
-	tone, err := s.toneRepo.FindByID(ctx, toneID)
-	if err != nil {
-		return nil, err
-	}
-
-	return tone, nil
+	return s.toneRepo.FindByID(ctx, toneID)
 }
 
+var unicodeReplacer = strings.NewReplacer(
+	"\u2014", ", ",  // em dash
+	"\u2019", "'",   // right single quote
+	"\u201c", "\"",  // left double quote
+	"\u00a0", " ",   // non-breaking space
+	"\u2018", "'",   // left single quote
+	"\u201d", "\"",  // right double quote
+	"\u2026", "...", // ellipsis
+)
+
 func applyPostProcess(text string) string {
-	result := text
-	result = strings.ReplaceAll(result, "\u2014", ", ")  // em dash
-	result = strings.ReplaceAll(result, "\u2019", "'")   // right single quote
-	result = strings.ReplaceAll(result, "\u201c", "\"")  // left double quote
-	result = strings.ReplaceAll(result, "\u00a0", " ")   // non-breaking space
-	result = strings.ReplaceAll(result, "\u2018", "'")   // left single quote
-	result = strings.ReplaceAll(result, "\u201d", "\"")  // right double quote
-	result = strings.ReplaceAll(result, "\u2026", "...") // ellipsis
-	return result
+	return unicodeReplacer.Replace(text)
 }

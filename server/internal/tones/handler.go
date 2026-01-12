@@ -217,12 +217,10 @@ func (h *Handler) ToggleDefault(w http.ResponseWriter, r *http.Request) {
 	var newDisabled []string
 	if enable {
 		newDisabled = shared.SliceRemove(user.DisabledToneIds, toneID)
+	} else if !shared.SliceContains(user.DisabledToneIds, toneID) {
+		newDisabled = append(user.DisabledToneIds, toneID)
 	} else {
-		if !shared.SliceContains(user.DisabledToneIds, toneID) {
-			newDisabled = append(user.DisabledToneIds, toneID)
-		} else {
-			newDisabled = user.DisabledToneIds
-		}
+		newDisabled = user.DisabledToneIds
 	}
 
 	if err := h.userRepo.UpdateDisabledToneIds(ctx, userID, newDisabled); err != nil {

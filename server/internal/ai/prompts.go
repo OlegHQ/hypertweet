@@ -134,17 +134,13 @@ func formatThreadQuote(post Post, depth, maxDepth, maxReplies int) []string {
 func extractPageContext(page Page) (activePost string, threadContext *string, currentDraft *string, guidelines []string) {
 	var activePostObj *Post
 
-	switch len(page.Posts) {
-	case 1:
+	switch {
+	case len(page.Posts) == 1:
 		activePostObj = &page.Posts[0]
-	case 0:
-		activePostObj = nil
-	default:
-		if page.ActivePost != nil {
-			activePostObj = page.ActivePost
-		} else if len(page.Posts) > 0 {
-			activePostObj = &page.Posts[0]
-		}
+	case page.ActivePost != nil:
+		activePostObj = page.ActivePost
+	case len(page.Posts) > 0:
+		activePostObj = &page.Posts[0]
 	}
 
 	if activePostObj != nil {
