@@ -113,7 +113,7 @@ func (h *Handler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiry := time.Now().UTC().Add(30 * 24 * time.Hour)
+	expiry := time.Now().UTC().Add(h.service.RefreshTokenExpiry())
 	if err := h.repo.UpdateRefreshToken(ctx, user.ID, tokens.RefreshToken, expiry); err != nil {
 		shared.HandleError(w, h.log, err)
 		return
@@ -152,7 +152,7 @@ func (h *Handler) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	expiry := time.Now().UTC().Add(30 * 24 * time.Hour)
+	expiry := time.Now().UTC().Add(h.service.RefreshTokenExpiry())
 	if err := h.repo.UpdateRefreshToken(ctx, user.ID, tokens.RefreshToken, expiry); err != nil {
 		shared.HandleError(w, h.log, err)
 		return

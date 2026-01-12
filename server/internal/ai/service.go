@@ -2,6 +2,8 @@ package ai
 
 import (
 	"context"
+	"errors"
+	"log/slog"
 	"strings"
 	"time"
 
@@ -17,15 +19,17 @@ type Service struct {
 	profileRepo *profiles.ProfileRepo
 	toneRepo    *tones.ToneRepo
 	traceRepo   *tracing.TraceRepo
+	log         *slog.Logger
 }
 
-func NewService(groq *GroqClient, userRepo *auth.UserRepo, profileRepo *profiles.ProfileRepo, toneRepo *tones.ToneRepo, traceRepo *tracing.TraceRepo) *Service {
+func NewService(groq *GroqClient, userRepo *auth.UserRepo, profileRepo *profiles.ProfileRepo, toneRepo *tones.ToneRepo, traceRepo *tracing.TraceRepo, log *slog.Logger) *Service {
 	return &Service{
 		groq:        groq,
 		userRepo:    userRepo,
 		profileRepo: profileRepo,
 		toneRepo:    toneRepo,
 		traceRepo:   traceRepo,
+		log:         log,
 	}
 }
 
@@ -202,7 +206,10 @@ func (s *Service) StreamChat(ctx context.Context, userID string, chatReq ChatReq
 		Response:   responseBuilder.String(),
 		TimeTookMs: int(duration.Milliseconds()),
 	}
-	eventID, _ := s.traceRepo.Save(ctx, event)
+	eventID, err := s.traceRepo.Save(ctx, event)
+	if err != nil {
+		s.log.Error("failed to save chat trace", "error", err, "userID", userID)
+	}
 
 	return eventID, nil
 }
@@ -214,7 +221,7 @@ func (s *Service) resolveUserProfile(ctx context.Context, userID string) (*auth.
 	}
 
 	profile, err := s.profileRepo.FindByID(ctx, userID)
-	if err != nil && err != profiles.ErrProfileNotFound {
+	if err != nil && !errors.Is(err, profiles.ErrProfileNotFound) {
 		return nil, nil, err
 	}
 

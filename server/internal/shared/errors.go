@@ -97,18 +97,5 @@ func ErrorToStatus(err error) int {
 		return http.StatusBadRequest
 	}
 
-	if errors.Is(err, ErrNotFound) {
-		return http.StatusNotFound
-	}
-	if errors.Is(err, ErrUnauthorized) {
-		return http.StatusUnauthorized
-	}
-	if errors.Is(err, ErrConflict) {
-		return http.StatusConflict
-	}
-	if errors.Is(err, ErrRateLimited) {
-		return http.StatusTooManyRequests
-	}
-
 	return http.StatusInternalServerError
 }

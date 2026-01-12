@@ -32,13 +32,7 @@ func (h *Handler) GetProfile(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if profile == nil {
-		postProcess := true
-		profile = &Profile{
-			ID:                 userID,
-			ModelName:          DefaultModel,
-			PostProcessReply:   &postProcess,
-			ReplyPromptOptions: []string{"NoEmojis", "NoHashtags"},
-		}
+		profile = NewDefaultProfile(userID)
 		if err := h.repo.Upsert(ctx, profile); err != nil {
 			shared.HandleError(w, h.log, err)
 			return
@@ -106,7 +100,7 @@ func (h *Handler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": "Ok"})
+	shared.RespondOK(w, "Ok")
 }
 
 func (h *Handler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
@@ -135,7 +129,7 @@ func (h *Handler) UpdatePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": "Ok"})
+	shared.RespondOK(w, "Ok")
 }
 
 func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
@@ -147,7 +141,7 @@ func (h *Handler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": "Ok"})
+	shared.RespondOK(w, "Ok")
 }
 
 func (h *Handler) ListModels(w http.ResponseWriter, r *http.Request) {

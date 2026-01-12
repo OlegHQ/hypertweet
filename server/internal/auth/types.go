@@ -31,4 +31,3 @@ type TokenResult struct {
 	RefreshToken string `json:"refreshToken"`
 	ExpiresIn    int    `json:"expiresIn"`
 }
-

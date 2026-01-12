@@ -11,19 +11,25 @@ import (
 )
 
 type AuthService struct {
-	secret     string
-	issuer     string
-	audience   string
-	expiryDays int
+	secret                 string
+	issuer                 string
+	audience               string
+	expiryDays             int
+	refreshTokenExpiryDays int
 }
 
-func NewAuthService(secret, issuer, audience string, expiryDays int) *AuthService {
+func NewAuthService(secret, issuer, audience string, expiryDays, refreshTokenExpiryDays int) *AuthService {
 	return &AuthService{
-		secret:     secret,
-		issuer:     issuer,
-		audience:   audience,
-		expiryDays: expiryDays,
+		secret:                 secret,
+		issuer:                 issuer,
+		audience:               audience,
+		expiryDays:             expiryDays,
+		refreshTokenExpiryDays: refreshTokenExpiryDays,
 	}
+}
+
+func (s *AuthService) RefreshTokenExpiry() time.Duration {
+	return time.Duration(s.refreshTokenExpiryDays) * 24 * time.Hour
 }
 
 func (s *AuthService) GenerateTokens(user *User) (*TokenResult, error) {

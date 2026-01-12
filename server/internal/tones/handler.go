@@ -22,6 +22,13 @@ func NewHandler(repo *ToneRepo, userRepo *auth.UserRepo, log *slog.Logger) *Hand
 	return &Handler{repo: repo, userRepo: userRepo, log: log}
 }
 
+func checkOwnership(ownerID *string, userID string) error {
+	if ownerID == nil || *ownerID != userID {
+		return shared.NewUnauthorizedError()
+	}
+	return nil
+}
+
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	userID := middleware.GetUserID(ctx)
@@ -105,7 +112,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusCreated, map[string]string{"id": tone.ID})
+	shared.RespondCreated(w, tone.ID)
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -138,8 +145,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if tone.UserID == nil || *tone.UserID != userID {
-		shared.HandleError(w, h.log, shared.NewUnauthorizedError())
+	if err := checkOwnership(tone.UserID, userID); err != nil {
+		shared.HandleError(w, h.log, err)
 		return
 	}
 
@@ -148,7 +155,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": "Updated"})
+	shared.RespondOK(w, "Updated")
 }
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
@@ -171,8 +178,8 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if tone.UserID == nil || *tone.UserID != userID {
-		shared.HandleError(w, h.log, shared.NewUnauthorizedError())
+	if err := checkOwnership(tone.UserID, userID); err != nil {
+		shared.HandleError(w, h.log, err)
 		return
 	}
 
@@ -181,7 +188,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": "Deleted"})
+	shared.RespondOK(w, "Deleted")
 }
 
 func (h *Handler) ToggleDefault(w http.ResponseWriter, r *http.Request) {
@@ -209,22 +216,12 @@ func (h *Handler) ToggleDefault(w http.ResponseWriter, r *http.Request) {
 
 	var newDisabled []string
 	if enable {
-		for _, id := range user.DisabledToneIds {
-			if id != toneID {
-				newDisabled = append(newDisabled, id)
-			}
-		}
+		newDisabled = shared.SliceRemove(user.DisabledToneIds, toneID)
 	} else {
-		newDisabled = user.DisabledToneIds
-		found := false
-		for _, id := range newDisabled {
-			if id == toneID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			newDisabled = append(newDisabled, toneID)
+		if !shared.SliceContains(user.DisabledToneIds, toneID) {
+			newDisabled = append(user.DisabledToneIds, toneID)
+		} else {
+			newDisabled = user.DisabledToneIds
 		}
 	}
 
@@ -237,5 +234,5 @@ func (h *Handler) ToggleDefault(w http.ResponseWriter, r *http.Request) {
 	if !enable {
 		message = "Disabled"
 	}
-	shared.RespondJSON(w, http.StatusOK, map[string]string{"message": message})
+	shared.RespondOK(w, message)
 }

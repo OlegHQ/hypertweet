@@ -41,3 +41,11 @@ func DecodeJSON[T any](r *http.Request) (T, error) {
 	}
 	return v, nil
 }
+
+func RespondOK(w http.ResponseWriter, message string) {
+	RespondJSON(w, http.StatusOK, map[string]string{"message": message})
+}
+
+func RespondCreated(w http.ResponseWriter, id string) {
+	RespondJSON(w, http.StatusCreated, map[string]string{"id": id})
+}

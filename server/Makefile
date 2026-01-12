@@ -1,4 +1,4 @@
-.PHONY: build run test clean fmt lint deploy
+.PHONY: build run test clean fmt lint deploy watch
 
 # Build configuration
 OUTPUT := ./bin/server
@@ -11,6 +11,9 @@ build:
 
 run:
 	go run ./cmd/server
+
+watch:
+	air
 
 test:
 	go test ./...

@@ -43,6 +43,16 @@ var AllModels = []string{
 
 const DefaultModel = "llama-3.3-70b-versatile"
 
+func NewDefaultProfile(userID string) *Profile {
+	postProcess := true
+	return &Profile{
+		ID:                 userID,
+		ModelName:          DefaultModel,
+		PostProcessReply:   &postProcess,
+		ReplyPromptOptions: []string{"NoEmojis", "NoHashtags"},
+	}
+}
+
 var ValidReplyPromptOptions = map[string]bool{
 	"NoEmojis":      true,
 	"NoHashtags":    true,

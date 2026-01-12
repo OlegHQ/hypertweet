@@ -2,6 +2,7 @@ package shared
 
 import (
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -16,10 +17,7 @@ func ValidateNotEmpty(field, value string) error {
 
 func ValidateMinLength(field, value string, minLen int) error {
 	if len(value) < minLen {
-		return &ValidationError{
-			Field:   field,
-			Message: "must be at least " + string(rune('0'+minLen)) + " characters",
-		}
+		return NewValidationError(field, "must be at least "+strconv.Itoa(minLen)+" characters")
 	}
 	return nil
 }

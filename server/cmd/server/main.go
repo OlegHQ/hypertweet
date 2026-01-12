@@ -53,9 +53,9 @@ func main() {
 	}
 	log.Info("database indexes generated")
 
-	authService := auth.NewAuthService(cfg.JwtSecret, cfg.JwtIssuer, cfg.JwtAudience, cfg.JwtExpiryDays)
+	authService := auth.NewAuthService(cfg.JwtSecret, cfg.JwtIssuer, cfg.JwtAudience, cfg.JwtExpiryDays, cfg.RefreshTokenExpiryDays)
 	groqClient := ai.NewGroqClient(cfg.GroqAPIKey)
-	aiService := ai.NewService(groqClient, userRepo, profileRepo, toneRepo, traceRepo)
+	aiService := ai.NewService(groqClient, userRepo, profileRepo, toneRepo, traceRepo, log)
 
 	authHandler := auth.NewHandler(userRepo, authService, log)
 	profileHandler := profiles.NewHandler(profileRepo, userRepo, log)
