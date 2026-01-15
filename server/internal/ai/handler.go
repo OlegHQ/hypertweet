@@ -82,28 +82,40 @@ func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Accel-Buffering", "no")
-
+	// Check flusher support before setting headers
 	flusher, ok := w.(http.Flusher)
 	if !ok {
 		shared.HandleError(w, h.log, shared.NewInternalError("streaming not supported"))
 		return
 	}
 
+	// Set SSE headers
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
+
+	// Explicitly set status code to start the response
+	w.WriteHeader(http.StatusOK)
+
 	chatID := uuid.NewString()
-	writeSSE(w, flusher, "chatId", chatID)
+	h.log.Info("chat stream starting", "userID", userID, "chatID", chatID, "messages", len(req.Messages))
+
+	if err := writeSSE(w, flusher, "chatId", chatID); err != nil {
+		h.log.Error("failed to write chatId", "error", err)
+		return
+	}
 
 	_, err = h.service.StreamChat(ctx, userID, req, func(token string) error {
 		return writeSSE(w, flusher, "token", token)
 	})
 	if err != nil {
-		h.log.Error("chat stream error", "error", err)
+		h.log.Error("chat stream error", "error", err, "userID", userID)
+		// Don't call HandleError here - response already started
 		return
 	}
 
+	h.log.Info("chat stream completed", "userID", userID, "chatID", chatID)
 	fmt.Fprintf(w, "data: [DONE]\n\n")
 	flusher.Flush()
 }
