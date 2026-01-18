@@ -1,4 +1,4 @@
-.PHONY: build run test clean fmt lint watch smdctl-install smdctl-logs smdctl-rm
+.PHONY: build run test clean fmt lint watch smdctl-install smdctl-logs smdctl-rm redeploy
 
 OUTPUT := ./bin/server
 
@@ -38,3 +38,8 @@ smdctl-logs:
 
 smdctl-rm:
 	smdctl rm -f hypertweet
+
+redeploy:
+	smdctl stop hypertweet || true
+	smdctl rm -f hypertweet
+	$(MAKE) smdctl-install
