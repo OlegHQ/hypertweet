@@ -312,7 +312,7 @@ func (h *Handler) callTool(ctx context.Context, userID string, name string, args
 		if err != nil {
 			return toolError(err), nil
 		}
-		return toolOK(list), nil
+		return toolOK(map[string]any{"tones": list}), nil
 	case "tones_create":
 		var p struct {
 			Title       string `json:"title"`
