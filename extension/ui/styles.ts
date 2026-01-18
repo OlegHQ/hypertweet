@@ -782,6 +782,96 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       margin: 0 0 ${tokens.spacing[3]} 0 !important;
     }
 
+    /* API token settings */
+    .ht-api-token-create {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[3]} !important;
+      max-width: 420px !important;
+    }
+    .ht-api-token-actions {
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+    .ht-api-token-created {
+      margin-top: ${tokens.spacing[4]} !important;
+      padding: ${tokens.spacing[4]} !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.lg} !important;
+      background: var(${cssVars.muted}) !important;
+    }
+    .ht-api-token-created-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: ${tokens.spacing[3]} !important;
+      margin-bottom: ${tokens.spacing[3]} !important;
+    }
+    .ht-api-token-created-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      color: var(${cssVars.foreground}) !important;
+    }
+    .ht-api-token-created-buttons {
+      display: flex !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-api-token-created-token {
+      font-family: ${tokens.font.mono} !important;
+      font-size: 12px !important;
+      color: var(${cssVars.foreground}) !important;
+      background: var(${cssVars.background}) !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      padding: ${tokens.spacing[3]} !important;
+      word-break: break-all !important;
+    }
+    .ht-api-token-created-warning {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.xs} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+      margin-top: ${tokens.spacing[2]} !important;
+    }
+    .ht-api-token-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-api-token-row {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: ${tokens.spacing[3]} !important;
+      padding: ${tokens.spacing[3]} !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      background: var(${cssVars.card}) !important;
+    }
+    .ht-api-token-row-main {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 2px !important;
+      min-width: 0 !important;
+    }
+    .ht-api-token-row-name {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      font-weight: ${tokens.font.weight.medium} !important;
+      color: var(${cssVars.foreground}) !important;
+    }
+    .ht-api-token-row-meta {
+      font-family: ${tokens.font.mono} !important;
+      font-size: 11px !important;
+      color: var(${cssVars.mutedForeground}) !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+    .ht-api-token-row-actions {
+      flex-shrink: 0 !important;
+    }
+
     /* Settings layout with sidebar */
     .ht-settings-layout {
       display: flex !important;

@@ -231,12 +231,12 @@ func (s *Service) resolveTone(ctx context.Context, toneID string) (*tones.Tone, 
 }
 
 var unicodeReplacer = strings.NewReplacer(
-	"\u2014", ", ",  // em dash
-	"\u2019", "'",   // right single quote
-	"\u201c", "\"",  // left double quote
-	"\u00a0", " ",   // non-breaking space
-	"\u2018", "'",   // left single quote
-	"\u201d", "\"",  // right double quote
+	"\u2014", ", ", // em dash
+	"\u2019", "'", // right single quote
+	"\u201c", "\"", // left double quote
+	"\u00a0", " ", // non-breaking space
+	"\u2018", "'", // left single quote
+	"\u201d", "\"", // right double quote
 	"\u2026", "...", // ellipsis
 )
 

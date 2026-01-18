@@ -219,6 +219,51 @@ export const getAvailableModels = make<undefined, AvailableModelsRes>(
   true
 );
 
+// API Tokens (protected)
+export interface ApiToken {
+  id: string;
+  userId: string;
+  name: string;
+  createdAt: string;
+  lastUsedAt?: string;
+  revokedAt?: string;
+}
+
+export interface CreateApiTokenReq {
+  name: string;
+}
+
+export interface CreateApiTokenRes {
+  id: string;
+  name: string;
+  token: string;
+  createdAt: string;
+}
+
+export interface ListApiTokensRes {
+  tokens: ApiToken[];
+}
+
+export const listApiTokens = make<undefined, ListApiTokensRes>(
+  'GET',
+  '/api-tokens',
+  true
+);
+
+export const createApiToken = make<CreateApiTokenReq, CreateApiTokenRes>(
+  'POST',
+  '/api-tokens',
+  true
+);
+
+export async function revokeApiToken(id: string): Promise<{ message: string }> {
+  return make<undefined, { message: string }>(
+    'POST',
+    `/api-tokens/${id}/revoke`,
+    true
+  )();
+}
+
 // AI Reply (protected)
 export interface ReplyRequest {
   toneId: string;

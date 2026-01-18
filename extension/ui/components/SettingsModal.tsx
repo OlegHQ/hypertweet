@@ -5,6 +5,8 @@ import { ProfileTab } from './ProfileTab';
 import { ChatSettingsTab } from './ChatSettingsTab';
 import { AccountTab } from './AccountTab';
 import { AISettingsTab } from './AISettingsTab';
+import { ApiTokensTab } from './ApiTokensTab';
+import { ErrorBoundary } from './ErrorBoundary';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -17,6 +19,7 @@ const MENU_ITEMS = [
   { id: 'chat', label: 'Chat' },
   { id: 'account', label: 'Account' },
   { id: 'ai', label: 'AI Settings' },
+  { id: 'mcp', label: 'MCP' },
 ];
 
 const TITLES: Record<string, string> = {
@@ -24,6 +27,7 @@ const TITLES: Record<string, string> = {
   chat: 'Chat Settings',
   account: 'Account',
   ai: 'AI Settings',
+  mcp: 'MCP',
 };
 
 export function SettingsModal({
@@ -66,10 +70,13 @@ export function SettingsModal({
             </button>
           </div>
           <div className="ht-settings-content">
-            {activeTab === 'profile' && <ProfileTab />}
-            {activeTab === 'chat' && <ChatSettingsTab />}
-            {activeTab === 'account' && <AccountTab onLogout={onLogout} />}
-            {activeTab === 'ai' && <AISettingsTab />}
+            <ErrorBoundary title="Settings error">
+              {activeTab === 'profile' && <ProfileTab />}
+              {activeTab === 'chat' && <ChatSettingsTab />}
+              {activeTab === 'account' && <AccountTab onLogout={onLogout} />}
+              {activeTab === 'ai' && <AISettingsTab />}
+              {activeTab === 'mcp' && <ApiTokensTab />}
+            </ErrorBoundary>
           </div>
         </div>
       </div>

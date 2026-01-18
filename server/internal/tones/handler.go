@@ -8,7 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/hypertweet/server/internal/auth"
-	"github.com/hypertweet/server/internal/middleware"
+	"github.com/hypertweet/server/internal/requestctx"
 	"github.com/hypertweet/server/internal/shared"
 )
 
@@ -31,7 +31,7 @@ func checkOwnership(ownerID *string, userID string) error {
 
 func (h *Handler) List(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 
 	user, err := h.userRepo.FindByID(ctx, userID)
 	if err != nil {
@@ -82,7 +82,7 @@ func makeResolvedTones(user *auth.User, userTones []*Tone) []*Tone {
 
 func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 
 	req, err := shared.DecodeJSON[CreateToneRequest](r)
 	if err != nil {
@@ -117,7 +117,7 @@ func (h *Handler) Create(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 	toneID := r.PathValue("id")
 
 	req, err := shared.DecodeJSON[UpdateToneRequest](r)
@@ -160,7 +160,7 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 	toneID := r.PathValue("id")
 
 	if IsDefaultTone(toneID) {
@@ -193,7 +193,7 @@ func (h *Handler) Delete(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) ToggleDefault(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 	toneID := r.PathValue("id")
 
 	if !IsDefaultTone(toneID) {

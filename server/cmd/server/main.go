@@ -11,9 +11,11 @@ import (
 	"time"
 
 	"github.com/hypertweet/server/internal/ai"
+	"github.com/hypertweet/server/internal/apitokens"
 	"github.com/hypertweet/server/internal/auth"
 	"github.com/hypertweet/server/internal/config"
 	"github.com/hypertweet/server/internal/db"
+	"github.com/hypertweet/server/internal/mcp"
 	"github.com/hypertweet/server/internal/middleware"
 	"github.com/hypertweet/server/internal/profiles"
 	"github.com/hypertweet/server/internal/tones"
@@ -43,6 +45,7 @@ func main() {
 	profileRepo := profiles.NewProfileRepo(database)
 	toneRepo := tones.NewToneRepo(database)
 	traceRepo := tracing.NewTraceRepo(database)
+	apiTokenRepo := apitokens.NewRepo(database)
 
 	log.Info("generating database indexes...")
 	if err := userRepo.EnsureIndexes(ctx); err != nil {
@@ -50,6 +53,9 @@ func main() {
 	}
 	if err := traceRepo.EnsureIndexes(ctx); err != nil {
 		log.Warn("failed to create trace indexes", "error", err)
+	}
+	if err := apiTokenRepo.EnsureIndexes(ctx); err != nil {
+		log.Warn("failed to create api token indexes", "error", err)
 	}
 	log.Info("database indexes generated")
 
@@ -61,8 +67,11 @@ func main() {
 	profileHandler := profiles.NewHandler(profileRepo, userRepo, log)
 	toneHandler := tones.NewHandler(toneRepo, userRepo, log)
 	aiHandler := ai.NewHandler(aiService, log)
+	apiTokenHandler := apitokens.NewHandler(apiTokenRepo, log)
+	mcpHandler := mcp.NewHandler(userRepo, profileRepo, toneRepo, log)
 
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JwtSecret, cfg.JwtIssuer, cfg.JwtAudience)
+	apiTokenMiddleware := middleware.NewAPITokenMiddleware(apiTokenRepo, log)
 
 	mux := http.NewServeMux()
 
@@ -88,6 +97,13 @@ func main() {
 	mux.Handle("PUT /tones/{id}", authMiddleware.Protect(http.HandlerFunc(toneHandler.Update)))
 	mux.Handle("DELETE /tones/{id}", authMiddleware.Protect(http.HandlerFunc(toneHandler.Delete)))
 	mux.Handle("POST /tones/{id}/toggle", authMiddleware.Protect(http.HandlerFunc(toneHandler.ToggleDefault)))
+
+	mux.Handle("GET /api-tokens", authMiddleware.Protect(http.HandlerFunc(apiTokenHandler.List)))
+	mux.Handle("POST /api-tokens", authMiddleware.Protect(http.HandlerFunc(apiTokenHandler.Create)))
+	mux.Handle("POST /api-tokens/{id}/revoke", authMiddleware.Protect(http.HandlerFunc(apiTokenHandler.Revoke)))
+
+	mux.Handle("GET /mcp", apiTokenMiddleware.Protect(mcpHandler))
+	mux.Handle("POST /mcp", apiTokenMiddleware.Protect(mcpHandler))
 
 	mux.Handle("POST /ai/reply", authMiddleware.Protect(http.HandlerFunc(aiHandler.Reply)))
 	mux.Handle("POST /ai/refine", authMiddleware.Protect(http.HandlerFunc(aiHandler.Refine)))

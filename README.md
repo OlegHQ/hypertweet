@@ -17,7 +17,7 @@ Hypertweet reads the conversation you're replying to and generates contextually-
 - **Custom Tones** - Create your own with free-form AI instructions
 - **Thread-Aware** - Understands full conversation context, not just the parent post
 - **Platform-Specific** - Follows character limits, formatting norms, and culture per site
-- **Model Selection** - Choose from 8 free-tier LLMs via OpenRouter
+- **Model Selection** - Choose from multiple models via Groq
 
 ## Architecture
 
@@ -34,17 +34,17 @@ Hypertweet reads the conversation you're replying to and generates contextually-
 │                    └─────┬─────┘                        │
 └──────────────────────────┼──────────────────────────────┘
                            │ HTTPS
-                    ┌──────┴──────┐
-                    │   F# API    │
-                    │   Server    │
-                    └──────┬──────┘
-                           │
-              ┌────────────┼────────────┐
-              │            │            │
-        ┌─────┴─────┐ ┌────┴────┐ ┌─────┴─────┐
-        │  MongoDB  │ │   JWT   │ │ OpenRouter│
-        │           │ │  Auth   │ │    AI     │
-        └───────────┘ └─────────┘ └───────────┘
+                     ┌──────┴──────┐
+                     │    Go API   │
+                     │   Server    │
+                     └──────┬──────┘
+                            │
+               ┌────────────┼────────────┐
+               │            │            │
+         ┌─────┴─────┐ ┌────┴────┐ ┌─────┴─────┐
+         │  MongoDB  │ │   JWT   │ │   Groq AI │
+         │           │ │  Auth   │ │           │
+         └───────────┘ └─────────┘ └───────────┘
 ```
 
 ## Tech Stack
@@ -53,17 +53,17 @@ Hypertweet reads the conversation you're replying to and generates contextually-
 |-----------|------------|
 | Extension | TypeScript, React 19, Emotion, React Query |
 | Build | Bun, esbuild |
-| Server | F#, Giraffe, .NET 8 |
+| Server | Go 1.22+ (stdlib net/http) |
 | Database | MongoDB |
 | Auth | JWT + BCrypt |
-| AI | OpenRouter API (free-tier models) |
+| AI | Groq API |
 
 ## Development
 
 ### Prerequisites
 
 - [Bun](https://bun.sh)
-- [.NET 8 SDK](https://dotnet.microsoft.com/download)
+- [Go](https://go.dev) (1.22+)
 - [MongoDB](https://www.mongodb.com/docs/manual/installation/)
 
 ### Extension
@@ -91,14 +91,14 @@ Load the unpacked extension from `extension/dist` in Chrome.
 ```bash
 cd server
 
-# Run development server (port 3000)
-dotnet run
+# Required
+export GROQ_API_KEY="your-groq-api-key"
 
-# Build release
-dotnet build --configuration Release
+# Run development server
+make run
 
 # Run tests
-dotnet test
+make test
 ```
 
 ### Available Commands
@@ -140,18 +140,15 @@ v2/
 │   ├── manifest.json
 │   └── justfile
 │
-└── server/                 # F# backend
-    └── src/
-        ├── Shared/         # Config, HTTP helpers, validation
-        ├── Domain/         # Models, database access
-        ├── Features/       # Vertical slices
-        │   ├── Auth/       # Login, register, refresh
-        │   ├── Tones/      # CRUD, toggle, list
-        │   └── Profiles/   # Model selection, password
-        ├── AI/             # OpenRouter integration
-        │   ├── Service.fs  # Generation logic
-        │   └── Prompts.fs  # Platform-specific templates
-        └── Program.fs      # Composition root
+└── server/                 # Go backend
+    ├── cmd/server/         # Server entrypoint
+    └── internal/           # Feature packages
+        ├── auth/           # Login, register, refresh (JWT)
+        ├── profiles/       # Model selection, chat config
+        ├── tones/          # Tone CRUD + defaults
+        ├── apitokens/      # MCP token CRUD (revocable)
+        ├── mcp/            # MCP endpoint (/mcp)
+        └── ai/             # Groq integration
 ```
 
 ## How It Works
@@ -170,26 +167,49 @@ v2/
 
 ## Configuration
 
-Server configuration via environment variables or `appsettings.json`:
+Server configuration via environment variables:
 
 | Variable | Description |
 |----------|-------------|
 | `MONGODB_URI` | MongoDB connection string |
 | `JWT_SECRET` | Secret key for JWT signing |
-| `OPENROUTER_API_KEY` | OpenRouter API key |
+| `GROQ_API_KEY` | Groq API key |
+
+## Claude Code MCP
+
+Hypertweet exposes a Model Context Protocol (MCP) server at `POST /mcp` for managing tones and profile/chat settings.
+
+1. In the extension UI, open **Settings → MCP** and generate a token.
+2. Add the MCP server to Claude Code.
+
+Example `.mcp.json` entry (project scope):
+
+```json
+{
+  "mcpServers": {
+    "hypertweet": {
+      "type": "http",
+      "url": "http://localhost:5001/mcp",
+      "headers": {
+        "Authorization": "Bearer ${HYPERTWEET_MCP_TOKEN}"
+      }
+    }
+  }
+}
+```
+
+Then run Claude Code with the env var set:
+
+- `HYPERTWEET_MCP_TOKEN=<paste-token-here> claude`
 
 ## Available AI Models
 
-All free-tier models via OpenRouter:
+Configured in `server/internal/profiles/types.go`.
 
-- xiaomi/mimo-v2-flash:free (default)
-- deepseek/deepseek-r1-0528:free
-- deepseek/deepseek-chat-v3-0324:free
-- meta-llama/llama-3.1-405b-instruct:free
-- google/gemini-2.0-flash-exp:free
-- google/gemma-3-27b-it:free
-- qwen/qwen3-235b-a22b:free
-- mistralai/mistral-small-3.1-24b-instruct:free
+- `openai/gpt-oss-120b` (default)
+- `openai/gpt-oss-20b`
+- `llama-3.3-70b-versatile`
+- `llama-3.1-8b-instant`
 
 ## License
 

@@ -34,10 +34,13 @@ export function AuthForm({
       return result;
     },
     onSuccess: res => {
-      console.log('[AuthForm] onSuccess, token:', res.accessToken?.substring(0, 20));
+      console.log(
+        '[AuthForm] onSuccess, token:',
+        res.accessToken?.substring(0, 20)
+      );
       onSuccess(res.accessToken);
     },
-    onError: (err) => {
+    onError: err => {
       console.error('[AuthForm] Login error:', err);
       setError('Invalid email or password');
     },

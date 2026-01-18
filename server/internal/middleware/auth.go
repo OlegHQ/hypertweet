@@ -1,17 +1,13 @@
 package middleware
 
 import (
-	"context"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/hypertweet/server/internal/requestctx"
 	"github.com/hypertweet/server/internal/shared"
 )
-
-type contextKey string
-
-const UserIDKey contextKey = "userID"
 
 type AuthMiddleware struct {
 	secret   string
@@ -66,14 +62,7 @@ func (m *AuthMiddleware) Protect(next http.Handler) http.Handler {
 			return
 		}
 
-		ctx := context.WithValue(r.Context(), UserIDKey, userID)
+		ctx := requestctx.WithUserID(r.Context(), userID)
 		next.ServeHTTP(w, r.WithContext(ctx))
 	})
-}
-
-func GetUserID(ctx context.Context) string {
-	if userID, ok := ctx.Value(UserIDKey).(string); ok {
-		return userID
-	}
-	return ""
 }

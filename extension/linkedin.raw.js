@@ -197,7 +197,9 @@ window.__linkedin = (function () {
     }
 
     // Find comments container within the article
-    var commentsContainer = articleElement.querySelector('.comments-comments-list');
+    var commentsContainer = articleElement.querySelector(
+      '.comments-comments-list'
+    );
     if (!commentsContainer) {
       // Try alternative container
       commentsContainer = articleElement.querySelector(

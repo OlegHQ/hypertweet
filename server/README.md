@@ -64,9 +64,16 @@ The server runs on `http://localhost:5001` by default.
 - `DELETE /tones/{id}` - Delete tone
 - `POST /tones/{id}/toggle` - Toggle default tone
 
+- `GET /api-tokens` - List MCP/API tokens
+- `POST /api-tokens` - Create MCP/API token (returned once)
+- `POST /api-tokens/{id}/revoke` - Revoke MCP/API token
+
 - `POST /ai/reply` - Generate reply with tone
 - `POST /ai/refine` - Refine existing reply
 - `POST /ai/chat` - Chat with AI (SSE streaming)
+
+### MCP (Claude Code)
+- `POST /mcp` - MCP endpoint (Streamable HTTP). Requires `Authorization: Bearer <mcp-token>`.
 
 ## Development
 

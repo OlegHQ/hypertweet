@@ -7,7 +7,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
-	"github.com/hypertweet/server/internal/middleware"
+	"github.com/hypertweet/server/internal/requestctx"
 	"github.com/hypertweet/server/internal/shared"
 )
 
@@ -22,7 +22,7 @@ func NewHandler(service *Service, log *slog.Logger) *Handler {
 
 func (h *Handler) Reply(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 
 	req, err := shared.DecodeJSON[ReplyRequest](r)
 	if err != nil {
@@ -48,7 +48,7 @@ func (h *Handler) Reply(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Refine(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 
 	req, err := shared.DecodeJSON[RefineRequest](r)
 	if err != nil {
@@ -69,7 +69,7 @@ func (h *Handler) Refine(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handler) Chat(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
-	userID := middleware.GetUserID(ctx)
+	userID := requestctx.GetUserID(ctx)
 
 	req, err := shared.DecodeJSON[ChatRequest](r)
 	if err != nil {
