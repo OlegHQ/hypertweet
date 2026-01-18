@@ -78,6 +78,35 @@ func (s *Service) GenerateReply(ctx context.Context, userID, toneID string, page
 	}, nil
 }
 
+func (s *Service) GenerateReplyVariants(ctx context.Context, userID string, page Page, count int) ([]string, error) {
+	_, profile, err := s.resolveUserProfile(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	ps := extractProfileSettings(profile)
+	prompt := BuildReplyVariantsPrompt(page, count, ps.userBio, ps.customGuidance, ps.options)
+	messages := []Message{{Role: "user", Content: prompt}}
+
+	completion, err := s.groq.Complete(ctx, ps.model, messages)
+	if err != nil {
+		return nil, err
+	}
+
+	variants := parseJSONStringArray(completion)
+	if len(variants) == 0 {
+		return nil, nil
+	}
+
+	if count <= 0 {
+		count = 3
+	}
+	if len(variants) > count {
+		variants = variants[:count]
+	}
+	return variants, nil
+}
+
 func (s *Service) RefineReply(ctx context.Context, userID, platform, originalPost, draftReply, instruction string) (*ReplyResponse, error) {
 	_, profile, err := s.resolveUserProfile(ctx, userID)
 	if err != nil {

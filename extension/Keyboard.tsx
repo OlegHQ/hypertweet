@@ -16,6 +16,7 @@ import { Modal } from './ui/components/Modal';
 import { AuthForm } from './ui/components/AuthForm';
 import { SettingsModal } from './ui/components/SettingsModal';
 import { ChatModal, type Message } from './ui/components/ChatModal';
+import { InboxModal } from './ui/components/InboxModal';
 import { injectGlobalStyles } from './ui/styles';
 import { api } from './apiProxy';
 
@@ -35,6 +36,11 @@ export function Keyboard({
   const [showLogin, setShowLogin] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
+  const [activeInboxItemId, setActiveInboxItemId] = useState<string | null>(
+    null
+  );
+  void activeInboxItemId;
   const [chatMessages, setChatMessages] = useState<Message[]>([]);
   const [loadingTone, setLoadingTone] = useState<string | null>(null);
   const [lastReply, setLastReply] = useState<string | null>(null);
@@ -44,6 +50,7 @@ export function Keyboard({
   const [isRefining, setIsRefining] = useState(false);
   const refineInputRef = useRef<HTMLInputElement>(null);
   const isReddit = siteType === 'reddit';
+
   const { data: tones = [], isLoading: tonesLoading } = useTones(!!token);
   const { data: modelsData } = useModels(!!token);
   const { data: profile } = useProfile(!!token);
@@ -293,6 +300,59 @@ export function Keyboard({
             </button>
             <button
               className="ht-icon-btn"
+              title="Inbox"
+              onClick={() => setShowInbox(true)}
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 4h16v16H4z" />
+                <path d="M4 14h4l2 3h4l2-3h4" />
+              </svg>
+            </button>
+            <button
+              className="ht-icon-btn"
+              title="Save"
+              onClick={() =>
+                void (async () => {
+                  try {
+                    const page = await readPage();
+                    await api.inboxSave({ page: page });
+                    toast.success('Saved');
+                  } catch (error) {
+                    const message =
+                      error instanceof Error
+                        ? error.message
+                        : 'Failed to save page';
+                    toast.error(message);
+                  }
+                })()
+              }
+            >
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <polyline points="17 21 17 13 7 13 7 21" />
+                <polyline points="7 3 7 8 15 8" />
+              </svg>
+            </button>
+            <button
+              className="ht-icon-btn"
               title="Chat"
               onClick={() => setShowChat(true)}
             >
@@ -427,6 +487,14 @@ export function Keyboard({
         isOpen={showSettings}
         onClose={() => setShowSettings(false)}
         onLogout={handleLogout}
+      />
+
+      <InboxModal
+        isOpen={showInbox}
+        onClose={() => setShowInbox(false)}
+        onSelectItem={id => setActiveInboxItemId(id)}
+        insertText={insertText}
+        isReddit={isReddit}
       />
 
       <ChatModal

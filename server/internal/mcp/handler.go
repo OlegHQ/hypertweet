@@ -12,7 +12,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/hypertweet/server/internal/ai"
 	"github.com/hypertweet/server/internal/auth"
+	"github.com/hypertweet/server/internal/inbox"
 	"github.com/hypertweet/server/internal/profiles"
 	"github.com/hypertweet/server/internal/requestctx"
 	"github.com/hypertweet/server/internal/shared"
@@ -30,12 +32,14 @@ type Handler struct {
 	userRepo         *auth.UserRepo
 	profileRepo      *profiles.ProfileRepo
 	toneRepo         *tones.ToneRepo
+	inboxRepo        *inbox.Repo
+	aiService        *ai.Service
 	log              *slog.Logger
 	allowedOrigins   map[string]bool
 	allowLocalOrigin bool
 }
 
-func NewHandler(userRepo *auth.UserRepo, profileRepo *profiles.ProfileRepo, toneRepo *tones.ToneRepo, log *slog.Logger) *Handler {
+func NewHandler(userRepo *auth.UserRepo, profileRepo *profiles.ProfileRepo, toneRepo *tones.ToneRepo, inboxRepo *inbox.Repo, aiService *ai.Service, log *slog.Logger) *Handler {
 	allowedOrigins := make(map[string]bool)
 	for _, o := range strings.Split(os.Getenv("MCP_ALLOWED_ORIGINS"), ",") {
 		o = strings.TrimSpace(o)
@@ -47,6 +51,8 @@ func NewHandler(userRepo *auth.UserRepo, profileRepo *profiles.ProfileRepo, tone
 		userRepo:         userRepo,
 		profileRepo:      profileRepo,
 		toneRepo:         toneRepo,
+		inboxRepo:        inboxRepo,
+		aiService:        aiService,
 		log:              log,
 		allowedOrigins:   allowedOrigins,
 		allowLocalOrigin: true,
@@ -189,6 +195,76 @@ func (h *Handler) toolDefs() []toolDef {
 			Title:       "Get profile",
 			Description: "Fetch current Hypertweet profile settings",
 			InputSchema: noArgs,
+		},
+		{
+			Name:        "inbox_list_unreplied",
+			Title:       "List unreplied items",
+			Description: "List saved posts/pages that still need replies",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"limit": map[string]any{"type": "number", "description": "Max items (default 50)"},
+				},
+				"additionalProperties": false,
+			},
+		},
+		{
+			Name:        "inbox_get",
+			Title:       "Get inbox item",
+			Description: "Fetch a saved item including page context and reply variants",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id": stringField("id", "Saved item id"),
+				},
+				"required":             []string{"id"},
+				"additionalProperties": false,
+			},
+		},
+		{
+			Name:        "inbox_add_variants",
+			Title:       "Add reply variants",
+			Description: "Add one or more reply variants to an inbox item (does not mark done)",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id": stringField("id", "Saved item id"),
+					"variants": map[string]any{
+						"type":        "array",
+						"items":       map[string]any{"type": "string"},
+						"description": "Reply variant texts",
+					},
+					"source": stringField("source", "manual|generated (default manual)"),
+				},
+				"required":             []string{"id", "variants"},
+				"additionalProperties": false,
+			},
+		},
+		{
+			Name:        "inbox_mark_done",
+			Title:       "Mark done",
+			Description: "Mark an inbox item as finished",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id": stringField("id", "Saved item id"),
+				},
+				"required":             []string{"id"},
+				"additionalProperties": false,
+			},
+		},
+		{
+			Name:        "inbox_generate_variants",
+			Title:       "Generate variants",
+			Description: "Generate 3 reply variants in one call and persist them",
+			InputSchema: map[string]any{
+				"type": "object",
+				"properties": map[string]any{
+					"id": stringField("id", "Saved item id"),
+				},
+				"required":             []string{"id"},
+				"additionalProperties": false,
+			},
 		},
 		{
 			Name:        "profile_update",
@@ -403,6 +479,152 @@ func (h *Handler) callTool(ctx context.Context, userID string, name string, args
 			return toolError(err), nil
 		}
 		return toolOK(map[string]any{"id": p.ID, "enabled": p.Enable}), nil
+	case "inbox_list_unreplied":
+		limit := 50
+		var p struct {
+			Limit *int `json:"limit"`
+		}
+		_ = decodeArgs(args, &p)
+		if p.Limit != nil {
+			limit = *p.Limit
+		}
+		items, err := h.inboxRepo.ListByStatus(ctx, userID, inbox.StatusUnreplied, limit)
+		if err != nil {
+			return toolError(err), nil
+		}
+		res := make([]inbox.ItemSummary, 0, len(items))
+		for _, it := range items {
+			preview := ""
+			if it.Page.ActivePost != nil {
+				preview = it.Page.ActivePost.Text
+			} else if len(it.Page.Posts) > 0 {
+				preview = it.Page.Posts[0].Text
+			}
+			if len(preview) > 200 {
+				preview = preview[:200]
+			}
+			res = append(res, inbox.ItemSummary{
+				ID:           it.ID,
+				Key:          it.Key,
+				Status:       it.Status,
+				Site:         it.Page.Site,
+				Url:          it.Page.Url,
+				TextPreview:  preview,
+				VariantCount: len(it.ReplyVariants),
+				CreatedAt:    it.CreatedAt,
+				UpdatedAt:    it.UpdatedAt,
+			})
+		}
+		return toolOK(map[string]any{"items": res}), nil
+	case "inbox_get":
+		var p struct {
+			ID string `json:"id"`
+		}
+		if err := decodeArgs(args, &p); err != nil {
+			return toolError(err), nil
+		}
+		item, err := h.inboxRepo.FindByID(ctx, p.ID)
+		if err != nil {
+			if errors.Is(err, inbox.ErrItemNotFound) {
+				return toolError(shared.NewNotFoundError("item")), nil
+			}
+			return toolError(err), nil
+		}
+		if item.UserID != userID {
+			return toolError(shared.NewUnauthorizedError()), nil
+		}
+		return toolOK(item), nil
+	case "inbox_add_variants":
+		var p struct {
+			ID       string   `json:"id"`
+			Variants []string `json:"variants"`
+			Source   *string  `json:"source"`
+		}
+		if err := decodeArgs(args, &p); err != nil {
+			return toolError(err), nil
+		}
+		if err := shared.ValidateNotEmpty("id", p.ID); err != nil {
+			return toolError(err), nil
+		}
+		if len(p.Variants) == 0 {
+			return toolError(shared.NewValidationError("variants", "cannot be empty")), nil
+		}
+		source := "manual"
+		if p.Source != nil && (*p.Source == "manual" || *p.Source == "generated") {
+			source = *p.Source
+		}
+		now := time.Now().UTC()
+		vars := make([]inbox.ReplyVariant, 0, len(p.Variants))
+		for _, v := range p.Variants {
+			v = strings.TrimSpace(v)
+			if v == "" {
+				return toolError(shared.NewValidationError("variants", "text cannot be empty")), nil
+			}
+			vars = append(vars, inbox.ReplyVariant{ID: uuid.NewString(), Text: v, Source: source, CreatedAt: now})
+		}
+		item, err := h.inboxRepo.AddVariants(ctx, p.ID, userID, vars, now)
+		if err != nil {
+			if errors.Is(err, inbox.ErrItemNotFound) {
+				return toolError(shared.NewNotFoundError("item")), nil
+			}
+			return toolError(err), nil
+		}
+		return toolOK(item), nil
+	case "inbox_mark_done":
+		var p struct {
+			ID string `json:"id"`
+		}
+		if err := decodeArgs(args, &p); err != nil {
+			return toolError(err), nil
+		}
+		now := time.Now().UTC()
+		item, err := h.inboxRepo.UpdateStatus(ctx, p.ID, userID, inbox.StatusFinished, now)
+		if err != nil {
+			if errors.Is(err, inbox.ErrItemNotFound) {
+				return toolError(shared.NewNotFoundError("item")), nil
+			}
+			return toolError(err), nil
+		}
+		return toolOK(item), nil
+	case "inbox_generate_variants":
+		var p struct {
+			ID string `json:"id"`
+		}
+		if err := decodeArgs(args, &p); err != nil {
+			return toolError(err), nil
+		}
+		item, err := h.inboxRepo.FindByID(ctx, p.ID)
+		if err != nil {
+			if errors.Is(err, inbox.ErrItemNotFound) {
+				return toolError(shared.NewNotFoundError("item")), nil
+			}
+			return toolError(err), nil
+		}
+		if item.UserID != userID {
+			return toolError(shared.NewUnauthorizedError()), nil
+		}
+
+		variantsText, err := h.aiService.GenerateReplyVariants(ctx, userID, item.Page, 3)
+		if err != nil {
+			return toolError(err), nil
+		}
+		now := time.Now().UTC()
+		vars := make([]inbox.ReplyVariant, 0, len(variantsText))
+		for _, t := range variantsText {
+			t = strings.TrimSpace(t)
+			if t == "" {
+				continue
+			}
+			vars = append(vars, inbox.ReplyVariant{ID: uuid.NewString(), Text: t, Source: "generated", CreatedAt: now})
+		}
+		if len(vars) == 0 {
+			return toolOK(map[string]any{"variants": []string{}}), nil
+		}
+		updated, err := h.inboxRepo.AddVariants(ctx, p.ID, userID, vars, now)
+		if err != nil {
+			return toolError(err), nil
+		}
+		return toolOK(updated), nil
 	default:
 		return nil, fmt.Errorf("Unknown tool: %s", name)
 	}

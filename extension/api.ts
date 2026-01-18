@@ -310,6 +310,96 @@ export interface ChatStreamEvent {
 }
 
 // SSE streaming chat - called from background script
+export interface InboxSaveResponse {
+  id: string;
+  status: 'unreplied' | 'finished';
+  key: string;
+}
+
+export interface InboxItemSummary {
+  id: string;
+  key: string;
+  status: 'unreplied' | 'finished';
+  site: string;
+  url: string;
+  textPreview: string;
+  variantCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface InboxListResponse {
+  items: InboxItemSummary[];
+}
+
+export interface InboxReplyVariant {
+  id: string;
+  text: string;
+  source: 'manual' | 'generated';
+  createdAt: string;
+}
+
+export interface InboxItem {
+  id: string;
+  userId: string;
+  key: string;
+  status: 'unreplied' | 'finished';
+  page: Page;
+  replyVariants: InboxReplyVariant[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export const inboxSave = make<{ page: Page }, InboxSaveResponse>(
+  'POST',
+  '/inbox/save',
+  true
+);
+
+export async function inboxListWithStatus(
+  status: 'unreplied' | 'finished'
+): Promise<InboxListResponse> {
+  return make<undefined, InboxListResponse>(
+    'GET',
+    `/inbox/items?status=${status}`,
+    true
+  )();
+}
+
+export async function inboxGet(id: string): Promise<InboxItem> {
+  return make<undefined, InboxItem>('GET', `/inbox/items/${id}`, true)();
+}
+
+export async function inboxAddVariants(
+  id: string,
+  variants: string[]
+): Promise<InboxItem> {
+  return make<{ variants: { text: string }[] }, InboxItem>(
+    'POST',
+    `/inbox/items/${id}/variants`,
+    true
+  )({ variants: variants.map(t => ({ text: t })) });
+}
+
+export async function inboxMarkDone(id: string): Promise<InboxItem> {
+  return make<undefined, InboxItem>(
+    'POST',
+    `/inbox/items/${id}/mark-done`,
+    true
+  )();
+}
+
+export async function inboxGenerateVariants(id: string): Promise<{
+  variants: { text: string }[];
+}> {
+  return make<{ count: number }, { variants: { text: string }[] }>(
+    'POST',
+    `/inbox/items/${id}/generate-variants`,
+    true
+  )({ count: 3 });
+}
+
+// SSE streaming chat - called from background script
 export async function streamChat(
   request: ChatRequest,
   onEvent: (event: ChatStreamEvent) => void

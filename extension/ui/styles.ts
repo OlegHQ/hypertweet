@@ -761,6 +761,141 @@ export function injectGlobalStyles(siteType?: SiteType): void {
       flex: 1 !important;
     }
 
+    /* Inbox modal */
+    .ht-inbox {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[4]} !important;
+    }
+    .ht-inbox-header {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: ${tokens.spacing[3]} !important;
+    }
+    .ht-inbox-title {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.base} !important;
+      font-weight: ${tokens.font.weight.semibold} !important;
+      margin: 0 !important;
+      color: var(${cssVars.foreground}) !important;
+    }
+    .ht-inbox-body {
+      display: grid !important;
+      grid-template-columns: 1fr 1.2fr !important;
+      gap: ${tokens.spacing[4]} !important;
+      align-items: start !important;
+    }
+    .ht-inbox-list {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[2]} !important;
+      max-height: 60vh !important;
+      overflow: auto !important;
+      padding-right: ${tokens.spacing[1]} !important;
+    }
+    .ht-inbox-item {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[1]} !important;
+      text-align: left !important;
+      padding: ${tokens.spacing[3]} !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      background: var(${cssVars.card}) !important;
+      cursor: pointer !important;
+      transition: all ${tokens.transition.fast} !important;
+    }
+    .ht-inbox-item:hover {
+      border-color: var(${cssVars.ring}) !important;
+      background: var(${cssVars.cardHover}) !important;
+    }
+    .ht-inbox-item-active {
+      border-color: var(${cssVars.primary}) !important;
+    }
+    .ht-inbox-item-top {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: space-between !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-inbox-item-site {
+      font-family: ${tokens.font.mono} !important;
+      font-size: 11px !important;
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-inbox-item-count {
+      font-family: ${tokens.font.mono} !important;
+      font-size: 11px !important;
+      color: var(${cssVars.mutedForeground}) !important;
+    }
+    .ht-inbox-item-text {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.foreground}) !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      display: -webkit-box !important;
+      -webkit-line-clamp: 3 !important;
+      -webkit-box-orient: vertical !important;
+    }
+    .ht-inbox-detail {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[3]} !important;
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.lg} !important;
+      padding: ${tokens.spacing[4]} !important;
+      background: var(${cssVars.muted}) !important;
+      min-height: 240px !important;
+    }
+    .ht-inbox-detail-actions {
+      display: flex !important;
+      gap: ${tokens.spacing[2]} !important;
+      justify-content: flex-end !important;
+    }
+    .ht-inbox-variants {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[2]} !important;
+      max-height: 32vh !important;
+      overflow: auto !important;
+      padding-right: ${tokens.spacing[1]} !important;
+    }
+    .ht-inbox-variant {
+      border: 1px solid var(${cssVars.border}) !important;
+      border-radius: ${tokens.radius.md} !important;
+      padding: ${tokens.spacing[3]} !important;
+      background: var(${cssVars.background}) !important;
+    }
+    .ht-inbox-variant-text {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.foreground}) !important;
+      white-space: pre-wrap !important;
+    }
+    .ht-inbox-variant-actions {
+      display: flex !important;
+      justify-content: flex-end !important;
+      margin-top: ${tokens.spacing[2]} !important;
+    }
+    .ht-inbox-add {
+      display: flex !important;
+      flex-direction: column !important;
+      gap: ${tokens.spacing[2]} !important;
+    }
+    .ht-inbox-add-actions {
+      display: flex !important;
+      justify-content: flex-end !important;
+    }
+    .ht-inbox-empty {
+      font-family: ${tokens.font.sans} !important;
+      font-size: ${tokens.font.size.sm} !important;
+      color: var(${cssVars.mutedForeground}) !important;
+      text-align: center !important;
+      padding: ${tokens.spacing[4]} !important;
+    }
+
     /* Save indicator */
     .ht-save-indicator {
       display: inline-flex !important;

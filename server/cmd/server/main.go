@@ -15,6 +15,7 @@ import (
 	"github.com/hypertweet/server/internal/auth"
 	"github.com/hypertweet/server/internal/config"
 	"github.com/hypertweet/server/internal/db"
+	"github.com/hypertweet/server/internal/inbox"
 	"github.com/hypertweet/server/internal/mcp"
 	"github.com/hypertweet/server/internal/middleware"
 	"github.com/hypertweet/server/internal/profiles"
@@ -46,6 +47,7 @@ func main() {
 	toneRepo := tones.NewToneRepo(database)
 	traceRepo := tracing.NewTraceRepo(database)
 	apiTokenRepo := apitokens.NewRepo(database)
+	inboxRepo := inbox.NewRepo(database)
 
 	log.Info("generating database indexes...")
 	if err := userRepo.EnsureIndexes(ctx); err != nil {
@@ -56,6 +58,9 @@ func main() {
 	}
 	if err := apiTokenRepo.EnsureIndexes(ctx); err != nil {
 		log.Warn("failed to create api token indexes", "error", err)
+	}
+	if err := inboxRepo.EnsureIndexes(ctx); err != nil {
+		log.Warn("failed to create inbox indexes", "error", err)
 	}
 	log.Info("database indexes generated")
 
@@ -68,7 +73,8 @@ func main() {
 	toneHandler := tones.NewHandler(toneRepo, userRepo, log)
 	aiHandler := ai.NewHandler(aiService, log)
 	apiTokenHandler := apitokens.NewHandler(apiTokenRepo, log)
-	mcpHandler := mcp.NewHandler(userRepo, profileRepo, toneRepo, log)
+	inboxHandler := inbox.NewHandler(inboxRepo, aiService, log)
+	mcpHandler := mcp.NewHandler(userRepo, profileRepo, toneRepo, inboxRepo, aiService, log)
 
 	authMiddleware := middleware.NewAuthMiddleware(cfg.JwtSecret, cfg.JwtIssuer, cfg.JwtAudience)
 	apiTokenMiddleware := middleware.NewAPITokenMiddleware(apiTokenRepo, log)
@@ -108,6 +114,13 @@ func main() {
 	mux.Handle("POST /ai/reply", authMiddleware.Protect(http.HandlerFunc(aiHandler.Reply)))
 	mux.Handle("POST /ai/refine", authMiddleware.Protect(http.HandlerFunc(aiHandler.Refine)))
 	mux.Handle("POST /ai/chat", authMiddleware.Protect(http.HandlerFunc(aiHandler.Chat)))
+
+	mux.Handle("POST /inbox/save", authMiddleware.Protect(http.HandlerFunc(inboxHandler.Save)))
+	mux.Handle("GET /inbox/items", authMiddleware.Protect(http.HandlerFunc(inboxHandler.List)))
+	mux.Handle("GET /inbox/items/{id}", authMiddleware.Protect(http.HandlerFunc(inboxHandler.Get)))
+	mux.Handle("POST /inbox/items/{id}/variants", authMiddleware.Protect(http.HandlerFunc(inboxHandler.AddVariants)))
+	mux.Handle("POST /inbox/items/{id}/mark-done", authMiddleware.Protect(http.HandlerFunc(inboxHandler.MarkDone)))
+	mux.Handle("POST /inbox/items/{id}/generate-variants", authMiddleware.Protect(http.HandlerFunc(inboxHandler.GenerateVariants)))
 
 	handler := middleware.CORS(mux)
 	handler = middleware.Logging(log)(handler)

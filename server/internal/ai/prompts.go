@@ -290,6 +290,61 @@ func BuildChatPrompt(persona *string, page Page, userBio *string, options []stri
 	return b.String()
 }
 
+func BuildReplyVariantsPrompt(page Page, count int, userBio, customGuidance *string, options []string) string {
+	activePost, threadContext, _, guidelines := extractPageContext(page)
+
+	if count <= 0 {
+		count = 3
+	}
+
+	var b strings.Builder
+
+	b.WriteString("<task>\n")
+	b.WriteString(fmt.Sprintf("Generate %d distinct reply variants to the social media post below.\n", count))
+	b.WriteString("Return ONLY a JSON array of strings (no markdown, no commentary).\n")
+	b.WriteString("The array must contain exactly the requested number of variants.\n")
+	b.WriteString("</task>\n\n")
+
+	b.WriteString(fmt.Sprintf("<platform>\nSite: %s\nURL: %s\n\nPlatform Guidelines:\n", page.Site, page.Url))
+	for _, g := range guidelines {
+		b.WriteString(fmt.Sprintf("- %s\n", g))
+	}
+	b.WriteString("</platform>\n\n")
+
+	if userBio != nil {
+		b.WriteString(fmt.Sprintf("<user_bio>\n%s\n</user_bio>\n\n", *userBio))
+	}
+
+	b.WriteString(fmt.Sprintf("<post_to_reply>\n%s\n</post_to_reply>\n\n", activePost))
+
+	if threadContext != nil {
+		b.WriteString(fmt.Sprintf("<thread_context>\n%s\n</thread_context>\n\n", *threadContext))
+	}
+
+	b.WriteString("<output_requirements>\n")
+	reqs := []string{
+		"Output must be valid JSON",
+		"Output must be a JSON array of strings",
+		"No additional keys or objects",
+		"Each string is a complete ready-to-post reply",
+		"No surrounding whitespace or commentary",
+		"Replies should be meaningfully different from each other",
+	}
+	for _, opt := range options {
+		reqs = append(reqs, formatReplyPromptOption(opt))
+	}
+	for _, r := range reqs {
+		b.WriteString(fmt.Sprintf("- %s\n", r))
+	}
+	b.WriteString("</output_requirements>\n\n")
+
+	if customGuidance != nil {
+		b.WriteString(fmt.Sprintf("<user_defined_guidance>\n%s\n</user_defined_guidance>\n\n", *customGuidance))
+	}
+
+	return b.String()
+}
+
 func BuildRefinePrompt(platform, originalPost, draftReply, instruction string, userBio, customGuidance *string, options []string) string {
 	site := ParseSite(platform)
 	guidelines := GetPlatformGuidelines(site)
