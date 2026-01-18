@@ -1,11 +1,7 @@
-.PHONY: build run test clean fmt lint deploy watch
+.PHONY: build run test clean fmt lint watch smdctl-install smdctl-logs smdctl-rm
 
-# Build configuration
 OUTPUT := ./bin/server
-DEPLOY_DIR := /var/www/hypertweet
-SERVICE := hypertweet.service
 
-# Go commands
 build:
 	go build -o $(OUTPUT) ./cmd/server
 
@@ -27,8 +23,18 @@ lint:
 clean:
 	rm -rf bin/
 
-# Deployment
-deploy: build
-	sudo systemctl stop $(SERVICE) || true
-	sudo cp $(OUTPUT) $(DEPLOY_DIR)/
-	sudo systemctl start $(SERVICE)
+smdctl-install: build
+	smdctl run \
+		-e "MONGODB_URI=$(MONGODB_URI)" \
+		-e "GROQ_API_KEY=$(GROQ_API_KEY)" \
+		-e "GOOGLE_AI_API_KEY=$(GOOGLE_AI_API_KEY)" \
+		-e "PORT=5001" \
+		--restart always \
+		--workdir "$(CURDIR)" \
+		hypertweet -- $(OUTPUT)
+
+smdctl-logs:
+	smdctl logs -f hypertweet
+
+smdctl-rm:
+	smdctl rm -f hypertweet
