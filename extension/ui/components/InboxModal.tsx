@@ -35,7 +35,7 @@ export function InboxModal({
   insertText,
   isReddit,
 }: InboxModalProps): React.ReactElement {
-  const toast = useToast();
+  const { error: toastError, success: toastSuccess } = useToast();
   const [activeTab, setActiveTab] = useState<'unreplied' | 'finished'>(
     'unreplied'
   );
@@ -67,12 +67,12 @@ export function InboxModal({
         };
         setItems(res.items);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Failed to load inbox');
+        toastError(e instanceof Error ? e.message : 'Failed to load inbox');
       } finally {
         setIsLoading(false);
       }
     })();
-  }, [isOpen, activeTab, toast]);
+  }, [isOpen, activeTab, toastError]);
 
   useEffect(() => {
     if (!isOpen || !selectedId) return;
@@ -82,10 +82,10 @@ export function InboxModal({
         const item = (await api.inboxGet(selectedId)) as InboxItem;
         setSelectedItem(item);
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : 'Failed to load item');
+        toastError(e instanceof Error ? e.message : 'Failed to load item');
       }
     })();
-  }, [isOpen, selectedId, toast]);
+  }, [isOpen, selectedId, toastError]);
 
   const handlePick = (id: string): void => {
     setSelectedId(id);
@@ -96,15 +96,15 @@ export function InboxModal({
     if (isReddit) {
       try {
         await navigator.clipboard.writeText(text);
-        toast.success('Copied to clipboard');
+        toastSuccess('Copied to clipboard');
       } catch {
-        toast.error('Failed to copy');
+        toastError('Failed to copy');
       }
       return;
     }
 
     insertText(text);
-    toast.success('Inserted');
+    toastSuccess('Inserted');
   };
 
   const handleSaveManualVariants = async (): Promise<void> => {
@@ -116,7 +116,7 @@ export function InboxModal({
       .filter(Boolean);
     const uniq = dedupeTexts(lines);
     if (uniq.length === 0) {
-      toast.error('No variants to save');
+      toastError('No variants to save');
       return;
     }
 
@@ -128,9 +128,9 @@ export function InboxModal({
       )) as InboxItem;
       setSelectedItem(updated);
       setManualVariants('');
-      toast.success('Saved variants');
+      toastSuccess('Saved variants');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to save variants');
+      toastError(e instanceof Error ? e.message : 'Failed to save variants');
     } finally {
       setIsSavingVariants(false);
     }
@@ -145,16 +145,16 @@ export function InboxModal({
       };
       const texts = dedupeTexts(res.variants.map(v => v.text));
       if (texts.length === 0) {
-        toast.error('No variants generated');
+        toastError('No variants generated');
         return;
       }
 
       // Refresh item to show persisted variants.
       const updated = (await api.inboxGet(selectedId)) as InboxItem;
       setSelectedItem(updated);
-      toast.success('Generated variants');
+      toastSuccess('Generated variants');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to generate');
+      toastError(e instanceof Error ? e.message : 'Failed to generate');
     } finally {
       setIsGenerating(false);
     }
@@ -166,14 +166,14 @@ export function InboxModal({
     try {
       const updated = (await api.inboxMarkDone(selectedId)) as InboxItem;
       setSelectedItem(updated);
-      toast.success('Marked done');
+      toastSuccess('Marked done');
       // Reload list
       const res = (await api.inboxListWithStatus(activeTab)) as {
         items: InboxItemSummary[];
       };
       setItems(res.items);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Failed to mark done');
+      toastError(e instanceof Error ? e.message : 'Failed to mark done');
     } finally {
       setIsMarkingDone(false);
     }

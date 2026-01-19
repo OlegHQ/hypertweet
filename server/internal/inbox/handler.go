@@ -2,6 +2,7 @@ package inbox
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -64,6 +65,10 @@ func (h *Handler) Save(w http.ResponseWriter, r *http.Request) {
 
 	saved, err := h.repo.UpsertByKey(ctx, item)
 	if err != nil {
+		if errors.Is(err, ErrItemConflict) {
+			shared.HandleError(w, h.log, shared.NewConflictError("inbox item already exists"))
+			return
+		}
 		shared.HandleError(w, h.log, err)
 		return
 	}

@@ -39,10 +39,6 @@ func (r *Repo) EnsureIndexes(ctx context.Context) error {
 
 func (r *Repo) UpsertByKey(ctx context.Context, item *SavedItem) (*SavedItem, error) {
 	filter := bson.M{"UserId": item.UserID, "Key": item.Key}
-	update := bson.M{"$set": bson.M{
-		"Page":      item.Page,
-		"UpdatedAt": item.UpdatedAt,
-	}}
 	setOnInsert := bson.M{
 		"_id":           item.ID,
 		"UserId":        item.UserID,
@@ -50,14 +46,22 @@ func (r *Repo) UpsertByKey(ctx context.Context, item *SavedItem) (*SavedItem, er
 		"Status":        item.Status,
 		"ReplyVariants": item.ReplyVariants,
 		"CreatedAt":     item.CreatedAt,
-		"UpdatedAt":     item.UpdatedAt,
 	}
-	update["$setOnInsert"] = setOnInsert
+	update := bson.M{
+		"$set": bson.M{
+			"Page":      item.Page,
+			"UpdatedAt": item.UpdatedAt,
+		},
+		"$setOnInsert": setOnInsert,
+	}
 
 	opts := options.FindOneAndUpdate().SetUpsert(true).SetReturnDocument(options.After)
 	var out SavedItem
 	err := r.coll.FindOneAndUpdate(ctx, filter, update, opts).Decode(&out)
 	if err != nil {
+		if mongo.IsDuplicateKeyError(err) {
+			return nil, ErrItemConflict
+		}
 		return nil, fmt.Errorf("upsert saved item: %w", err)
 	}
 	return &out, nil
